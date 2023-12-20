@@ -1,4 +1,19 @@
-from ollama.client import Client
+from ._client import Client, AsyncClient
+
+__all__ = [
+  'Client',
+  'AsyncClient',
+  'generate',
+  'chat',
+  'pull',
+  'push',
+  'create',
+  'delete',
+  'list',
+  'copy',
+  'show',
+]
+
 
 _default_client = Client()
 

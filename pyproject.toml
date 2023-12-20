@@ -11,6 +11,7 @@ httpx = "^0.25.2"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
+pytest-asyncio = "^0.23.2"
 pytest-cov = "^4.1.0"
 pytest-httpserver = "^1.0.8"
 pillow = "^10.1.0"
