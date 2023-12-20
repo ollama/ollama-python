@@ -33,7 +33,10 @@ class Client(BaseClient):
           raise Exception(e)
         yield part
 
-  def generate(self, model, prompt='', system='', template='', context=None, stream=False, raw=False, format='', images=None, options=None):
+  def generate(self, model='', prompt='', system='', template='', context=None, stream=False, raw=False, format='', images=None, options=None):
+    if not model:
+      raise Exception('must provide a model')
+
     fn = self.stream if stream else self._request_json
     return fn('POST', '/api/generate', json={
       'model': model,
@@ -48,7 +51,10 @@ class Client(BaseClient):
       'options': options or {},
     })
 
-  def chat(self, model, messages=None, stream=False, format='', options=None):
+  def chat(self, model='', messages=None, stream=False, format='', options=None):
+    if not model:
+      raise Exception('must provide a model')
+
     for message in messages or []:
       if not isinstance(message, dict):
         raise TypeError('messages must be a list of strings')
