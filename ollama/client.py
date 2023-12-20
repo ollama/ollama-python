@@ -137,9 +137,9 @@ class Client(BaseClient):
 def _encode_image(image):
   '''
   _encode_images takes a list of images and returns a generator of base64 encoded images.
-  if the image is a bytes object, it is assumed to be the raw bytes of an image.
   if the image is a string, it is assumed to be a path to a file.
   if the image is a Path object, it is assumed to be a path to a file.
+  if the image is a bytes object, it is assumed to be the raw bytes of an image.
   if the image is a file-like object, it is assumed to be a container to the raw bytes of an image.
   '''
 
