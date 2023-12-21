@@ -1,0 +1,24 @@
+name: publish
+
+on:
+  release:
+    types:
+      - created
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          cache: poetry
+      - run: |
+          poetry version -- ${GIT_REF_NAME#v}
+          poetry build
+      - uses: pypa/gh-action-pypi-publish@release/v1
+      - run: gh release upload $GIT_REF_NAME dist/*
