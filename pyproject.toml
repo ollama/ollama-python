@@ -25,6 +25,7 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.ruff]
+line-length = 999
 indent-width = 2
 
 [tool.ruff.format]

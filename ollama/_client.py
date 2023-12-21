@@ -9,6 +9,7 @@ from base64 import b64encode
 from typing import Any, AnyStr, Union, Optional, List, Mapping
 
 import sys
+
 if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
 else:
@@ -18,13 +19,11 @@ from ollama._types import Message, Options
 
 
 class BaseClient:
-
   def __init__(self, client, base_url='http://127.0.0.1:11434') -> None:
     self._client = client(base_url=base_url, follow_redirects=True, timeout=None)
 
 
 class Client(BaseClient):
-
   def __init__(self, base='http://localhost:11434') -> None:
     super().__init__(httpx.Client, base)
 
@@ -45,43 +44,47 @@ class Client(BaseClient):
         yield part
 
   def generate(
-      self,
-      model: str = '',
-      prompt: str = '',
-      system: str = '',
-      template: str = '',
-      context: Optional[List[int]] = None,
-      stream: bool = False,
-      raw: bool = False,
-      format: str = '',
-      images: Optional[List[AnyStr]] = None,
-      options: Optional[Options] = None,
-    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[List[int]] = None,
+    stream: bool = False,
+    raw: bool = False,
+    format: str = '',
+    images: Optional[List[AnyStr]] = None,
+    options: Optional[Options] = None,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     if not model:
       raise Exception('must provide a model')
 
     fn = self._stream if stream else self._request_json
-    return fn('POST', '/api/generate', json={
-      'model': model,
-      'prompt': prompt,
-      'system': system,
-      'template': template,
-      'context': context or [],
-      'stream': stream,
-      'raw': raw,
-      'images': [_encode_image(image) for image in images or []],
-      'format': format,
-      'options': options or {},
-    })
+    return fn(
+      'POST',
+      '/api/generate',
+      json={
+        'model': model,
+        'prompt': prompt,
+        'system': system,
+        'template': template,
+        'context': context or [],
+        'stream': stream,
+        'raw': raw,
+        'images': [_encode_image(image) for image in images or []],
+        'format': format,
+        'options': options or {},
+      },
+    )
 
   def chat(
-      self,
-      model: str = '',
-      messages: Optional[List[Message]] = None,
-      stream: bool = False,
-      format: str = '',
-      options: Optional[Options] = None,
-    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    self,
+    model: str = '',
+    messages: Optional[List[Message]] = None,
+    stream: bool = False,
+    format: str = '',
+    options: Optional[Options] = None,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     if not model:
       raise Exception('must provide a model')
 
@@ -96,47 +99,59 @@ class Client(BaseClient):
         message['images'] = [_encode_image(image) for image in images]
 
     fn = self._stream if stream else self._request_json
-    return fn('POST', '/api/chat', json={
-      'model': model,
-      'messages': messages,
-      'stream': stream,
-      'format': format,
-      'options': options or {},
-    })
+    return fn(
+      'POST',
+      '/api/chat',
+      json={
+        'model': model,
+        'messages': messages,
+        'stream': stream,
+        'format': format,
+        'options': options or {},
+      },
+    )
 
   def pull(
-      self,
-      model: str,
-      insecure: bool = False,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     fn = self._stream if stream else self._request_json
-    return fn('POST', '/api/pull', json={
-      'model': model,
-      'insecure': insecure,
-      'stream': stream,
-    })
+    return fn(
+      'POST',
+      '/api/pull',
+      json={
+        'model': model,
+        'insecure': insecure,
+        'stream': stream,
+      },
+    )
 
   def push(
-      self,
-      model: str,
-      insecure: bool = False,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     fn = self._stream if stream else self._request_json
-    return fn('POST', '/api/push', json={
-      'model': model,
-      'insecure': insecure,
-      'stream': stream,
-    })
+    return fn(
+      'POST',
+      '/api/push',
+      json={
+        'model': model,
+        'insecure': insecure,
+        'stream': stream,
+      },
+    )
 
   def create(
-      self,
-      model: str,
-      path: Optional[Union[str, PathLike]] = None,
-      modelfile: Optional[str] = None,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     if (realpath := _as_path(path)) and realpath.exists():
       modelfile = self._parse_modelfile(realpath.read_text(), base=realpath.parent)
     elif modelfile:
@@ -145,11 +160,15 @@ class Client(BaseClient):
       raise Exception('must provide either path or modelfile')
 
     fn = self._stream if stream else self._request_json
-    return fn('POST', '/api/create', json={
-      'model': model,
-      'modelfile': modelfile,
-      'stream': stream,
-    })
+    return fn(
+      'POST',
+      '/api/create',
+      json={
+        'model': model,
+        'modelfile': modelfile,
+        'stream': stream,
+      },
+    )
 
   def _parse_modelfile(self, modelfile: str, base: Optional[Path] = None) -> str:
     base = Path.cwd() if base is None else base
@@ -170,7 +189,7 @@ class Client(BaseClient):
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
-        chunk = r.read(32*1024)
+        chunk = r.read(32 * 1024)
         if not chunk:
           break
         sha256sum.update(chunk)
@@ -204,7 +223,6 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-
   def __init__(self, base='http://localhost:11434') -> None:
     super().__init__(httpx.AsyncClient, base)
 
@@ -225,46 +243,51 @@ class AsyncClient(BaseClient):
           if e := part.get('error'):
             raise Exception(e)
           yield part
+
     return inner()
 
   async def generate(
-      self,
-      model: str = '',
-      prompt: str = '',
-      system: str = '',
-      template: str = '',
-      context: Optional[List[int]] = None,
-      stream: bool = False,
-      raw: bool = False,
-      format: str = '',
-      images: Optional[List[AnyStr]] = None,
-      options: Optional[Options] = None,
-    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[List[int]] = None,
+    stream: bool = False,
+    raw: bool = False,
+    format: str = '',
+    images: Optional[List[AnyStr]] = None,
+    options: Optional[Options] = None,
+  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     if not model:
       raise Exception('must provide a model')
 
     fn = self._stream if stream else self._request_json
-    return await fn('POST', '/api/generate', json={
-      'model': model,
-      'prompt': prompt,
-      'system': system,
-      'template': template,
-      'context': context or [],
-      'stream': stream,
-      'raw': raw,
-      'images': [_encode_image(image) for image in images or []],
-      'format': format,
-      'options': options or {},
-    })
+    return await fn(
+      'POST',
+      '/api/generate',
+      json={
+        'model': model,
+        'prompt': prompt,
+        'system': system,
+        'template': template,
+        'context': context or [],
+        'stream': stream,
+        'raw': raw,
+        'images': [_encode_image(image) for image in images or []],
+        'format': format,
+        'options': options or {},
+      },
+    )
 
   async def chat(
-      self,
-      model: str = '',
-      messages: Optional[List[Message]] = None,
-      stream: bool = False,
-      format: str = '',
-      options: Optional[Options] = None,
-    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+    self,
+    model: str = '',
+    messages: Optional[List[Message]] = None,
+    stream: bool = False,
+    format: str = '',
+    options: Optional[Options] = None,
+  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     if not model:
       raise Exception('must provide a model')
 
@@ -279,47 +302,59 @@ class AsyncClient(BaseClient):
         message['images'] = [_encode_image(image) for image in images]
 
     fn = self._stream if stream else self._request_json
-    return await fn('POST', '/api/chat', json={
-      'model': model,
-      'messages': messages,
-      'stream': stream,
-      'format': format,
-      'options': options or {},
-    })
+    return await fn(
+      'POST',
+      '/api/chat',
+      json={
+        'model': model,
+        'messages': messages,
+        'stream': stream,
+        'format': format,
+        'options': options or {},
+      },
+    )
 
   async def pull(
-      self,
-      model: str,
-      insecure: bool = False,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     fn = self._stream if stream else self._request_json
-    return await fn('POST', '/api/pull', json={
-      'model': model,
-      'insecure': insecure,
-      'stream': stream,
-    })
+    return await fn(
+      'POST',
+      '/api/pull',
+      json={
+        'model': model,
+        'insecure': insecure,
+        'stream': stream,
+      },
+    )
 
   async def push(
-      self,
-      model: str,
-      insecure: bool = False,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     fn = self._stream if stream else self._request_json
-    return await fn('POST', '/api/push', json={
-      'model': model,
-      'insecure': insecure,
-      'stream': stream,
-    })
+    return await fn(
+      'POST',
+      '/api/push',
+      json={
+        'model': model,
+        'insecure': insecure,
+        'stream': stream,
+      },
+    )
 
   async def create(
-      self,
-      model: str,
-      path: Optional[Union[str, PathLike]] = None,
-      modelfile: Optional[str] = None,
-      stream: bool = False,
-    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    stream: bool = False,
+  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     if (realpath := _as_path(path)) and realpath.exists():
       modelfile = await self._parse_modelfile(realpath.read_text(), base=realpath.parent)
     elif modelfile:
@@ -328,11 +363,15 @@ class AsyncClient(BaseClient):
       raise Exception('must provide either path or modelfile')
 
     fn = self._stream if stream else self._request_json
-    return await fn('POST', '/api/create', json={
-      'model': model,
-      'modelfile': modelfile,
-      'stream': stream,
-    })
+    return await fn(
+      'POST',
+      '/api/create',
+      json={
+        'model': model,
+        'modelfile': modelfile,
+        'stream': stream,
+      },
+    )
 
   async def _parse_modelfile(self, modelfile: str, base: Optional[Path] = None) -> str:
     base = Path.cwd() if base is None else base
@@ -353,7 +392,7 @@ class AsyncClient(BaseClient):
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
-        chunk = r.read(32*1024)
+        chunk = r.read(32 * 1024)
         if not chunk:
           break
         sha256sum.update(chunk)
@@ -369,7 +408,7 @@ class AsyncClient(BaseClient):
       async def upload_bytes():
         with open(path, 'rb') as r:
           while True:
-            chunk = r.read(32*1024)
+            chunk = r.read(32 * 1024)
             if not chunk:
               break
             yield chunk

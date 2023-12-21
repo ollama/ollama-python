@@ -3,9 +3,9 @@ from ollama import generate
 prefix = '''def remove_non_ascii(s: str) -> str:
     """ '''
 
-suffix = '''
+suffix = """
     return result
-'''
+"""
 
 
 response = generate(
