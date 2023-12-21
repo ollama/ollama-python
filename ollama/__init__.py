@@ -1,8 +1,10 @@
-from ._client import Client, AsyncClient
+from ollama._client import Client, AsyncClient, Message, Options
 
 __all__ = [
   'Client',
   'AsyncClient',
+  'Message',
+  'Options',
   'generate',
   'chat',
   'pull',
