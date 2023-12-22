@@ -25,7 +25,7 @@ for part in ollama.chat(model='llama2', messages=[message], stream=True):
 ```
 
 
-### Using the Synchronous Client
+## Using the Synchronous Client
 
 ```python
 from ollama import Client
@@ -42,7 +42,7 @@ for part in Client().chat(model='llama2', messages=[message], stream=True):
   print(part['message']['content'], end='', flush=True)
 ```
 
-### Using the Asynchronous Client
+## Using the Asynchronous Client
 
 ```python
 import asyncio
