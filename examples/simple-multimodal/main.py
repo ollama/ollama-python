@@ -24,6 +24,6 @@ raw = httpx.get(comic.json().get('img'))
 raw.raise_for_status()
 
 for response in generate('llava', 'explain this comic:', images=[raw.content], stream=True):
-  print(response.get('response'), end='', flush=True)
+  print(response['response'], end='', flush=True)
 
 print()

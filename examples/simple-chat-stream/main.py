@@ -8,10 +8,8 @@ messages = [
   },
 ]
 
-for message in chat('mistral', messages=messages, stream=True):
-  if message := message.get('message'):
-    if message.get('role') == 'assistant':
-      print(message.get('content', ''), end='', flush=True)
+for part in chat('mistral', messages=messages, stream=True):
+  print(part['message']['content'], end='', flush=True)
 
 # end with a newline
 print()

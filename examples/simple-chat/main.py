@@ -9,4 +9,4 @@ messages = [
 ]
 
 response = chat('mistral', messages=messages)
-print(response['message'])
+print(response['message']['content'])

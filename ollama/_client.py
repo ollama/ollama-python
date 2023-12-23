@@ -19,13 +19,13 @@ from ollama._types import Message, Options
 
 
 class BaseClient:
-  def __init__(self, client, base_url='http://127.0.0.1:11434') -> None:
+  def __init__(self, client, base_url: str = 'http://127.0.0.1:11434') -> None:
     self._client = client(base_url=base_url, follow_redirects=True, timeout=None)
 
 
 class Client(BaseClient):
-  def __init__(self, base='http://localhost:11434') -> None:
-    super().__init__(httpx.Client, base)
+  def __init__(self, base_url: str = 'http://localhost:11434') -> None:
+    super().__init__(httpx.Client, base_url)
 
   def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = self._client.request(method, url, **kwargs)
@@ -122,7 +122,7 @@ class Client(BaseClient):
       'POST',
       '/api/pull',
       json={
-        'model': model,
+        'name': model,
         'insecure': insecure,
         'stream': stream,
       },
@@ -139,7 +139,7 @@ class Client(BaseClient):
       'POST',
       '/api/push',
       json={
-        'model': model,
+        'name': model,
         'insecure': insecure,
         'stream': stream,
       },
@@ -164,7 +164,7 @@ class Client(BaseClient):
       'POST',
       '/api/create',
       json={
-        'model': model,
+        'name': model,
         'modelfile': modelfile,
         'stream': stream,
       },
@@ -208,7 +208,7 @@ class Client(BaseClient):
     return digest
 
   def delete(self, model: str) -> Mapping[str, Any]:
-    response = self._request('DELETE', '/api/delete', json={'model': model})
+    response = self._request('DELETE', '/api/delete', json={'name': model})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def list(self) -> Mapping[str, Any]:
@@ -219,12 +219,12 @@ class Client(BaseClient):
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def show(self, model: str) -> Mapping[str, Any]:
-    return self._request_json('GET', '/api/show', json={'model': model})
+    return self._request_json('GET', '/api/show', json={'name': model})
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, base='http://localhost:11434') -> None:
-    super().__init__(httpx.AsyncClient, base)
+  def __init__(self, base_url: str = 'http://localhost:11434') -> None:
+    super().__init__(httpx.AsyncClient, base_url)
 
   async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = await self._client.request(method, url, **kwargs)
@@ -325,7 +325,7 @@ class AsyncClient(BaseClient):
       'POST',
       '/api/pull',
       json={
-        'model': model,
+        'name': model,
         'insecure': insecure,
         'stream': stream,
       },
@@ -342,7 +342,7 @@ class AsyncClient(BaseClient):
       'POST',
       '/api/push',
       json={
-        'model': model,
+        'name': model,
         'insecure': insecure,
         'stream': stream,
       },
@@ -367,7 +367,7 @@ class AsyncClient(BaseClient):
       'POST',
       '/api/create',
       json={
-        'model': model,
+        'name': model,
         'modelfile': modelfile,
         'stream': stream,
       },
@@ -418,7 +418,7 @@ class AsyncClient(BaseClient):
     return digest
 
   async def delete(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('DELETE', '/api/delete', json={'model': model})
+    response = await self._request('DELETE', '/api/delete', json={'name': model})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def list(self) -> Mapping[str, Any]:
@@ -430,7 +430,7 @@ class AsyncClient(BaseClient):
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def show(self, model: str) -> Mapping[str, Any]:
-    return await self._request_json('GET', '/api/show', json={'model': model})
+    return await self._request_json('GET', '/api/show', json={'name': model})
 
 
 def _encode_image(image) -> str:
