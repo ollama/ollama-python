@@ -16,41 +16,26 @@ __all__ = [
   'show',
 ]
 
-
 _default_client = Client()
 
+generate = _default_client.generate
+chat = _default_client.chat
+pull = _default_client.pull
+push = _default_client.push
+create = _default_client.create
+delete = _default_client.delete
+list = _default_client.list
+copy = _default_client.copy
+show = _default_client.show
 
-def generate(*args, **kwargs):
-  return _default_client.generate(*args, **kwargs)
+_async_default_client = AsyncClient()
 
-
-def chat(*args, **kwargs):
-  return _default_client.chat(*args, **kwargs)
-
-
-def pull(*args, **kwargs):
-  return _default_client.pull(*args, **kwargs)
-
-
-def push(*args, **kwargs):
-  return _default_client.push(*args, **kwargs)
-
-
-def create(*args, **kwargs):
-  return _default_client.create(*args, **kwargs)
-
-
-def delete(*args, **kwargs):
-  return _default_client.delete(*args, **kwargs)
-
-
-def list(*args, **kwargs):
-  return _default_client.list(*args, **kwargs)
-
-
-def copy(*args, **kwargs):
-  return _default_client.copy(*args, **kwargs)
-
-
-def show(*args, **kwargs):
-  return _default_client.show(*args, **kwargs)
+async_generate = _async_default_client.generate
+async_chat = _async_default_client.chat
+async_pull = _async_default_client.pull
+async_push = _async_default_client.push
+async_create = _async_default_client.create
+async_delete = _async_default_client.delete
+async_list = _async_default_client.list
+async_copy = _async_default_client.copy
+async_show = _async_default_client.show
