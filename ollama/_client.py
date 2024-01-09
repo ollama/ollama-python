@@ -1,3 +1,4 @@
+import os
 import io
 import json
 import httpx
@@ -19,12 +20,13 @@ from ollama._types import Message, Options
 
 
 class BaseClient:
-  def __init__(self, client, base_url: str = 'http://127.0.0.1:11434') -> None:
+  def __init__(self, client, base_url: Optional[str] = None) -> None:
+    base_url = base_url or os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434')
     self._client = client(base_url=base_url, follow_redirects=True, timeout=None)
 
 
 class Client(BaseClient):
-  def __init__(self, base_url: str = 'http://localhost:11434') -> None:
+  def __init__(self, base_url: Optional[str] = None) -> None:
     super().__init__(httpx.Client, base_url)
 
   def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
@@ -38,10 +40,10 @@ class Client(BaseClient):
   def _stream(self, method: str, url: str, **kwargs) -> Iterator[Mapping[str, Any]]:
     with self._client.stream(method, url, **kwargs) as r:
       for line in r.iter_lines():
-        part = json.loads(line)
-        if e := part.get('error'):
+        partial = json.loads(line)
+        if e := partial.get('error'):
           raise Exception(e)
-        yield part
+        yield partial
 
   def generate(
     self,
@@ -223,7 +225,7 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, base_url: str = 'http://localhost:11434') -> None:
+  def __init__(self, base_url: Optional[str] = None) -> None:
     super().__init__(httpx.AsyncClient, base_url)
 
   async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
@@ -239,10 +241,10 @@ class AsyncClient(BaseClient):
     async def inner():
       async with self._client.stream(method, url, **kwargs) as r:
         async for line in r.aiter_lines():
-          part = json.loads(line)
-          if e := part.get('error'):
+          partial = json.loads(line)
+          if e := partial.get('error'):
             raise Exception(e)
-          yield part
+          yield partial
 
     return inner()
 
