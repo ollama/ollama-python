@@ -1,4 +1,4 @@
-from typing import Any, TypedDict, List
+from typing import Any, TypedDict, Sequence
 
 import sys
 
@@ -8,10 +8,39 @@ else:
   from typing import NotRequired
 
 
+class BaseGenerateResponse(TypedDict):
+  model: str
+  created_at: str
+  done: bool
+
+  total_duration: int
+  load_duration: int
+  prompt_eval_count: int
+  prompt_eval_duration: int
+  eval_count: int
+  eval_duration: int
+
+
+class GenerateResponse(BaseGenerateResponse):
+  response: str
+  context: Sequence[int]
+
+
 class Message(TypedDict):
   role: str
   content: str
-  images: NotRequired[List[Any]]
+  images: NotRequired[Sequence[Any]]
+
+
+class ChatResponse(BaseGenerateResponse):
+  message: Message
+
+
+class ProgressResponse(TypedDict):
+  status: str
+  completed: int
+  total: int
+  digest: str
 
 
 class Options(TypedDict, total=False):
@@ -50,4 +79,4 @@ class Options(TypedDict, total=False):
   mirostat_tau: float
   mirostat_eta: float
   penalize_newline: bool
-  stop: List[str]
+  stop: Sequence[str]
