@@ -80,3 +80,28 @@ class Options(TypedDict, total=False):
   mirostat_eta: float
   penalize_newline: bool
   stop: Sequence[str]
+
+
+class RequestError(Exception):
+  """
+  Common class for request errors.
+  """
+
+  def __init__(self, content: str):
+    super().__init__(content)
+    self.content = content
+    "Reason for the error."
+
+
+class ResponseError(Exception):
+  """
+  Common class for response errors.
+  """
+
+  def __init__(self, content: str, status_code: int = -1):
+    super().__init__(content)
+    self.content = content
+    "Reason for the error."
+
+    self.status_code = status_code
+    "HTTP status code of the response."

@@ -2,8 +2,11 @@ from ollama._client import Client, AsyncClient
 from ollama._types import (
   GenerateResponse,
   ChatResponse,
+  ProgressResponse,
   Message,
   Options,
+  RequestError,
+  ResponseError,
 )
 
 __all__ = [
@@ -11,8 +14,11 @@ __all__ = [
   'AsyncClient',
   'GenerateResponse',
   'ChatResponse',
+  'ProgressResponse',
   'Message',
   'Options',
+  'RequestError',
+  'ResponseError',
   'generate',
   'chat',
   'pull',
