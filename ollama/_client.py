@@ -20,14 +20,25 @@ from ollama._types import Message, Options
 
 
 class BaseClient:
-  def __init__(self, client, base_url: Optional[str] = None) -> None:
-    base_url = base_url or os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434')
-    self._client = client(base_url=base_url, follow_redirects=True, timeout=None)
+  def __init__(
+    self,
+    client,
+    base_url: Optional[str] = None,
+    follow_redirects: bool = True,
+    timeout: Any = None,
+    **kwargs,
+  ) -> None:
+    self._client = client(
+      base_url=base_url or os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434'),
+      follow_redirects=follow_redirects,
+      timeout=timeout,
+      **kwargs,
+    )
 
 
 class Client(BaseClient):
-  def __init__(self, base_url: Optional[str] = None) -> None:
-    super().__init__(httpx.Client, base_url)
+  def __init__(self, base_url: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.Client, base_url, **kwargs)
 
   def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = self._client.request(method, url, **kwargs)
@@ -247,8 +258,8 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, base_url: Optional[str] = None) -> None:
-    super().__init__(httpx.AsyncClient, base_url)
+  def __init__(self, base_url: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.AsyncClient, base_url, **kwargs)
 
   async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = await self._client.request(method, url, **kwargs)
