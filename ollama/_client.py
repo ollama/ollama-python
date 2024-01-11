@@ -149,7 +149,7 @@ class Client(BaseClient):
 
     for message in messages or []:
       if not isinstance(message, dict):
-        raise TypeError('messages must be a list of strings')
+        raise TypeError('messages must be a list of Message or dict-like objects')
       if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
         raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
       if not message.get('content'):
