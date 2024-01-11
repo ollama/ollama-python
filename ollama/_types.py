@@ -10,31 +10,76 @@ else:
 
 class BaseGenerateResponse(TypedDict):
   model: str
+  "Model used to generate response."
+
   created_at: str
+  "Time when the request was created."
+
   done: bool
+  "True if response is complete, otherwise False. Useful for streaming to detect the final response."
 
   total_duration: int
+  "Total duration in nanoseconds."
+
   load_duration: int
+  "Load duration in nanoseconds."
+
   prompt_eval_count: int
+  "Number of tokens evaluated in the prompt."
+
   prompt_eval_duration: int
+  "Duration of evaluating the prompt in nanoseconds."
+
   eval_count: int
+  "Number of tokens evaluated in inference."
+
   eval_duration: int
+  "Duration of evaluating inference in nanoseconds."
 
 
 class GenerateResponse(BaseGenerateResponse):
+  """
+  Response returned by generate requests.
+  """
+
   response: str
+  "Response content. When streaming, this contains a fragment of the response."
+
   context: Sequence[int]
+  "Tokenized history up to the point of the response."
 
 
 class Message(TypedDict):
+  """
+  Chat message.
+  """
+
   role: Literal['user', 'assistant', 'system']
+  "Assumed role of the message. Response messages always has role 'assistant'."
 
   content: str
+  "Content of the message. Response messages contains message fragments when streaming."
+
   images: NotRequired[Sequence[Any]]
+  """
+  Optional list of image data for multimodal models.
+
+  Valid input types are:
+
+  - `str` or path-like object: path to image file
+  - `bytes` or bytes-like object: raw image data
+
+  Valid image formats depend on the model. See the model card for more information.
+  """
 
 
 class ChatResponse(BaseGenerateResponse):
+  """
+  Response returned by chat requests.
+  """
+
   message: Message
+  "Response message."
 
 
 class ProgressResponse(TypedDict):

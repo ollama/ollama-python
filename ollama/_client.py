@@ -28,6 +28,16 @@ class BaseClient:
     timeout: Any = None,
     **kwargs,
   ) -> None:
+    """
+    Creates a httpx client. Default parameters are the same as those defined in httpx
+    except for the following:
+
+    - `base_url`: http://127.0.0.1:11434
+    - `follow_redirects`: True
+    - `timeout`: None
+
+    `kwargs` are passed to the httpx client.
+    """
     self._client = client(
       base_url=base_url or os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434'),
       follow_redirects=follow_redirects,
