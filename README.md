@@ -68,3 +68,18 @@ async def chat():
 
 asyncio.run(chat())
 ```
+
+## Handling Errors
+
+Errors are raised if requests return an error status or if an error is detected while streaming.
+
+```python
+model = 'does-not-yet-exist'
+
+try:
+  ollama.chat(model)
+except ollama.ResponseError as e:
+  print('Error:', e.content)
+  if e.status_code == 404:
+    ollama.pull(model)
+```

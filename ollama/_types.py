@@ -1,3 +1,4 @@
+import json
 from typing import Any, TypedDict, Sequence, Literal
 
 import sys
@@ -145,6 +146,13 @@ class ResponseError(Exception):
   """
 
   def __init__(self, content: str, status_code: int = -1):
+    try:
+      # try to parse content as JSON and extract 'error'
+      # fallback to raw content if JSON parsing fails
+      content = json.loads(content).get('error', content)
+    except json.JSONDecodeError:
+      ...
+
     super().__init__(content)
     self.content = content
     "Reason for the error."
