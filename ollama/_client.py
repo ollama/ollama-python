@@ -170,6 +170,17 @@ class Client(BaseClient):
       stream=stream,
     )
 
+  def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
+    return self._request(
+      'POST',
+      '/api/embeddings',
+      json={
+        'model': model,
+        'prompt': prompt,
+        'options': options or {},
+      },
+    ).json()
+
   def pull(
     self,
     model: str,
@@ -424,6 +435,19 @@ class AsyncClient(BaseClient):
       },
       stream=stream,
     )
+
+  async def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
+    response = await self._request(
+      'POST',
+      '/api/embeddings',
+      json={
+        'model': model,
+        'prompt': prompt,
+        'options': options or {},
+      },
+    )
+
+    return response.json()
 
   async def pull(
     self,
