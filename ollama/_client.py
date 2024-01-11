@@ -7,7 +7,7 @@ from pathlib import Path
 from hashlib import sha256
 from base64 import b64encode
 
-from typing import Any, AnyStr, Union, Optional, Sequence, Mapping
+from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal
 
 import sys
 
@@ -81,7 +81,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: bool = False,
-    format: str = '',
+    format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
     options: Optional[Options] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
@@ -121,7 +121,7 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
     stream: bool = False,
-    format: str = '',
+    format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
@@ -338,7 +338,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: bool = False,
-    format: str = '',
+    format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
     options: Optional[Options] = None,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
@@ -377,7 +377,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
     stream: bool = False,
-    format: str = '',
+    format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     """

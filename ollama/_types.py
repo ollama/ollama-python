@@ -1,4 +1,4 @@
-from typing import Any, TypedDict, Sequence
+from typing import Any, TypedDict, Sequence, Literal
 
 import sys
 
@@ -27,7 +27,8 @@ class GenerateResponse(BaseGenerateResponse):
 
 
 class Message(TypedDict):
-  role: str
+  role: Literal['user', 'assistant', 'system']
+
   content: str
   images: NotRequired[Sequence[Any]]
 
