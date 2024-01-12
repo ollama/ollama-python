@@ -418,7 +418,7 @@ def test_client_create_from_library(httpserver: HTTPServer):
 
 def test_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='HEAD').respond_with_response(Response(status=404))
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='PUT').respond_with_response(Response(status=201))
+  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=201))
 
   client = Client(httpserver.url_for('/'))
 
@@ -759,7 +759,7 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
 @pytest.mark.asyncio
 async def test_async_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='HEAD').respond_with_response(Response(status=404))
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='PUT').respond_with_response(Response(status=201))
+  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=201))
 
   client = AsyncClient(httpserver.url_for('/'))
 

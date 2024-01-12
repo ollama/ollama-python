@@ -563,7 +563,7 @@ class AsyncClient(BaseClient):
               break
             yield chunk
 
-      await self._request('PUT', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request('POST', f'/api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
