@@ -262,7 +262,7 @@ class Client(BaseClient):
     for line in io.StringIO(modelfile):
       command, _, args = line.partition(' ')
       if command.upper() in ['FROM', 'ADAPTER']:
-        path = Path(args).expanduser()
+        path = Path(args.strip()).expanduser()
         path = path if path.is_absolute() else base / path
         if path.exists():
           args = f'@{self._create_blob(path)}'
@@ -288,7 +288,7 @@ class Client(BaseClient):
         raise
 
       with open(path, 'rb') as r:
-        self._request('PUT', f'/api/blobs/{digest}', content=r)
+        self._request('POST', f'/api/blobs/{digest}', content=r)
 
     return digest
 
@@ -563,7 +563,7 @@ class AsyncClient(BaseClient):
               break
             yield chunk
 
-      await self._request('PUT', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request('POST', f'/api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
