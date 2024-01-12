@@ -299,8 +299,8 @@ class Client(BaseClient):
   def list(self) -> Mapping[str, Any]:
     return self._request('GET', '/api/tags').json()
 
-  def copy(self, source: str, target: str) -> Mapping[str, Any]:
-    response = self._request('POST', '/api/copy', json={'source': source, 'destination': target})
+  def copy(self, source: str, destination: str) -> Mapping[str, Any]:
+    response = self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def show(self, model: str) -> Mapping[str, Any]:
@@ -575,8 +575,8 @@ class AsyncClient(BaseClient):
     response = await self._request('GET', '/api/tags')
     return response.json()
 
-  async def copy(self, source: str, target: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/copy', json={'source': source, 'destination': target})
+  async def copy(self, source: str, destination: str) -> Mapping[str, Any]:
+    response = await self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def show(self, model: str) -> Mapping[str, Any]:
