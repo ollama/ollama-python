@@ -16,9 +16,12 @@ jobs:
       - run: pipx install poetry
       - uses: actions/setup-python@v5
         with:
+          python-version: '3.x'
           cache: poetry
       - run: |
-          poetry version -- ${GIT_REF_NAME#v}
+          poetry version ${GITHUB_REF_NAME#v}
           poetry build
       - uses: pypa/gh-action-pypi-publish@release/v1
       - run: gh release upload $GIT_REF_NAME dist/*
+        env:
+          GH_TOKEN: ${{ github.token }}
