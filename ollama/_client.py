@@ -304,7 +304,7 @@ class Client(BaseClient):
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def show(self, model: str) -> Mapping[str, Any]:
-    return self._request('GET', '/api/show', json={'name': model}).json()
+    return self._request('POST', '/api/show', json={'name': model}).json()
 
 
 class AsyncClient(BaseClient):
@@ -580,7 +580,7 @@ class AsyncClient(BaseClient):
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def show(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/show', json={'name': model})
+    response = await self._request('POST', '/api/show', json={'name': model})
     return response.json()
 
 
