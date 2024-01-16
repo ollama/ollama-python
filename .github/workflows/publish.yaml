@@ -11,6 +11,7 @@ jobs:
     environment: release
     permissions:
       id-token: write
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - run: pipx install poetry
