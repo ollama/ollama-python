@@ -1,5 +1,3 @@
-# pip install tqdm
-
 from tqdm import tqdm
 from ollama import pull
 
