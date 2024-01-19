@@ -35,3 +35,6 @@ indent-style = "space"
 [tool.ruff.lint]
 select = ["E", "F", "B"]
 ignore = ["E501"]
+
+[tool.pytest.ini_options]
+addopts = '--doctest-modules --ignore examples'

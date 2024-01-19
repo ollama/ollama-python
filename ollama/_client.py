@@ -2,6 +2,7 @@ import os
 import io
 import json
 import httpx
+import urllib.parse
 from os import PathLike
 from pathlib import Path
 from hashlib import sha256
@@ -23,7 +24,7 @@ class BaseClient:
   def __init__(
     self,
     client,
-    base_url: Optional[str] = None,
+    host: Optional[str] = None,
     follow_redirects: bool = True,
     timeout: Any = None,
     **kwargs,
@@ -31,15 +32,12 @@ class BaseClient:
     """
     Creates a httpx client. Default parameters are the same as those defined in httpx
     except for the following:
-
-    - `base_url`: http://127.0.0.1:11434
     - `follow_redirects`: True
     - `timeout`: None
-
     `kwargs` are passed to the httpx client.
     """
     self._client = client(
-      base_url=base_url or os.getenv('OLLAMA_HOST', 'http://127.0.0.1:11434'),
+      base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
       **kwargs,
@@ -47,8 +45,8 @@ class BaseClient:
 
 
 class Client(BaseClient):
-  def __init__(self, base_url: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.Client, base_url, **kwargs)
+  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.Client, host, **kwargs)
 
   def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = self._client.request(method, url, **kwargs)
@@ -308,8 +306,8 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, base_url: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.AsyncClient, base_url, **kwargs)
+  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.AsyncClient, host, **kwargs)
 
   async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
     response = await self._client.request(method, url, **kwargs)
@@ -607,3 +605,53 @@ def _as_bytesio(s: Any) -> Union[io.BytesIO, None]:
   elif isinstance(s, bytes):
     return io.BytesIO(s)
   return None
+
+
+def _parse_host(host: Optional[str]) -> str:
+  """
+  >>> _parse_host(None)
+  'http://127.0.0.1:11434'
+  >>> _parse_host('')
+  'http://127.0.0.1:11434'
+  >>> _parse_host('1.2.3.4')
+  'http://1.2.3.4:11434'
+  >>> _parse_host(':56789')
+  'http://127.0.0.1:56789'
+  >>> _parse_host('1.2.3.4:56789')
+  'http://1.2.3.4:56789'
+  >>> _parse_host('http://1.2.3.4')
+  'http://1.2.3.4:80'
+  >>> _parse_host('https://1.2.3.4')
+  'https://1.2.3.4:443'
+  >>> _parse_host('https://1.2.3.4:56789')
+  'https://1.2.3.4:56789'
+  >>> _parse_host('example.com')
+  'http://example.com:11434'
+  >>> _parse_host('example.com:56789')
+  'http://example.com:56789'
+  >>> _parse_host('http://example.com')
+  'http://example.com:80'
+  >>> _parse_host('https://example.com')
+  'https://example.com:443'
+  >>> _parse_host('https://example.com:56789')
+  'https://example.com:56789'
+  >>> _parse_host('example.com/')
+  'http://example.com:11434'
+  >>> _parse_host('example.com:56789/')
+  'http://example.com:56789'
+  """
+
+  host, port = host or '', 11434
+  scheme, _, hostport = host.partition('://')
+  if not hostport:
+    scheme, hostport = 'http', host
+  elif scheme == 'http':
+    port = 80
+  elif scheme == 'https':
+    port = 443
+
+  split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
+  host = split.hostname or '127.0.0.1'
+  port = split.port or port
+
+  return f'{scheme}://{host}:{port}'
