@@ -1,48 +1,131 @@
 # Ollama Python Library
 
-The Ollama Python library provides the easiest way to integrate your Python 3 project with [Ollama](https://github.com/jmorganca/ollama).
+The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
 
-## Getting Started
-
-Requires Python 3.8 or higher.
+## Install
 
 ```sh
 pip install ollama
 ```
 
-A global default client is provided for convenience and can be used in the same way as the synchronous client.
+## Usage
 
 ```python
 import ollama
-response = ollama.chat(model='llama2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+response = ollama.chat(model='llama2', messages=[
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+])
+print(response['message']['content'])
 ```
+
+## Streaming responses
+
+Response streaming can be enabled by setting `stream=True`, modifying function calls to return a Python generator where each part is an object in the stream.
 
 ```python
 import ollama
-message = {'role': 'user', 'content': 'Why is the sky blue?'}
-for part in ollama.chat(model='llama2', messages=[message], stream=True):
-  print(part['message']['content'], end='', flush=True)
+
+stream = ollama.chat(
+    model='llama2',
+    messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
+    stream=True,
+)
+
+for chunk in stream:
+  print(chunk['message']['content'], end='', flush=True)
 ```
 
+## API
 
-## Using the Synchronous Client
+The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)
+
+### Chat
+
+```python
+ollama.chat(model='llama2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+```
+
+### Generate
+
+```python
+ollama.generate(model='llama2', prompt='Why is the sky blue?')
+```
+
+### List
+
+```python
+ollama.list()
+```
+
+### Show
+
+```python
+ollama.show('llama2')
+```
+
+### Create
+
+```python
+modelfile='''
+FROM llama2
+SYSTEM You are mario from super mario bros.
+'''
+
+ollama.create(model='example', modelfile=modelfile)
+```
+
+### Copy
+
+```python
+ollama.copy('llama2', 'user/llama2')
+```
+
+### Delete
+
+```python
+ollama.delete('llama2')
+```
+
+### Pull
+
+```python
+ollama.pull('llama2')
+```
+
+### Push
+
+```python
+ollama.push('user/llama2')
+```
+
+### Embeddings
+
+```python
+ollama.embeddings(model='llama2', prompt='They sky is blue because of rayleigh scattering')
+```
+
+## Custom client
+
+A custom client can be created with the following fields:
+
+- `host`: The Ollama host to connect to
+- `timeout`: The timeout for requests
 
 ```python
 from ollama import Client
-message = {'role': 'user', 'content': 'Why is the sky blue?'}
-response = Client().chat(model='llama2', messages=[message])
+ollama = Client(host='http://localhost:11434')
+response = ollama.chat(model='llama2', messages=[
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+])
 ```
 
-Response streaming can be enabled by setting `stream=True`. This modifies the function to return a Python generator where each part is an object in the stream.
-
-```python
-from ollama import Client
-message = {'role': 'user', 'content': 'Why is the sky blue?'}
-for part in Client().chat(model='llama2', messages=[message], stream=True):
-  print(part['message']['content'], end='', flush=True)
-```
-
-## Using the Asynchronous Client
+## Async client
 
 ```python
 import asyncio
@@ -55,7 +138,7 @@ async def chat():
 asyncio.run(chat())
 ```
 
-Similar to the synchronous client, setting `stream=True` modifies the function to return a Python asynchronous generator.
+Setting `stream=True`` modifies functions to return a Python asynchronous generator:
 
 ```python
 import asyncio
@@ -69,7 +152,7 @@ async def chat():
 asyncio.run(chat())
 ```
 
-## Handling Errors
+## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
 
