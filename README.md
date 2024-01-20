@@ -116,8 +116,8 @@ A custom client can be created with the following fields:
 
 ```python
 from ollama import Client
-ollama = Client(host='http://localhost:11434')
-response = ollama.chat(model='llama2', messages=[
+client = Client(host='http://localhost:11434')
+response = client.chat(model='llama2', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
