@@ -11,31 +11,31 @@ else:
 
 class BaseGenerateResponse(TypedDict):
   model: str
-  "Model used to generate response."
+  'Model used to generate response.'
 
   created_at: str
-  "Time when the request was created."
+  'Time when the request was created.'
 
   done: bool
-  "True if response is complete, otherwise False. Useful for streaming to detect the final response."
+  'True if response is complete, otherwise False. Useful for streaming to detect the final response.'
 
   total_duration: int
-  "Total duration in nanoseconds."
+  'Total duration in nanoseconds.'
 
   load_duration: int
-  "Load duration in nanoseconds."
+  'Load duration in nanoseconds.'
 
   prompt_eval_count: int
-  "Number of tokens evaluated in the prompt."
+  'Number of tokens evaluated in the prompt.'
 
   prompt_eval_duration: int
-  "Duration of evaluating the prompt in nanoseconds."
+  'Duration of evaluating the prompt in nanoseconds.'
 
   eval_count: int
-  "Number of tokens evaluated in inference."
+  'Number of tokens evaluated in inference.'
 
   eval_duration: int
-  "Duration of evaluating inference in nanoseconds."
+  'Duration of evaluating inference in nanoseconds.'
 
 
 class GenerateResponse(BaseGenerateResponse):
@@ -44,10 +44,10 @@ class GenerateResponse(BaseGenerateResponse):
   """
 
   response: str
-  "Response content. When streaming, this contains a fragment of the response."
+  'Response content. When streaming, this contains a fragment of the response.'
 
   context: Sequence[int]
-  "Tokenized history up to the point of the response."
+  'Tokenized history up to the point of the response.'
 
 
 class Message(TypedDict):
@@ -59,7 +59,7 @@ class Message(TypedDict):
   "Assumed role of the message. Response messages always has role 'assistant'."
 
   content: str
-  "Content of the message. Response messages contains message fragments when streaming."
+  'Content of the message. Response messages contains message fragments when streaming.'
 
   images: NotRequired[Sequence[Any]]
   """
@@ -80,7 +80,7 @@ class ChatResponse(BaseGenerateResponse):
   """
 
   message: Message
-  "Response message."
+  'Response message.'
 
 
 class ProgressResponse(TypedDict):
@@ -134,10 +134,10 @@ class RequestError(Exception):
   Common class for request errors.
   """
 
-  def __init__(self, content: str):
-    super().__init__(content)
-    self.content = content
-    "Reason for the error."
+  def __init__(self, error: str):
+    super().__init__(error)
+    self.error = error
+    'Reason for the error.'
 
 
 class ResponseError(Exception):
@@ -145,17 +145,17 @@ class ResponseError(Exception):
   Common class for response errors.
   """
 
-  def __init__(self, content: str, status_code: int = -1):
+  def __init__(self, error: str, status_code: int = -1):
     try:
       # try to parse content as JSON and extract 'error'
       # fallback to raw content if JSON parsing fails
-      content = json.loads(content).get('error', content)
+      error = json.loads(error).get('error', error)
     except json.JSONDecodeError:
       ...
 
-    super().__init__(content)
-    self.content = content
-    "Reason for the error."
+    super().__init__(error)
+    self.error = error
+    'Reason for the error.'
 
     self.status_code = status_code
-    "HTTP status code of the response."
+    'HTTP status code of the response.'
