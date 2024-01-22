@@ -1,7 +1,6 @@
 import os
 import io
 import json
-import types
 import pytest
 import tempfile
 from pathlib import Path
