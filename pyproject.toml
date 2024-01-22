@@ -17,7 +17,7 @@ pytest = "^7.4.3"
 pytest-asyncio = "^0.23.2"
 pytest-cov = "^4.1.0"
 pytest-httpserver = "^1.0.8"
-pillow = "^10.1.0"
+pillow = "^10.2.0"
 ruff = "^0.1.8"
 
 [build-system]
