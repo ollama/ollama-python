@@ -13,7 +13,7 @@ for progress in pull('mistral', stream=True):
     continue
 
   if digest not in bars and (total := progress.get('total')):
-    bars[digest] = tqdm(total=total, desc=f'pushing {digest[7:19]}', unit='B', unit_scale=True)
+    bars[digest] = tqdm(total=total, desc=f'pulling {digest[7:19]}', unit='B', unit_scale=True)
 
   if completed := progress.get('completed'):
     bars[digest].update(completed - bars[digest].n)
