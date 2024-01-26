@@ -1,5 +1,6 @@
 import os
 import io
+import sys
 import json
 import httpx
 import urllib.parse
@@ -7,651 +8,750 @@ from os import PathLike
 from pathlib import Path
 from hashlib import sha256
 from base64 import b64encode
-
 from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal
 
-import sys
 
 if sys.version_info < (3, 9):
-  from typing import Iterator, AsyncIterator
+    from typing import Iterator, AsyncIterator
 else:
-  from collections.abc import Iterator, AsyncIterator
+    from collections.abc import Iterator, AsyncIterator
 
 from ollama._types import Message, Options, RequestError, ResponseError
 
 
 class BaseClient:
-  def __init__(
-    self,
-    client,
-    host: Optional[str] = None,
-    follow_redirects: bool = True,
-    timeout: Any = None,
-    **kwargs,
-  ) -> None:
-    """
-    Creates a httpx client. Default parameters are the same as those defined in httpx
-    except for the following:
-    - `follow_redirects`: True
-    - `timeout`: None
-    `kwargs` are passed to the httpx client.
-    """
-    self._client = client(
-      base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
-      follow_redirects=follow_redirects,
-      timeout=timeout,
-      **kwargs,
-    )
+    def __init__(
+        self,
+        client,
+        host: Optional[str]=None,
+        follow_redirects: bool=True,
+        timeout: Any=None,
+        **kwargs
+    ) -> None:
+        """
+            Creates a httpx client. Default parameters are the
+            same as those defined in httpx except for the following:
+                - `follow_redirects`: True
+                - `timeout`: None
+            `kwargs` are passed to the httpx client.
+        """
+
+        self._client = client(
+            base_url=_parse_host(host or os.getenv("OLLAMA_HOST")),
+            follow_redirects=follow_redirects,
+            timeout=timeout,
+            **kwargs
+        )
 
 
 class Client(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.Client, host, **kwargs)
+    def __init__(self, host: Optional[str]=None, **kwargs) -> None:
+        super().__init__(httpx.Client, host, **kwargs)
 
-  def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
-    response = self._client.request(method, url, **kwargs)
+    def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
+        response = self._client.request(method, url, **kwargs)
 
-    try:
-      response.raise_for_status()
-    except httpx.HTTPStatusError as e:
-      raise ResponseError(e.response.text, e.response.status_code) from None
+        try:
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise ResponseError(e.response.text, e.response.status_code)
 
-    return response
+        return response
 
-  def _stream(self, method: str, url: str, **kwargs) -> Iterator[Mapping[str, Any]]:
-    with self._client.stream(method, url, **kwargs) as r:
-      try:
-        r.raise_for_status()
-      except httpx.HTTPStatusError as e:
-        e.response.read()
-        raise ResponseError(e.response.text, e.response.status_code) from None
+    def _stream(self, method: str, url: str, **kwargs) -> Iterator[Mapping[str, Any]]:
+        with self._client.stream(method, url, **kwargs) as r:
+            try:
+                r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                e.response.read()
+                raise ResponseError(e.response.text, e.response.status_code)
 
-      for line in r.iter_lines():
-        partial = json.loads(line)
-        if e := partial.get('error'):
-          raise ResponseError(e)
-        yield partial
+            for line in r.iter_lines():
+                partial = json.loads(line)
 
-  def _request_stream(
-    self,
-    *args,
-    stream: bool = False,
-    **kwargs,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    return self._stream(*args, **kwargs) if stream else self._request(*args, **kwargs).json()
+                if e := partial.get("error"):
+                    raise ResponseError(e)
 
-  def generate(
-    self,
-    model: str = '',
-    prompt: str = '',
-    system: str = '',
-    template: str = '',
-    context: Optional[Sequence[int]] = None,
-    stream: bool = False,
-    raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    """
-    Create a response using the requested model.
+                yield partial
 
-    Raises `RequestError` if a model is not provided.
+    def _request_stream(
+        self,
+        *args,
+        stream: bool=False,
+        **kwargs,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        return (
+            self._stream(*args, **kwargs)
+            if stream else
+            self._request(*args, **kwargs).json()
+        )
 
-    Raises `ResponseError` if the request could not be fulfilled.
+    def generate(
+        self,
+        model: str="",
+        prompt: str="",
+        system: str="",
+        template: str="",
+        context: Optional[Sequence[int]]=None,
+        stream: bool=False,
+        raw: bool=False,
+        format: Literal["", 'json']="",
+        images: Optional[Sequence[AnyStr]]=None,
+        options: Optional[Options]=None,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        """
+            Create a response using the requested model.
 
-    Returns `GenerateResponse` if `stream` is `False`, otherwise returns a `GenerateResponse` generator.
-    """
+            Raises `RequestError` if a model is not provided.
 
-    if not model:
-      raise RequestError('must provide a model')
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    return self._request_stream(
-      'POST',
-      '/api/generate',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'system': system,
-        'template': template,
-        'context': context or [],
-        'stream': stream,
-        'raw': raw,
-        'images': [_encode_image(image) for image in images or []],
-        'format': format,
-        'options': options or {},
-      },
-      stream=stream,
-    )
+            Returns `GenerateResponse` if `stream` is `False`,
+            otherwise returns a `GenerateResponse` generator.
+        """
 
-  def chat(
-    self,
-    model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    stream: bool = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    """
-    Create a chat response using the requested model.
+        if not model:
+            raise RequestError("must provide a model")
 
-    Raises `RequestError` if a model is not provided.
+        return self._request_stream(
+            "POST",
+            "/api/generate",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "system": system,
+                "template": template,
+                "context": context or [],
+                "stream": stream,
+                "raw": raw,
+                "images": [_encode_image(image) for image in images or []],
+                "format": format,
+                "options": options or {},
+            },
+            stream=stream,
+        )
 
-    Raises `ResponseError` if the request could not be fulfilled.
+    def chat(
+        self,
+        model: str="",
+        messages: Optional[Sequence[Message]]=None,
+        stream: bool=False,
+        format: Literal["", "json"]="",
+        options: Optional[Options]=None,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        """
+            Create a chat response using the requested model.
 
-    Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
-    """
+            Raises `RequestError` if a model is not provided.
 
-    if not model:
-      raise RequestError('must provide a model')
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    for message in messages or []:
-      if not isinstance(message, dict):
-        raise TypeError('messages must be a list of Message or dict-like objects')
-      if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
-        raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
-        raise RequestError('messages must contain content')
-      if images := message.get('images'):
-        message['images'] = [_encode_image(image) for image in images]
+            Returns `ChatResponse` if `stream` is `False`,
+            otherwise returns a `ChatResponse` generator.
+        """
 
-    return self._request_stream(
-      'POST',
-      '/api/chat',
-      json={
-        'model': model,
-        'messages': messages,
-        'stream': stream,
-        'format': format,
-        'options': options or {},
-      },
-      stream=stream,
-    )
+        if not model:
+            raise RequestError("must provide a model")
 
-  def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
-    return self._request(
-      'POST',
-      '/api/embeddings',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'options': options or {},
-      },
-    ).json()
+        for message in messages or []:
+            if not isinstance(message, dict):
+                raise TypeError(
+                    "messages must be a list of Message or dict-like objects"
+                )
 
-  def pull(
-    self,
-    model: str,
-    insecure: bool = False,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+            if not (role := message.get("role")) or role not in ("system", "user", "assistant"):
+                raise RequestError("messages must contain a role and it must be one of \"system\", \"user\", or \"assistant\"")
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    return self._request_stream(
-      'POST',
-      '/api/pull',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+            if not message.get("content"):
+                raise RequestError("messages must contain content")
 
-  def push(
-    self,
-    model: str,
-    insecure: bool = False,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+            if images := message.get("images"):
+                message["images"] = [_encode_image(image) for image in images]
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    return self._request_stream(
-      'POST',
-      '/api/push',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+        return self._request_stream(
+            "POST",
+            "/api/chat",
+            json={
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+                "format": format,
+                "options": options or {},
+            },
+            stream=stream,
+        )
 
-  def create(
-    self,
-    model: str,
-    path: Optional[Union[str, PathLike]] = None,
-    modelfile: Optional[str] = None,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+    def embeddings(self, model: str="", prompt: str="", options: Optional[Options]=None) -> Sequence[float]:
+        return self._request(
+            "POST",
+            "/api/embeddings",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "options": options or {},
+            },
+        ).json()
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    if (realpath := _as_path(path)) and realpath.exists():
-      modelfile = self._parse_modelfile(realpath.read_text(), base=realpath.parent)
-    elif modelfile:
-      modelfile = self._parse_modelfile(modelfile)
-    else:
-      raise RequestError('must provide either path or modelfile')
+    def pull(
+        self,
+        model: str,
+        insecure: bool=False,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    return self._request_stream(
-      'POST',
-      '/api/create',
-      json={
-        'name': model,
-        'modelfile': modelfile,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-  def _parse_modelfile(self, modelfile: str, base: Optional[Path] = None) -> str:
-    base = Path.cwd() if base is None else base
+        return self._request_stream(
+            "POST",
+            "/api/pull",
+            json={
+                "name": model,
+                "insecure": insecure,
+                "stream": stream,
+            },
+            stream=stream,
+        )
 
-    out = io.StringIO()
-    for line in io.StringIO(modelfile):
-      command, _, args = line.partition(' ')
-      if command.upper() in ['FROM', 'ADAPTER']:
-        path = Path(args.strip()).expanduser()
-        path = path if path.is_absolute() else base / path
-        if path.exists():
-          args = f'@{self._create_blob(path)}'
+    def push(
+        self,
+        model: str,
+        insecure: bool=False,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-      print(command, args, file=out)
-    return out.getvalue()
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-  def _create_blob(self, path: Union[str, Path]) -> str:
-    sha256sum = sha256()
-    with open(path, 'rb') as r:
-      while True:
-        chunk = r.read(32 * 1024)
-        if not chunk:
-          break
-        sha256sum.update(chunk)
+        return self._request_stream(
+            "POST",
+            "/api/push",
+            json={
+                "name": model,
+                "insecure": insecure,
+                "stream": stream,
+            },
+            stream=stream,
+        )
 
-    digest = f'sha256:{sha256sum.hexdigest()}'
+    def create(
+        self,
+        model: str,
+        path: Optional[Union[str, PathLike]]=None,
+        modelfile: Optional[str]=None,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    try:
-      self._request('HEAD', f'/api/blobs/{digest}')
-    except ResponseError as e:
-      if e.status_code != 404:
-        raise
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-      with open(path, 'rb') as r:
-        self._request('POST', f'/api/blobs/{digest}', content=r)
+        if (realpath := _as_path(path)) and realpath.exists():
+            modelfile = self._parse_modelfile(
+                realpath.read_text(),
+                base=realpath.parent
+            )
+        elif modelfile:
+            modelfile = self._parse_modelfile(modelfile)
+        else:
+            raise RequestError("must provide either path or modelfile")
 
-    return digest
+        return self._request_stream(
+            "POST",
+            "/api/create",
+            json={
+                "name": model,
+                "modelfile": modelfile,
+                "stream": stream,
+            },
+            stream=stream,
+        )
 
-  def delete(self, model: str) -> Mapping[str, Any]:
-    response = self._request('DELETE', '/api/delete', json={'name': model})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+    def _parse_modelfile(self, modelfile: str, base: Optional[Path]=None) -> str:
+        base = Path.cwd() if base is None else base
 
-  def list(self) -> Mapping[str, Any]:
-    return self._request('GET', '/api/tags').json()
+        out = io.StringIO()
 
-  def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+        for line in io.StringIO(modelfile):
+            command, _, args = line.partition(" ")
 
-  def show(self, model: str) -> Mapping[str, Any]:
-    return self._request('POST', '/api/show', json={'name': model}).json()
+            if command.upper() in ["FROM", "ADAPTER"]:
+                path = Path(args.strip()).expanduser()
+                path = path if path.is_absolute() else base / path
+
+                if path.exists():
+                    args = f'@{self._create_blob(path)}'
+
+            print(command, args, file=out)
+
+        return out.getvalue()
+
+    def _create_blob(self, path: Union[str, Path]) -> str:
+        sha256sum = sha256()
+
+        with open(path, "rb") as file:
+            while True:
+                chunk = file.read(0x8000)  # reads 32 * 1024
+
+                if not chunk:
+                    break
+
+                sha256sum.update(chunk)
+
+        digest = f'sha256:{sha256sum.hexdigest()}'
+
+        try:
+            self._request("HEAD", f'/api/blobs/{digest}')
+        except ResponseError as error:
+            if error.status_code != 404:
+                raise
+
+            with open(path, "rb") as file:
+                self._request("POST", f'/api/blobs/{digest}', content=file)
+
+        return digest
+
+    def delete(self, model: str) -> Mapping[str, Any]:
+        response = self._request("DELETE", "/api/delete", json={"name": model})
+
+        return {
+            "status": "success" if response.status_code == 200 else "error"
+        }
+
+    def list(self) -> Mapping[str, Any]:
+        return self._request("GET", "/api/tags").json()
+
+    def copy(self, source: str, destination: str) -> Mapping[str, Any]:
+        response = self._request(
+            "POST",
+            "/api/copy",
+            json={"source": source, "destination": destination}
+        )
+
+        return {
+            "status": "success" if response.status_code == 200 else "error"
+        }
+
+    def show(self, model: str) -> Mapping[str, Any]:
+        return self._request("POST", "/api/show", json={"name": model}).json()
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.AsyncClient, host, **kwargs)
+    def __init__(self, host: Optional[str]=None, **kwargs) -> None:
+        super().__init__(httpx.AsyncClient, host, **kwargs)
 
-  async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
-    response = await self._client.request(method, url, **kwargs)
+    async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
+        response = await self._client.request(method, url, **kwargs)
 
-    try:
-      response.raise_for_status()
-    except httpx.HTTPStatusError as e:
-      raise ResponseError(e.response.text, e.response.status_code) from None
-
-    return response
-
-  async def _stream(self, method: str, url: str, **kwargs) -> AsyncIterator[Mapping[str, Any]]:
-    async def inner():
-      async with self._client.stream(method, url, **kwargs) as r:
         try:
-          r.raise_for_status()
-        except httpx.HTTPStatusError as e:
-          e.response.read()
-          raise ResponseError(e.response.text, e.response.status_code) from None
+            response.raise_for_status()
+        except httpx.HTTPStatusError as error:
+            raise ResponseError(
+                error.response.text, error.response.status_code
+            )
 
-        async for line in r.aiter_lines():
-          partial = json.loads(line)
-          if e := partial.get('error'):
-            raise ResponseError(e)
-          yield partial
+        return response
 
-    return inner()
+    async def _stream(self, method: str, url: str, **kwargs) -> AsyncIterator[Mapping[str, Any]]:
+        async def inner():
+            async with self._client.stream(method, url, **kwargs) as stream:
+                try:
+                    stream.raise_for_status()
+                except httpx.HTTPStatusError as error:
+                    error.response.read()
 
-  async def _request_stream(
-    self,
-    *args,
-    stream: bool = False,
-    **kwargs,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    if stream:
-      return await self._stream(*args, **kwargs)
+                    raise ResponseError(
+                        error.response.text, error.response.status_code
+                    )
 
-    response = await self._request(*args, **kwargs)
-    return response.json()
+                async for line in stream.aiter_lines():
+                    partial = json.loads(line)
 
-  async def generate(
-    self,
-    model: str = '',
-    prompt: str = '',
-    system: str = '',
-    template: str = '',
-    context: Optional[Sequence[int]] = None,
-    stream: bool = False,
-    raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    """
-    Create a response using the requested model.
+                    if error := partial.get("error"):
 
-    Raises `RequestError` if a model is not provided.
+                        raise ResponseError(error)
+                    yield partial
 
-    Raises `ResponseError` if the request could not be fulfilled.
+        return inner()
 
-    Returns `GenerateResponse` if `stream` is `False`, otherwise returns an asynchronous `GenerateResponse` generator.
-    """
-    if not model:
-      raise RequestError('must provide a model')
+    async def _request_stream(
+        self,
+        *args,
+        stream: bool=False,
+        **kwargs,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        if stream:
+            return await self._stream(*args, **kwargs)
 
-    return await self._request_stream(
-      'POST',
-      '/api/generate',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'system': system,
-        'template': template,
-        'context': context or [],
-        'stream': stream,
-        'raw': raw,
-        'images': [_encode_image(image) for image in images or []],
-        'format': format,
-        'options': options or {},
-      },
-      stream=stream,
-    )
+        response = await self._request(*args, **kwargs)
 
-  async def chat(
-    self,
-    model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    stream: bool = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    """
-    Create a chat response using the requested model.
+        return response.json()
 
-    Raises `RequestError` if a model is not provided.
+    async def generate(
+        self,
+        model: str="",
+        prompt: str="",
+        system: str="",
+        template: str="",
+        context: Optional[Sequence[int]]=None,
+        stream: bool=False,
+        raw: bool=False,
+        format: Literal["", "json"]="",
+        images: Optional[Sequence[AnyStr]]=None,
+        options: Optional[Options]=None,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        """
+            Create a response using the requested model.
 
-    Raises `ResponseError` if the request could not be fulfilled.
+            Raises `RequestError` if a model is not provided.
 
-    Returns `ChatResponse` if `stream` is `False`, otherwise returns an asynchronous `ChatResponse` generator.
-    """
-    if not model:
-      raise RequestError('must provide a model')
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    for message in messages or []:
-      if not isinstance(message, dict):
-        raise TypeError('messages must be a list of strings')
-      if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
-        raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
-        raise RequestError('messages must contain content')
-      if images := message.get('images'):
-        message['images'] = [_encode_image(image) for image in images]
+            Returns `GenerateResponse` if `stream` is `False`,
+            otherwise returns an asynchronous `GenerateResponse` generator.
+        """
 
-    return await self._request_stream(
-      'POST',
-      '/api/chat',
-      json={
-        'model': model,
-        'messages': messages,
-        'stream': stream,
-        'format': format,
-        'options': options or {},
-      },
-      stream=stream,
-    )
+        if not model:
+            raise RequestError("must provide a model")
 
-  async def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
-    response = await self._request(
-      'POST',
-      '/api/embeddings',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'options': options or {},
-      },
-    )
+        return await self._request_stream(
+            "POST",
+            "/api/generate",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "system": system,
+                "template": template,
+                "context": context or [],
+                "stream": stream,
+                "raw": raw,
+                "images": [_encode_image(image) for image in images or []],
+                "format": format,
+                "options": options or {},
+            },
+            stream=stream,
+        )
 
-    return response.json()
+    async def chat(
+        self,
+        model: str="",
+        messages: Optional[Sequence[Message]]=None,
+        stream: bool=False,
+        format: Literal["", "json"]="",
+        options: Optional[Options]=None,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        """
+            Create a chat response using the requested model.
 
-  async def pull(
-    self,
-    model: str,
-    insecure: bool = False,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+            Raises `RequestError` if a model is not provided.
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    return await self._request_stream(
-      'POST',
-      '/api/pull',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+            Raises `ResponseError` if the request could not be fulfilled.
 
-  async def push(
-    self,
-    model: str,
-    insecure: bool = False,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+            Returns `ChatResponse` if `stream` is `False`,
+            otherwise returns an asynchronous `ChatResponse` generator.
+        """
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    return await self._request_stream(
-      'POST',
-      '/api/push',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+        if not model:
+            raise RequestError("must provide a model")
 
-  async def create(
-    self,
-    model: str,
-    path: Optional[Union[str, PathLike]] = None,
-    modelfile: Optional[str] = None,
-    stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+        for message in messages or []:
+            if not isinstance(message, dict):
+                raise TypeError("messages must be a list of strings")
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
-    if (realpath := _as_path(path)) and realpath.exists():
-      modelfile = await self._parse_modelfile(realpath.read_text(), base=realpath.parent)
-    elif modelfile:
-      modelfile = await self._parse_modelfile(modelfile)
-    else:
-      raise RequestError('must provide either path or modelfile')
+            if not (role := message.get("role")) or role not in ["system", "user", "assistant"]:
+                raise RequestError("messages must contain a role and it must be one of \"system\", \"user\", or \"assistant\"")
 
-    return await self._request_stream(
-      'POST',
-      '/api/create',
-      json={
-        'name': model,
-        'modelfile': modelfile,
-        'stream': stream,
-      },
-      stream=stream,
-    )
+            if not message.get("content"):
+                raise RequestError("messages must contain content")
 
-  async def _parse_modelfile(self, modelfile: str, base: Optional[Path] = None) -> str:
-    base = Path.cwd() if base is None else base
+            if images := message.get("images"):
+                message["images"] = [_encode_image(image) for image in images]
 
-    out = io.StringIO()
-    for line in io.StringIO(modelfile):
-      command, _, args = line.partition(' ')
-      if command.upper() in ['FROM', 'ADAPTER']:
-        path = Path(args).expanduser()
-        path = path if path.is_absolute() else base / path
-        if path.exists():
-          args = f'@{await self._create_blob(path)}'
+        return await self._request_stream(
+            "POST",
+            "/api/chat",
+            json={
+                "model": model,
+                "messages": messages,
+                "stream": stream,
+                "format": format,
+                "options": options or {},
+            },
+            stream=stream,
+        )
 
-      print(command, args, file=out)
-    return out.getvalue()
+    async def embeddings(self, model: str=", prompt: str = ", options: Optional[Options]=None) -> Sequence[float]:
+        response = await self._request(
+            "POST",
+            "/api/embeddings",
+            json={
+                "model": model,
+                "prompt": prompt,
+                "options": options or {},
+            },
+        )
 
-  async def _create_blob(self, path: Union[str, Path]) -> str:
-    sha256sum = sha256()
-    with open(path, 'rb') as r:
-      while True:
-        chunk = r.read(32 * 1024)
-        if not chunk:
-          break
-        sha256sum.update(chunk)
+        return response.json()
 
-    digest = f'sha256:{sha256sum.hexdigest()}'
+    async def pull(
+        self,
+        model: str,
+        insecure: bool=False,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    try:
-      await self._request('HEAD', f'/api/blobs/{digest}')
-    except ResponseError as e:
-      if e.status_code != 404:
-        raise
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-      async def upload_bytes():
-        with open(path, 'rb') as r:
-          while True:
-            chunk = r.read(32 * 1024)
-            if not chunk:
-              break
-            yield chunk
+        return await self._request_stream(
+            "POST",
+            "/api/pull",
+            json={
+                "name": model,
+                "insecure": insecure,
+                "stream": stream,
+            },
+            stream=stream,
+        )
 
-      await self._request('POST', f'/api/blobs/{digest}', content=upload_bytes())
+    async def push(
+        self,
+        model: str,
+        insecure: bool=False,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-    return digest
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-  async def delete(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('DELETE', '/api/delete', json={'name': model})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+        return await self._request_stream(
+            "POST",
+            "/api/push",
+            json={
+                "name": model,
+                "insecure": insecure,
+                "stream": stream,
+            },
+            stream=stream,
+        )
 
-  async def list(self) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/tags')
-    return response.json()
+    async def create(
+        self,
+        model: str,
+        path: Optional[Union[str, PathLike]]=None,
+        modelfile: Optional[str]=None,
+        stream: bool=False,
+    ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+        """
+            Raises `ResponseError` if the request could not be fulfilled.
 
-  async def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+            Returns `ProgressResponse` if `stream` is `False`,
+            otherwise returns a `ProgressResponse` generator.
+        """
 
-  async def show(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/show', json={'name': model})
-    return response.json()
+        if (realpath := _as_path(path)) and realpath.exists():
+            modelfile = await self._parse_modelfile(
+                realpath.read_text(),
+                base=realpath.parent
+            )
+        elif modelfile:
+            modelfile = await self._parse_modelfile(modelfile)
+        else:
+            raise RequestError("must provide either path or modelfile")
+
+        return await self._request_stream(
+            "POST",
+            "/api/create",
+            json={
+                "name": model,
+                "modelfile": modelfile,
+                "stream": stream,
+            },
+            stream=stream,
+        )
+
+    async def _parse_modelfile(self, modelfile: str, base: Optional[Path]=None) -> str:
+        base = Path.cwd() if base is None else base
+        out = io.StringIO()
+
+        for line in io.StringIO(modelfile):
+            command, _, args = line.partition(" ")
+
+            if command.upper() in ["FROM", "ADAPTER"]:
+                path = Path(args).expanduser()
+                path = path if path.is_absolute() else base / path
+
+                if path.exists():
+                    args = f'@{await self._create_blob(path)}'
+
+            print(command, args, file=out)
+
+        return out.getvalue()
+
+    async def _create_blob(self, path: Union[str, Path]) -> str:
+        sha256sum = sha256()
+
+        with open(path, "rb") as file:
+            while True:
+                chunk = file.read(0x8000)  # 32 * 1024
+
+                if not chunk:
+                    break
+
+                sha256sum.update(chunk)
+
+        digest = f'sha256:{sha256sum.hexdigest()}'
+
+        try:
+            await self._request("HEAD", f'/api/blobs/{digest}')
+        except ResponseError as error:
+            if error.status_code != 404:
+                raise
+
+            async def upload_bytes():
+                with open(path, "rb") as file:
+                    while True:
+                        chunk = filer.read(32 * 1024)
+
+                        if not chunk:
+                            break
+
+                        yield chunk
+
+            await self._request(
+                "POST",
+                f'/api/blobs/{digest}',
+                content=upload_bytes()
+            )
+
+        return digest
+
+    async def delete(self, model: str) -> Mapping[str, Any]:
+        response = await self._request(
+            "DELETE",
+            "/api/delete",
+            json={"name": model}
+        )
+
+        return {
+            "status": "success" if response.status_code == 200 else "error"
+        }
+
+    async def list(self) -> Mapping[str, Any]:
+        response = await self._request("GET", "/api/tags")
+        return response.json()
+
+    async def copy(self, source: str, destination: str) -> Mapping[str, Any]:
+        response = await self._request(
+            "POST",
+            "/api/copy",
+            json={"source": source, "destination": destination}
+        )
+
+        return {
+            "status": "success" if response.status_code == 200 else "error"
+        }
+
+    async def show(self, model: str) -> Mapping[str, Any]:
+        response = await self._request(
+            "POST",
+            "/api/show",
+            json={"name": model}
+        )
+
+        return response.json()
 
 
 def _encode_image(image) -> str:
-  if p := _as_path(image):
-    b64 = b64encode(p.read_bytes())
-  elif b := _as_bytesio(image):
-    b64 = b64encode(b.read())
-  else:
-    raise RequestError('images must be a list of bytes, path-like objects, or file-like objects')
+    if path := _as_path(image):
+        b64_data = b64encode(path.read_bytes())
+    elif b := _as_bytesio(image):
+        b64_data = b64encode(b.read())
+    else:
+        raise RequestError("images must be a list of bytes, path-like objects, or file-like objects")
 
-  return b64.decode('utf-8')
+    return b64_data.decode("utf-8")
 
 
-def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
-  if isinstance(s, str) or isinstance(s, Path):
-    return Path(s)
-  return None
+def _as_path(string: Optional[Union[str, PathLike]]) -> Union[Path, None]:
+    if isinstance(string, str) or isinstance(string, Path):
+        return Path(string)
+
+    return None
 
 
 def _as_bytesio(s: Any) -> Union[io.BytesIO, None]:
-  if isinstance(s, io.BytesIO):
-    return s
-  elif isinstance(s, bytes):
-    return io.BytesIO(s)
-  return None
+    if isinstance(s, io.BytesIO):
+        return s
+
+    elif isinstance(s, bytes):
+        return io.BytesIO(s)
+
+    return None
 
 
 def _parse_host(host: Optional[str]) -> str:
-  """
-  >>> _parse_host(None)
-  'http://127.0.0.1:11434'
-  >>> _parse_host('')
-  'http://127.0.0.1:11434'
-  >>> _parse_host('1.2.3.4')
-  'http://1.2.3.4:11434'
-  >>> _parse_host(':56789')
-  'http://127.0.0.1:56789'
-  >>> _parse_host('1.2.3.4:56789')
-  'http://1.2.3.4:56789'
-  >>> _parse_host('http://1.2.3.4')
-  'http://1.2.3.4:80'
-  >>> _parse_host('https://1.2.3.4')
-  'https://1.2.3.4:443'
-  >>> _parse_host('https://1.2.3.4:56789')
-  'https://1.2.3.4:56789'
-  >>> _parse_host('example.com')
-  'http://example.com:11434'
-  >>> _parse_host('example.com:56789')
-  'http://example.com:56789'
-  >>> _parse_host('http://example.com')
-  'http://example.com:80'
-  >>> _parse_host('https://example.com')
-  'https://example.com:443'
-  >>> _parse_host('https://example.com:56789')
-  'https://example.com:56789'
-  >>> _parse_host('example.com/')
-  'http://example.com:11434'
-  >>> _parse_host('example.com:56789/')
-  'http://example.com:56789'
-  """
+    """
+        >>> _parse_host(None)
+        "http://127.0.0.1:11434"
+        >>> _parse_host(")
+        "http://127.0.0.1:11434"
+        >>> _parse_host("1.2.3.4")
+        "http://1.2.3.4:11434"
+        >>> _parse_host(":56789")
+        "http://127.0.0.1:56789"
+        >>> _parse_host("1.2.3.4:56789")
+        "http://1.2.3.4:56789"
+        >>> _parse_host("http://1.2.3.4")
+        "http://1.2.3.4:80"
+        >>> _parse_host("https://1.2.3.4")
+        "https://1.2.3.4:443"
+        >>> _parse_host("https://1.2.3.4:56789")
+        "https://1.2.3.4:56789"
+        >>> _parse_host("example.com")
+        "http://example.com:11434"
+        >>> _parse_host("example.com:56789")
+        "http://example.com:56789"
+        >>> _parse_host("http://example.com")
+        "http://example.com:80"
+        >>> _parse_host("https://example.com")
+        "https://example.com:443"
+        >>> _parse_host("https://example.com:56789")
+        "https://example.com:56789"
+        >>> _parse_host("example.com/")
+        "http://example.com:11434"
+        >>> _parse_host("example.com:56789/")
+        "http://example.com:56789"
+    """
 
-  host, port = host or '', 11434
-  scheme, _, hostport = host.partition('://')
-  if not hostport:
-    scheme, hostport = 'http', host
-  elif scheme == 'http':
-    port = 80
-  elif scheme == 'https':
-    port = 443
+    host, port = host or "", 11434
+    scheme, _, hostport = host.partition("://")
 
-  split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
-  host = split.hostname or '127.0.0.1'
-  port = split.port or port
+    if not hostport:
+        scheme, hostport = "http", host
 
-  return f'{scheme}://{host}:{port}'
+    elif scheme == "http":
+        port = 80
+
+    elif scheme == "https":
+        port = 443
+
+    split = urllib.parse.urlsplit("://".join([scheme, hostport]))
+    host = split.hostname or "127.0.0.1"
+    port = split.port or port
+
+    return f'{scheme}://{host}:{port}'
