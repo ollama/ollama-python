@@ -92,6 +92,7 @@ class Client(BaseClient):
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
     options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
     Create a response using the requested model.
@@ -120,6 +121,7 @@ class Client(BaseClient):
         'images': [_encode_image(image) for image in images or []],
         'format': format,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
       stream=stream,
     )
@@ -131,6 +133,7 @@ class Client(BaseClient):
     stream: bool = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
     Create a chat response using the requested model.
@@ -164,11 +167,18 @@ class Client(BaseClient):
         'stream': stream,
         'format': format,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
       stream=stream,
     )
 
-  def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
+  def embeddings(
+    self,
+    model: str = '',
+    prompt: str = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Sequence[float]:
     return self._request(
       'POST',
       '/api/embeddings',
@@ -176,6 +186,7 @@ class Client(BaseClient):
         'model': model,
         'prompt': prompt,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
     ).json()
 
@@ -360,6 +371,7 @@ class AsyncClient(BaseClient):
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
     options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     """
     Create a response using the requested model.
@@ -387,6 +399,7 @@ class AsyncClient(BaseClient):
         'images': [_encode_image(image) for image in images or []],
         'format': format,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
       stream=stream,
     )
@@ -398,6 +411,7 @@ class AsyncClient(BaseClient):
     stream: bool = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     """
     Create a chat response using the requested model.
@@ -430,11 +444,18 @@ class AsyncClient(BaseClient):
         'stream': stream,
         'format': format,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
       stream=stream,
     )
 
-  async def embeddings(self, model: str = '', prompt: str = '', options: Optional[Options] = None) -> Sequence[float]:
+  async def embeddings(
+    self,
+    model: str = '',
+    prompt: str = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Sequence[float]:
     response = await self._request(
       'POST',
       '/api/embeddings',
@@ -442,6 +463,7 @@ class AsyncClient(BaseClient):
         'model': model,
         'prompt': prompt,
         'options': options or {},
+        'keep_alive': keep_alive,
       },
     )
 

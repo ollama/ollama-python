@@ -29,6 +29,7 @@ def test_client_chat(httpserver: HTTPServer):
       'stream': False,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -75,6 +76,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
       'stream': True,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -103,6 +105,7 @@ def test_client_chat_images(httpserver: HTTPServer):
       'stream': False,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -139,6 +142,7 @@ def test_client_generate(httpserver: HTTPServer):
       'images': [],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -183,6 +187,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
       'images': [],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -210,6 +215,7 @@ def test_client_generate_images(httpserver: HTTPServer):
       'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -465,6 +471,7 @@ async def test_async_client_chat(httpserver: HTTPServer):
       'stream': False,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json({})
 
@@ -502,6 +509,7 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
       'stream': True,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -531,6 +539,7 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
       'stream': False,
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json({})
 
@@ -558,6 +567,7 @@ async def test_async_client_generate(httpserver: HTTPServer):
       'images': [],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json({})
 
@@ -597,6 +607,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
       'images': [],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -625,6 +636,7 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
       'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
       'format': '',
       'options': {},
+      'keep_alive': None,
     },
   ).respond_with_json({})
 
