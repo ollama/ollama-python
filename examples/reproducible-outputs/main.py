@@ -1,7 +1,7 @@
 from ollama import chat
 
 
-options = {"temperature": 0.1, "seed": 100}
+options = {"temperature": 0, "seed": 100}
 
 messages = [
   {
