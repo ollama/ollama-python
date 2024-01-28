@@ -152,6 +152,20 @@ async def chat():
 asyncio.run(chat())
 ```
 
+If you are trying to use this feature in jupyter notebook, please use below sample code to avoid an erroe message `asyncio.run() cannot be called from a running event`.
+
+```python
+from ollama import AsyncClient
+
+async def chat():
+    message ={ "role":"user","content":"why people smile?"}
+    response = await AsyncClient().chat(model="llama2",messages=[message])
+    print(response)
+
+await chat()
+```
+
+
 ## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
