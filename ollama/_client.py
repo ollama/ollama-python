@@ -259,13 +259,16 @@ class Client(BaseClient):
     out = io.StringIO()
     for line in io.StringIO(modelfile):
       command, _, args = line.partition(' ')
-      if command.upper() in ['FROM', 'ADAPTER']:
-        path = Path(args.strip()).expanduser()
-        path = path if path.is_absolute() else base / path
-        if path.exists():
-          args = f'@{self._create_blob(path)}'
+      if command.upper() not in ['FROM', 'ADAPTER']:
+        print(line, end='', file=out)
+        continue
 
-      print(command, args, file=out)
+      path = Path(args.strip()).expanduser()
+      path = path if path.is_absolute() else base / path
+      if path.exists():
+        args = f'@{self._create_blob(path)}\n'
+      print(command, args, end='', file=out)
+
     return out.getvalue()
 
   def _create_blob(self, path: Union[str, Path]) -> str:
@@ -527,13 +530,16 @@ class AsyncClient(BaseClient):
     out = io.StringIO()
     for line in io.StringIO(modelfile):
       command, _, args = line.partition(' ')
-      if command.upper() in ['FROM', 'ADAPTER']:
-        path = Path(args).expanduser()
-        path = path if path.is_absolute() else base / path
-        if path.exists():
-          args = f'@{await self._create_blob(path)}'
+      if command.upper() not in ['FROM', 'ADAPTER']:
+        print(line, end='', file=out)
+        continue
 
-      print(command, args, file=out)
+      path = Path(args.strip()).expanduser()
+      path = path if path.is_absolute() else base / path
+      if path.exists():
+        args = f'@{await self._create_blob(path)}\n'
+      print(command, args, end='', file=out)
+
     return out.getvalue()
 
   async def _create_blob(self, path: Union[str, Path]) -> str:

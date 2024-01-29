@@ -416,13 +416,61 @@ def test_client_create_modelfile(httpserver: HTTPServer):
     assert isinstance(response, dict)
 
 
+def test_client_create_modelfile_roundtrip(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='HEAD').respond_with_response(Response(status=200))
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'name': 'dummy',
+      'modelfile': '''FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>
+{{.Prompt}} [/INST]"""
+SYSTEM """
+Use
+multiline
+strings.
+"""
+PARAMETER stop [INST]
+PARAMETER stop [/INST]
+PARAMETER stop <<SYS>>
+PARAMETER stop <</SYS>>''',
+      'stream': False,
+    },
+  ).respond_with_json({})
+
+  client = Client(httpserver.url_for('/'))
+
+  with tempfile.NamedTemporaryFile() as blob:
+    response = client.create(
+      'dummy',
+      modelfile='\n'.join(
+        [
+          f'FROM {blob.name}',
+          'TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>',
+          '{{.Prompt}} [/INST]"""',
+          'SYSTEM """',
+          'Use',
+          'multiline',
+          'strings.',
+          '"""',
+          'PARAMETER stop [INST]',
+          'PARAMETER stop [/INST]',
+          'PARAMETER stop <<SYS>>',
+          'PARAMETER stop <</SYS>>',
+        ]
+      ),
+    )
+    assert isinstance(response, dict)
+
+
 def test_client_create_from_library(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
     json={
       'name': 'dummy',
-      'modelfile': 'FROM llama2\n',
+      'modelfile': 'FROM llama2',
       'stream': False,
     },
   ).respond_with_json({})
@@ -821,13 +869,62 @@ async def test_async_client_create_modelfile(httpserver: HTTPServer):
 
 
 @pytest.mark.asyncio
+async def test_async_client_create_modelfile_roundtrip(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='HEAD').respond_with_response(Response(status=200))
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'name': 'dummy',
+      'modelfile': '''FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>
+{{.Prompt}} [/INST]"""
+SYSTEM """
+Use
+multiline
+strings.
+"""
+PARAMETER stop [INST]
+PARAMETER stop [/INST]
+PARAMETER stop <<SYS>>
+PARAMETER stop <</SYS>>''',
+      'stream': False,
+    },
+  ).respond_with_json({})
+
+  client = AsyncClient(httpserver.url_for('/'))
+
+  with tempfile.NamedTemporaryFile() as blob:
+    response = await client.create(
+      'dummy',
+      modelfile='\n'.join(
+        [
+          f'FROM {blob.name}',
+          'TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>',
+          '{{.Prompt}} [/INST]"""',
+          'SYSTEM """',
+          'Use',
+          'multiline',
+          'strings.',
+          '"""',
+          'PARAMETER stop [INST]',
+          'PARAMETER stop [/INST]',
+          'PARAMETER stop <<SYS>>',
+          'PARAMETER stop <</SYS>>',
+        ]
+      ),
+    )
+    assert isinstance(response, dict)
+
+
+@pytest.mark.asyncio
 async def test_async_client_create_from_library(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
     json={
       'name': 'dummy',
-      'modelfile': 'FROM llama2\n',
+      'modelfile': 'FROM llama2',
       'stream': False,
     },
   ).respond_with_json({})
