@@ -10,7 +10,7 @@ repository = "https://github.com/jmorganca/ollama-python"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-httpx = "^0.25.2"
+httpx = "^0.26.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.4.3"
