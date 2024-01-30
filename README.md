@@ -138,7 +138,7 @@ async def chat():
 asyncio.run(chat())
 ```
 
-Setting `stream=True`` modifies functions to return a Python asynchronous generator:
+Setting `stream=True` modifies functions to return a Python asynchronous generator:
 
 ```python
 import asyncio
