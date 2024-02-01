@@ -11,7 +11,7 @@ curl https://ollama.ai/install.sh | sh
 ollama serve
 ```
 
-Next you can go ahead with `ollapa-python`.
+Next you can go ahead with `ollama-python`.
 
 ## Install
 
