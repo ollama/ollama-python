@@ -1,12 +1,7 @@
-from ollama import chat
-
-
+from ollama import chat, Message, Role
 messages = [
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
+    Message(role=Role.USER, content='Why is the sky blue?'),
 ]
 
-response = chat('mistral', messages=messages)
+response = chat('llama2', messages=messages)
 print(response['message']['content'])
