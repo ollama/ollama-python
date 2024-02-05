@@ -8,6 +8,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 from PIL import Image
 
+from ollama import Message, Role
 from ollama._client import Client, AsyncClient
 
 
@@ -25,7 +26,9 @@ def test_client_chat(httpserver: HTTPServer):
     method='POST',
     json={
       'model': 'dummy',
-      'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'messages': [
+        Message(role=Role.USER, content='Why is the sky blue?').dict(),
+    ],
       'stream': False,
       'format': '',
       'options': {},
@@ -42,7 +45,7 @@ def test_client_chat(httpserver: HTTPServer):
   )
 
   client = Client(httpserver.url_for('/'))
-  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+  response = client.chat('dummy', messages=[Message(role=Role.USER, content='Why is the sky blue?')])
   assert response['model'] == 'dummy'
   assert response['message']['role'] == 'assistant'
   assert response['message']['content'] == "I don't know."
@@ -72,7 +75,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
     method='POST',
     json={
       'model': 'dummy',
-      'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'messages': [Message(role=Role.USER, content='Why is the sky blue?').dict()],
       'stream': True,
       'format': '',
       'options': {},
@@ -81,7 +84,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
   ).respond_with_handler(stream_handler)
 
   client = Client(httpserver.url_for('/'))
-  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], stream=True)
+  response = client.chat('dummy', messages=[Message(role=Role.USER, content='Why is the sky blue?')], stream=True)
 
   it = iter(['I ', "don't ", 'know.'])
   for part in response:
@@ -121,7 +124,7 @@ def test_client_chat_images(httpserver: HTTPServer):
 
   with io.BytesIO() as b:
     Image.new('RGB', (1, 1)).save(b, 'PNG')
-    response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': [b.getvalue()]}])
+    response = client.chat('dummy', messages=[Message(role=Role.USER, content="Why is the sky blue?", images=[b.getvalue()])])
     assert response['model'] == 'dummy'
     assert response['message']['role'] == 'assistant'
     assert response['message']['content'] == "I don't know."

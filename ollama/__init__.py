@@ -5,8 +5,6 @@ from ollama._types import (
   ProgressResponse,
   Message,
   Options,
-  RequestError,
-  ResponseError,
   Role,
 )
 

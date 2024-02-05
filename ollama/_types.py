@@ -1,8 +1,10 @@
 import json
 from enum import Enum
-from typing import TypedDict, Sequence, Optional
+from typing import TypedDict, Sequence, Optional, Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+from ollama._utils import _encode_image
 
 
 class BaseGenerateResponse(BaseModel):
@@ -63,7 +65,7 @@ class Message(BaseModel):
     content: str
     'Content of the message. Response messages contains message fragments when streaming.'
 
-    images: Optional[list[str | bytes]]
+    images: Optional[list[str | bytes]] = None
     """
     Optional list of image data for multimodal models.
   
@@ -74,6 +76,11 @@ class Message(BaseModel):
   
     Valid image formats depend on the model. See the model card for more information.
     """
+
+    @field_validator('images')
+    @classmethod
+    def encode_images(cls, v: Any):
+        return [_encode_image(image) for image in v]
 
 
 class ChatResponse(BaseGenerateResponse):
@@ -131,33 +138,7 @@ class Options(BaseModel):
     stop: Sequence[str]
 
 
-class RequestError(Exception):
-    """
-    Common class for request errors.
-    """
-
-    def __init__(self, error: str):
-        super().__init__(error)
-        self.error = error
-        'Reason for the error.'
 
 
-class ResponseError(Exception):
-    """
-    Common class for response errors.
-    """
 
-    def __init__(self, error: str, status_code: int = -1):
-        try:
-            # try to parse content as JSON and extract 'error'
-            # fallback to raw content if JSON parsing fails
-            error = json.loads(error).get('error', error)
-        except json.JSONDecodeError:
-            ...
 
-        super().__init__(error)
-        self.error = error
-        'Reason for the error.'
-
-        self.status_code = status_code
-        'HTTP status code of the response.'
