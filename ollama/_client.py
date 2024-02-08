@@ -3,6 +3,7 @@ import io
 import json
 import httpx
 import binascii
+import platform
 import urllib.parse
 from os import PathLike
 from pathlib import Path
@@ -17,6 +18,13 @@ if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
 else:
   from collections.abc import Iterator, AsyncIterator
+
+from importlib import metadata
+
+try:
+  __version__ = metadata.version('ollama')
+except metadata.PackageNotFoundError:
+  __version__ = '0.0.0'
 
 from ollama._types import Message, Options, RequestError, ResponseError
 
@@ -37,10 +45,15 @@ class BaseClient:
     - `timeout`: None
     `kwargs` are passed to the httpx client.
     """
+
+    headers = kwargs.pop('headers', {})
+    headers['user-agent'] = f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}'
+
     self._client = client(
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
+      headers=headers,
       **kwargs,
     )
 
