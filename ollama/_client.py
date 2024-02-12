@@ -718,8 +718,10 @@ def _parse_host(host: Optional[str]) -> str:
   elif scheme == 'https':
     port = 443
 
-  split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
+  split = urllib.parse.urlsplit('://'.join([scheme, hostport]), allow_fragments=True)
   host = split.hostname or '127.0.0.1'
   port = split.port or port
-
-  return f'{scheme}://{host}:{port}'
+  parsed_url = f'{scheme}://{host}:{port}'
+  if split.username and split.password:
+    parsed_url=f'{scheme}://{split.username}:{split.password}@{host}:{port}'
+  return parsed_url
