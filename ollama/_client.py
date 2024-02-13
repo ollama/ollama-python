@@ -59,8 +59,39 @@ class BaseClient:
       **kwargs,
     )
 
+class HistoryClient(BaseClient):
+  def __init__(self, *args, **kwargs) -> None:
+    super().__init__(*args, **kwargs)
+    self._history = []
+  
+  def _append_history(self, message: dict) -> None: 
+    """
+    Appends the provided message to self._history.
 
-class Client(BaseClient):
+    Returns None
+    """
+    if not isinstance(message, dict):
+      raise TypeError('history message must be a list of dict-like objects')
+    if message.get('role') not in ['system', 'user', 'assistant']:
+      raise RequestError('history message must contain a role and it must be one of "system", "user", or "assistant')
+    if not message.get('content'):
+      raise RequestError('history must contain content')
+    self._history.append(message)
+
+  def _historic_chat_iterator(
+    self, output: Iterator[Mapping[str, Any]]
+  ):
+    content = ""
+    for part in output:
+      content += part['message']['content']
+      if part.get('done'):
+        self._append_history({
+          'role': 'assistant',
+          'content': content
+        })
+      yield part
+      
+class Client(HistoryClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
@@ -142,6 +173,50 @@ class Client(BaseClient):
       stream=stream,
     )
 
+  def historic_chat(
+    self,
+    *args,
+    message: dict = dict(),
+    history: Optional[Sequence[Message]] = None,
+    **kwargs,
+  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+    """
+    Creates a chat response using the requested model but only takes one message and appends it to an object history.
+
+    Takes in all the same parameters as the chat method except for the parameter `messages`.
+      - This is overwritten with the passed message plus any history.
+
+    An additonal `message` parameter must be passed to the method to provide the message to be appended to the history.
+      - This message should match the format of one message passed with the messages parameter in the chat method.
+
+    An optional `history` parameter can be passed to the method to provide a list of initial messages for the history.
+    - Note: This will replace the current history with the provided history.
+    - Note: If not provided, this will not modify the history.
+    - Note: If an empty list is provided, this will clear the history.
+
+    Each call to this method will append the provided message to the history and append the response to the history for future calls.
+    
+    Returns the chat response.
+    """
+    if history is not None:
+        self._history = []
+        for message in history:
+          self._append_history(message)
+    self._append_history(message)
+    output = self.chat(
+      *args,
+      messages = self._history,
+      **kwargs,
+    )
+    if isinstance(output, Iterator):
+      return self._historic_chat_iterator(output)
+    else:
+      self._append_history({
+        'role': 'assistant',
+        'content': output['message']['content']
+      })
+    return output
+                       
   def chat(
     self,
     model: str = '',
