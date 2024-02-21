@@ -1,5 +1,4 @@
-from ollama import historic_chat
-from ollama import _client
+from ollama import iterative_chat
 
 
 message = {
@@ -7,7 +6,7 @@ message = {
   'content': 'Tell me a Joke in less than 30 words.',
 }
 
-for part in historic_chat('mistral', message=message, stream=True):
+for part in iterative_chat('llama2:70b', message=message, stream=True):
     print(part['message']['content'], end='', flush=True)
 
 message = {
@@ -15,5 +14,5 @@ message = {
   'content': 'Another please.',
 }
 
-for part in historic_chat('mistral', message=message, stream=True):
+for part in iterative_chat('llama2:70b', message=message, stream=True):
     print(part['message']['content'], end='', flush=True)

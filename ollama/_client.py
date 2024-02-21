@@ -59,7 +59,7 @@ class BaseClient:
       **kwargs,
     )
 
-class HistoryClient(BaseClient):
+class IterativeChatClient(BaseClient):
   def __init__(self, *args, **kwargs) -> None:
     super().__init__(*args, **kwargs)
     self._history = []
@@ -78,7 +78,7 @@ class HistoryClient(BaseClient):
       raise RequestError('history must contain content')
     self._history.append(message)
 
-  def _historic_chat_iterator(
+  def _iterative_chat_iterator(
     self, output: Iterator[Mapping[str, Any]]
   ):
     content = ""
@@ -91,7 +91,7 @@ class HistoryClient(BaseClient):
         })
       yield part
       
-class Client(HistoryClient):
+class Client(IterativeChatClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
@@ -173,7 +173,7 @@ class Client(HistoryClient):
       stream=stream,
     )
 
-  def historic_chat(
+  def iterative_chat(
     self,
     *args,
     message: dict = dict(),
@@ -181,15 +181,16 @@ class Client(HistoryClient):
     **kwargs,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
-    Creates a chat response using the requested model but only takes one message and appends it to an object history.
+    Creates a chat response using the requested model but only takes one message and appends it to an iterative history.
 
     Takes in all the same parameters as the chat method except for the parameter `messages`.
       - This is overwritten with the passed message plus any history.
 
-    An additonal `message` parameter must be passed to the method to provide the message to be appended to the history.
+    An additonal `message` parameter must be passed to the method which is appended to any iterative history.
       - This message should match the format of one message passed with the messages parameter in the chat method.
 
     An optional `history` parameter can be passed to the method to provide a list of initial messages for the history.
+    - This is given as the same format as the `messages` parameter in the chat method.
     - Note: This will replace the current history with the provided history.
     - Note: If not provided, this will not modify the history.
     - Note: If an empty list is provided, this will clear the history.
@@ -209,7 +210,7 @@ class Client(HistoryClient):
       **kwargs,
     )
     if isinstance(output, Iterator):
-      return self._historic_chat_iterator(output)
+      return self._iterative_chat_iterator(output)
     else:
       self._append_history({
         'role': 'assistant',
