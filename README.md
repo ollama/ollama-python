@@ -2,6 +2,19 @@
 
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
 
+## Setup
+
+For general use as shown in most examples, you should have a local ollama server running to be able to continue. 
+
+To do this:
+
+- Download: https://ollama.com/
+- In your terminal, run an LLM: 
+    - See available LLMs: https://ollama.com/library
+    - Example: `ollama run llama2`
+    - Example: `ollama run llama2:70b`
+- If you want to use a non local server (or a different local one), see the docs on (Custom Client)[#custom-client].
+
 ## Install
 
 ```sh
@@ -36,6 +49,29 @@ stream = ollama.chat(
 
 for chunk in stream:
   print(chunk['message']['content'], end='', flush=True)
+```
+
+## Iterative Chat (Chat with History)
+```python
+import ollama
+
+response = ollama.iterative_chat(
+  model='llama2:7b', 
+  message={
+    'role': 'user',
+    'content': 'Tell me a Joke in less than 30 words.',
+  }
+)
+print(response['message']['content']) # Prints out a joke.
+
+response2 = ollama.iterative_chat(
+  model='llama2:7b', 
+  message={
+    'role': 'user',
+    'content': 'Another Please.',
+  }
+)
+print(response2['message']['content']) # Prints another joke
 ```
 
 ## API
