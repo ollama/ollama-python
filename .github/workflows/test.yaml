@@ -26,7 +26,7 @@ jobs:
         run: |
           poetry export >requirements.txt
           git diff --exit-code requirements.txt
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: pytest-results-${{ matrix.python-version }}
           path: junit/test-results-${{ matrix.python-version }}.xml
