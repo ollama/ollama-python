@@ -104,7 +104,7 @@ ollama.push('user/llama2')
 ### Embeddings
 
 ```python
-ollama.embeddings(model='llama2', prompt='They sky is blue because of rayleigh scattering')
+ollama.embeddings(model='llama2', prompt='The sky is blue because of rayleigh scattering')
 ```
 
 ## Custom client
