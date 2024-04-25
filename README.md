@@ -21,6 +21,23 @@ response = ollama.chat(model='llama2', messages=[
 print(response['message']['content'])
 ```
 
+### Note
+To start using this library, you need to have ollama running on your system. If you are running ollama on a jupyter notebook, then you can use the below code to fix the "connection refused" error
+
+```python
+import os
+import threading
+import subprocess
+
+def ollama():
+    os.environ['OLLAMA_HOST'] = '0.0.0.0:11434'
+    os.environ['OLLAMA_ORIGINS'] = '*'
+    subprocess.Popen(["ollama", "serve"])
+
+ollama_thread = threading.Thread(target=ollama)
+ollama_thread.start()
+```
+
 ## Streaming responses
 
 Response streaming can be enabled by setting `stream=True`, modifying function calls to return a Python generator where each part is an object in the stream.
