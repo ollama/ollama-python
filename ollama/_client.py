@@ -169,7 +169,7 @@ class Client(BaseClient):
         raise TypeError('messages must be a list of Message or dict-like objects')
       if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
         raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
+      if 'content' not in message:
         raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
@@ -449,7 +449,7 @@ class AsyncClient(BaseClient):
         raise TypeError('messages must be a list of strings')
       if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
         raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
+      if 'content' not in message:
         raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
