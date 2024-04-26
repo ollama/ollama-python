@@ -108,6 +108,7 @@ class Client(BaseClient):
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
     options: Optional[Options] = None,
+    temperature: float = 0.0,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
@@ -130,6 +131,7 @@ class Client(BaseClient):
         'model': model,
         'prompt': prompt,
         'system': system,
+        'temperature': temperature,
         'template': template,
         'context': context or [],
         'stream': stream,
@@ -150,6 +152,7 @@ class Client(BaseClient):
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    temperature: float = 0
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
     Create a chat response using the requested model.
@@ -180,6 +183,7 @@ class Client(BaseClient):
       json={
         'model': model,
         'messages': messages,
+        'temperature': temperature,
         'stream': stream,
         'format': format,
         'options': options or {},
