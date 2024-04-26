@@ -10,7 +10,7 @@ from pathlib import Path
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
-from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal
+from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal, overload
 
 import sys
 
@@ -141,6 +141,30 @@ class Client(BaseClient):
       },
       stream=stream,
     )
+
+  @overload
+  def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[False] = False,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[True] = True,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
 
   def chat(
     self,
