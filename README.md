@@ -1,5 +1,8 @@
 # Ollama Python Library
 
+[![publish](https://github.com/ollama/ollama-python/actions/workflows/publish.yaml/badge.svg?branch=main)](https://github.com/ollama/ollama-python/actions/workflows/publish.yaml)
+[![test](https://github.com/ollama/ollama-python/actions/workflows/test.yaml/badge.svg)](https://github.com/ollama/ollama-python/actions/workflows/test.yaml)
+
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
 
 ## Install
