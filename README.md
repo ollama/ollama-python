@@ -1,6 +1,6 @@
 # Ollama Python Library
 
-The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
+The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
 
 ## Install
 
@@ -40,7 +40,7 @@ for chunk in stream:
 
 ## API
 
-The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)
+The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 ### Chat
 
