@@ -7,6 +7,9 @@ license = "MIT"
 readme = "README.md"
 homepage = "https://ollama.ai"
 repository = "https://github.com/jmorganca/ollama-python"
+include = [
+    "ollama/py.typed"
+]
 
 [tool.poetry.dependencies]
 python = "^3.8"
