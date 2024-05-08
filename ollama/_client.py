@@ -474,7 +474,7 @@ class AsyncClient(BaseClient):
     prompt: str = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Sequence[float]:
+  ) -> Mapping[str, Sequence[float]]:
     response = await self._request(
       'POST',
       '/api/embeddings',
