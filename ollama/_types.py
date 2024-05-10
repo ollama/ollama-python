@@ -19,6 +19,9 @@ class BaseGenerateResponse(TypedDict):
   done: bool
   'True if response is complete, otherwise False. Useful for streaming to detect the final response.'
 
+  done_reason: str
+  'Reason for completion. Only present when done is True.'
+
   total_duration: int
   'Total duration in nanoseconds.'
 
