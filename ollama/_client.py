@@ -255,6 +255,7 @@ class Client(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
     stream: bool = False,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
@@ -276,6 +277,7 @@ class Client(BaseClient):
         'name': model,
         'modelfile': modelfile,
         'stream': stream,
+        'quantize': quantize,
       },
       stream=stream,
     )
@@ -537,6 +539,7 @@ class AsyncClient(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
     stream: bool = False,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     """
@@ -558,6 +561,7 @@ class AsyncClient(BaseClient):
         'name': model,
         'modelfile': modelfile,
         'stream': stream,
+        'quantize': quantize,
       },
       stream=stream,
     )
