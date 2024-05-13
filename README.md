@@ -2,40 +2,40 @@
 
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
 
-## Prerequisites
+## Getting Started
 
-You need to have a local ollama server running to be able to continue. To do this:
+Before you can use the Ollama Python library locally you need to complete a few steps. You will need to have Ollama installed and an ollama server running on your local machine. You also need to pip install the Ollama python library.
 
-- Download: https://ollama.com/
-- Run an LLM: https://ollama.com/library
-    - Example: `ollama run llama2`
-    - Example: `ollama run llama2:70b`
-
-Then:
-
-```sh
-curl https://ollama.ai/install.sh | sh
-ollama serve
-```
-
-Next you can go ahead with `ollama-python`.
-
-## Install
-
-```sh
-pip install ollama
-```
+- Download & Install Ollama:
+  - See [https://ollama.com/](https://ollama.com/)
+- Install the Ollama Python library in your Python environment:
+  ```sh
+  pip install ollama
+  ```
+- Run the Ollama server with a specific model:
+  - Example: `ollama run llama3`
+  - Notes:
+    - The model you specify will be automatically downloaded and cached on your machine.
+    - **You will need to run this step each time you restart your computer or each time after you kill your ollama server**.
+    - You can also run a specific version of a model:
+      - See available models [here](https://ollama.com/library).
+      - Once at a model page, you can view specific versions and related version info by clicking on `tags` at the top of the model page and selecting the version you want.
+      - Example: `ollama run llama3:8b`
 
 ## Usage
 
 ```python
 import ollama
-response = ollama.chat(model='llama3', messages=[
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
-])
+response = ollama.chat(
+    # Note: This model should be the same as the one you started with `ollama run`
+    model='llama3', 
+    messages=[
+    {
+      'role': 'user',
+      'content': 'Why is the sky blue?',
+    },
+  ]
+)
 print(response['message']['content'])
 ```
 
