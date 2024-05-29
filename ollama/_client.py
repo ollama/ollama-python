@@ -725,5 +725,6 @@ def _parse_host(host: Optional[str]) -> str:
   split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
   host = split.hostname or '127.0.0.1'
   port = split.port or port
+  path = split.path or ''
 
-  return f'{scheme}://{host}:{port}'
+  return f'{scheme}://{host}:{port}{path}'
