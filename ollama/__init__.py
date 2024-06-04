@@ -29,7 +29,7 @@ __all__ = [
   'list',
   'copy',
   'show',
-  'process',
+  'ps',
 ]
 
 _client = Client()
@@ -44,4 +44,4 @@ delete = _client.delete
 list = _client.list
 copy = _client.copy
 show = _client.show
-process = _client.process
+ps = _client.ps

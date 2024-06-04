@@ -128,7 +128,7 @@ ollama.embeddings(model='llama3', prompt='The sky is blue because of rayleigh sc
 ### Process
 
 ```python
-ollama.process()
+ollama.ps()
 ```
 
 ## Custom client
