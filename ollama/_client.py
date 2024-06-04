@@ -336,6 +336,9 @@ class Client(BaseClient):
   def show(self, model: str) -> Mapping[str, Any]:
     return self._request('POST', '/api/show', json={'name': model}).json()
 
+  def process(self) -> Mapping[str, Any]:
+    return self._request('GET', '/api/ps').json()
+
 
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
@@ -627,6 +630,10 @@ class AsyncClient(BaseClient):
 
   async def show(self, model: str) -> Mapping[str, Any]:
     response = await self._request('POST', '/api/show', json={'name': model})
+    return response.json()
+
+  async def process(self) -> Mapping[str, Any]:
+    response = await self._request('GET', '/api/ps')
     return response.json()
 
 
