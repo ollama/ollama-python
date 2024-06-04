@@ -125,7 +125,7 @@ ollama.push('user/llama3')
 ollama.embeddings(model='llama3', prompt='The sky is blue because of rayleigh scattering')
 ```
 
-### Process
+### Ps
 
 ```python
 ollama.ps()
