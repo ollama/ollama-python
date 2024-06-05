@@ -7,6 +7,7 @@ import platform
 import urllib.parse
 from os import PathLike
 from pathlib import Path
+from copy import deepcopy
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
@@ -163,6 +164,8 @@ class Client(BaseClient):
 
     if not model:
       raise RequestError('must provide a model')
+
+    messages = deepcopy(messages)
 
     for message in messages or []:
       if not isinstance(message, dict):
@@ -448,6 +451,8 @@ class AsyncClient(BaseClient):
     """
     if not model:
       raise RequestError('must provide a model')
+
+    messages = deepcopy(messages)
 
     for message in messages or []:
       if not isinstance(message, dict):
