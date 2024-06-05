@@ -1,6 +1,24 @@
 # Ollama Python Library
 
-The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
+The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
+
+## Prerequisites
+
+You need to have a local ollama server running to be able to continue. To do this:
+
+- Download: https://ollama.com/
+- Run an LLM: https://ollama.com/library
+    - Example: `ollama run llama2`
+    - Example: `ollama run llama2:70b`
+
+Then:
+
+```sh
+curl https://ollama.ai/install.sh | sh
+ollama serve
+```
+
+Next you can go ahead with `ollama-python`.
 
 ## Install
 
@@ -40,7 +58,7 @@ for chunk in stream:
 
 ## API
 
-The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)
+The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 ### Chat
 
@@ -105,6 +123,12 @@ ollama.push('user/llama3')
 
 ```python
 ollama.embeddings(model='llama3', prompt='The sky is blue because of rayleigh scattering')
+```
+
+### Ps
+
+```python
+ollama.ps()
 ```
 
 ## Custom client

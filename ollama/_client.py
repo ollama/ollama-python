@@ -7,6 +7,7 @@ import platform
 import urllib.parse
 from os import PathLike
 from pathlib import Path
+from copy import deepcopy
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
@@ -164,12 +165,14 @@ class Client(BaseClient):
     if not model:
       raise RequestError('must provide a model')
 
+    messages = deepcopy(messages)
+
     for message in messages or []:
       if not isinstance(message, dict):
         raise TypeError('messages must be a list of Message or dict-like objects')
       if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
         raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
+      if 'content' not in message:
         raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
@@ -194,7 +197,7 @@ class Client(BaseClient):
     prompt: str = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Sequence[float]:
+  ) -> Mapping[str, Sequence[float]]:
     return self._request(
       'POST',
       '/api/embeddings',
@@ -255,6 +258,7 @@ class Client(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
     stream: bool = False,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     """
@@ -276,6 +280,7 @@ class Client(BaseClient):
         'name': model,
         'modelfile': modelfile,
         'stream': stream,
+        'quantize': quantize,
       },
       stream=stream,
     )
@@ -333,6 +338,9 @@ class Client(BaseClient):
 
   def show(self, model: str) -> Mapping[str, Any]:
     return self._request('POST', '/api/show', json={'name': model}).json()
+
+  def ps(self) -> Mapping[str, Any]:
+    return self._request('GET', '/api/ps').json()
 
 
 class AsyncClient(BaseClient):
@@ -444,12 +452,14 @@ class AsyncClient(BaseClient):
     if not model:
       raise RequestError('must provide a model')
 
+    messages = deepcopy(messages)
+
     for message in messages or []:
       if not isinstance(message, dict):
         raise TypeError('messages must be a list of strings')
       if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
         raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if not message.get('content'):
+      if 'content' not in message:
         raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
@@ -474,7 +484,7 @@ class AsyncClient(BaseClient):
     prompt: str = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Sequence[float]:
+  ) -> Mapping[str, Sequence[float]]:
     response = await self._request(
       'POST',
       '/api/embeddings',
@@ -537,6 +547,7 @@ class AsyncClient(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
     stream: bool = False,
   ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
     """
@@ -558,6 +569,7 @@ class AsyncClient(BaseClient):
         'name': model,
         'modelfile': modelfile,
         'stream': stream,
+        'quantize': quantize,
       },
       stream=stream,
     )
@@ -623,6 +635,10 @@ class AsyncClient(BaseClient):
 
   async def show(self, model: str) -> Mapping[str, Any]:
     response = await self._request('POST', '/api/show', json={'name': model})
+    return response.json()
+
+  async def ps(self) -> Mapping[str, Any]:
+    response = await self._request('GET', '/api/ps')
     return response.json()
 
 

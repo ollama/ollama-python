@@ -19,6 +19,9 @@ class BaseGenerateResponse(TypedDict):
   done: bool
   'True if response is complete, otherwise False. Useful for streaming to detect the final response.'
 
+  done_reason: str
+  'Reason for completion. Only present when done is True.'
+
   total_duration: int
   'Total duration in nanoseconds.'
 
@@ -95,7 +98,6 @@ class Options(TypedDict, total=False):
   numa: bool
   num_ctx: int
   num_batch: int
-  num_gqa: int
   num_gpu: int
   main_gpu: int
   low_vram: bool
@@ -105,8 +107,6 @@ class Options(TypedDict, total=False):
   use_mmap: bool
   use_mlock: bool
   embedding_only: bool
-  rope_frequency_base: float
-  rope_frequency_scale: float
   num_thread: int
 
   # runtime options

@@ -334,6 +334,7 @@ def test_client_create_path(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -357,6 +358,7 @@ def test_client_create_path_relative(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -389,6 +391,7 @@ def test_client_create_path_user_home(httpserver: HTTPServer, userhomedir):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -412,6 +415,7 @@ def test_client_create_modelfile(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -442,6 +446,7 @@ PARAMETER stop [/INST]
 PARAMETER stop <<SYS>>
 PARAMETER stop <</SYS>>''',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -478,6 +483,7 @@ def test_client_create_from_library(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM llama2',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -798,6 +804,7 @@ async def test_async_client_create_path(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -822,6 +829,7 @@ async def test_async_client_create_path_relative(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -846,6 +854,7 @@ async def test_async_client_create_path_user_home(httpserver: HTTPServer, userho
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -870,6 +879,7 @@ async def test_async_client_create_modelfile(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -901,6 +911,7 @@ PARAMETER stop [/INST]
 PARAMETER stop <<SYS>>
 PARAMETER stop <</SYS>>''',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
@@ -938,6 +949,7 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
       'name': 'dummy',
       'modelfile': 'FROM llama2',
       'stream': False,
+      'quantize': None,
     },
   ).respond_with_json({})
 
