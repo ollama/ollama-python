@@ -1,6 +1,24 @@
 # Ollama Python Library
 
-The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/jmorganca/ollama).
+The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
+
+## Prerequisites
+
+You need to have a local ollama server running to be able to continue. To do this:
+
+- Download: https://ollama.com/
+- Run an LLM: https://ollama.com/library
+    - Example: `ollama run llama2`
+    - Example: `ollama run llama2:70b`
+
+Then:
+
+```sh
+curl https://ollama.ai/install.sh | sh
+ollama serve
+```
+
+Next you can go ahead with `ollama-python`.
 
 ## Install
 
@@ -12,7 +30,7 @@ pip install ollama
 
 ```python
 import ollama
-response = ollama.chat(model='llama2', messages=[
+response = ollama.chat(model='llama3', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -29,7 +47,7 @@ Response streaming can be enabled by setting `stream=True`, modifying function c
 import ollama
 
 stream = ollama.chat(
-    model='llama2',
+    model='llama3',
     messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
     stream=True,
 )
@@ -40,18 +58,18 @@ for chunk in stream:
 
 ## API
 
-The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/jmorganca/ollama/blob/main/docs/api.md)
+The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 ### Chat
 
 ```python
-ollama.chat(model='llama2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+ollama.chat(model='llama3', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 ```
 
 ### Generate
 
 ```python
-ollama.generate(model='llama2', prompt='Why is the sky blue?')
+ollama.generate(model='llama3', prompt='Why is the sky blue?')
 ```
 
 ### List
@@ -63,14 +81,14 @@ ollama.list()
 ### Show
 
 ```python
-ollama.show('llama2')
+ollama.show('llama3')
 ```
 
 ### Create
 
 ```python
 modelfile='''
-FROM llama2
+FROM llama3
 SYSTEM You are mario from super mario bros.
 '''
 
@@ -80,31 +98,37 @@ ollama.create(model='example', modelfile=modelfile)
 ### Copy
 
 ```python
-ollama.copy('llama2', 'user/llama2')
+ollama.copy('llama3', 'user/llama3')
 ```
 
 ### Delete
 
 ```python
-ollama.delete('llama2')
+ollama.delete('llama3')
 ```
 
 ### Pull
 
 ```python
-ollama.pull('llama2')
+ollama.pull('llama3')
 ```
 
 ### Push
 
 ```python
-ollama.push('user/llama2')
+ollama.push('user/llama3')
 ```
 
 ### Embeddings
 
 ```python
-ollama.embeddings(model='llama2', prompt='The sky is blue because of rayleigh scattering')
+ollama.embeddings(model='llama3', prompt='The sky is blue because of rayleigh scattering')
+```
+
+### Ps
+
+```python
+ollama.ps()
 ```
 
 ## Custom client
@@ -117,7 +141,7 @@ A custom client can be created with the following fields:
 ```python
 from ollama import Client
 client = Client(host='http://localhost:11434')
-response = client.chat(model='llama2', messages=[
+response = client.chat(model='llama3', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -133,7 +157,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='llama2', messages=[message])
+  response = await AsyncClient().chat(model='llama3', messages=[message])
 
 asyncio.run(chat())
 ```
@@ -146,7 +170,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='llama2', messages=[message], stream=True):
+  async for part in await AsyncClient().chat(model='llama3', messages=[message], stream=True):
     print(part['message']['content'], end='', flush=True)
 
 asyncio.run(chat())
