@@ -11,7 +11,7 @@ from copy import deepcopy
 from hashlib import sha256
 from base64 import b64encode, b64decode
 
-from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal
+from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal, overload
 
 import sys
 
@@ -97,6 +97,40 @@ class Client(BaseClient):
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
     return self._stream(*args, **kwargs) if stream else self._request(*args, **kwargs).json()
 
+  @overload
+  def generate(
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[Sequence[int]] = None,
+    stream: bool = False,
+    raw: bool = False,
+    format: Literal['', 'json'] = '',
+    images: Optional[Sequence[AnyStr]] = None,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def generate(
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[Sequence[int]] = None,
+    stream: bool = True,
+    raw: bool = False,
+    format: Literal['', 'json'] = '',
+    images: Optional[Sequence[AnyStr]] = None,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
+
   def generate(
     self,
     model: str = '',
@@ -142,6 +176,30 @@ class Client(BaseClient):
       },
       stream=stream,
     )
+
+  @overload
+  def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[False] = False,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[True] = True,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
 
   def chat(
     self,
@@ -209,6 +267,24 @@ class Client(BaseClient):
       },
     ).json()
 
+  @overload
+  def pull(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def pull(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = True,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
+
   def pull(
     self,
     model: str,
@@ -231,6 +307,24 @@ class Client(BaseClient):
       stream=stream,
     )
 
+  @overload
+  def push(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def push(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = True,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
+
   def push(
     self,
     model: str,
@@ -252,6 +346,28 @@ class Client(BaseClient):
       },
       stream=stream,
     )
+
+  @overload
+  def create(
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  def create(
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
+    stream: bool = True,
+  ) -> Iterator[Mapping[str, Any]]:
+    ...
 
   def create(
     self,
@@ -386,6 +502,40 @@ class AsyncClient(BaseClient):
     response = await self._request(*args, **kwargs)
     return response.json()
 
+  @overload
+  async def generate(
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[Sequence[int]] = None,
+    stream: bool = False,
+    raw: bool = False,
+    format: Literal['', 'json'] = '',
+    images: Optional[Sequence[AnyStr]] = None,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  async def generate(
+    self,
+    model: str = '',
+    prompt: str = '',
+    system: str = '',
+    template: str = '',
+    context: Optional[Sequence[int]] = None,
+    stream: bool = True,
+    raw: bool = False,
+    format: Literal['', 'json'] = '',
+    images: Optional[Sequence[AnyStr]] = None,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> AsyncIterator[Mapping[str, Any]]:
+    ...
+
   async def generate(
     self,
     model: str = '',
@@ -430,6 +580,30 @@ class AsyncClient(BaseClient):
       },
       stream=stream,
     )
+
+  @overload
+  async def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[False] = False,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  async def chat(
+    self,
+    model: str = '',
+    messages: Optional[Sequence[Message]] = None,
+    stream: Literal[True] = True,
+    format: Literal['', 'json'] = '',
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> AsyncIterator[Mapping[str, Any]]:
+    ...
 
   async def chat(
     self,
@@ -498,6 +672,24 @@ class AsyncClient(BaseClient):
 
     return response.json()
 
+  @overload
+  async def pull(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  async def pull(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = True,
+  ) -> AsyncIterator[Mapping[str, Any]]:
+    ...
+
   async def pull(
     self,
     model: str,
@@ -520,6 +712,24 @@ class AsyncClient(BaseClient):
       stream=stream,
     )
 
+  @overload
+  async def push(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  async def push(
+    self,
+    model: str,
+    insecure: bool = False,
+    stream: bool = True,
+  ) -> AsyncIterator[Mapping[str, Any]]:
+    ...
+
   async def push(
     self,
     model: str,
@@ -541,6 +751,29 @@ class AsyncClient(BaseClient):
       },
       stream=stream,
     )
+
+  @overload
+  async def create(
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
+    stream: bool = False,
+  ) -> Mapping[str, Any]:
+    ...
+
+  @overload
+  async def create(
+    self,
+    model: str,
+    path: Optional[Union[str, PathLike]] = None,
+    modelfile: Optional[str] = None,
+    quantize: Optional[str] = None,
+    stream: bool = True,
+  ) -> AsyncIterator[Mapping[str, Any]]:
+    ...
+
 
   async def create(
     self,
