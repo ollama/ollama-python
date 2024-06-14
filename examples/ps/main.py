@@ -1,7 +1,8 @@
 from ollama import ps, pull, chat
 
 pull('mistral')
-chat('mistral', messages=[{'role': 'user', 'content': 'Pick a number'}])
+response = chat('mistral', messages=[{'role': 'user', 'content': 'Pick a number'}])
+print(response['message']['content'])
 
 response = ps()
 
