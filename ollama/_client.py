@@ -595,7 +595,7 @@ class AsyncClient(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
-    stream: Literal[False] = False,
+    stream: bool = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
