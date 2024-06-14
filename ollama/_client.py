@@ -105,7 +105,7 @@ class Client(BaseClient):
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
-    stream: bool = False,
+    stream: Literal[False] = False,
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
@@ -121,7 +121,7 @@ class Client(BaseClient):
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
-    stream: bool = True,
+    stream: Literal[True] = True,
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
@@ -268,7 +268,7 @@ class Client(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -276,7 +276,7 @@ class Client(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> Iterator[Mapping[str, Any]]: ...
 
   def pull(
@@ -306,7 +306,7 @@ class Client(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -314,7 +314,7 @@ class Client(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> Iterator[Mapping[str, Any]]: ...
 
   def push(
@@ -346,7 +346,7 @@ class Client(BaseClient):
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
     quantize: Optional[str] = None,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -356,7 +356,7 @@ class Client(BaseClient):
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
     quantize: Optional[str] = None,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> Iterator[Mapping[str, Any]]: ...
 
   def create(
@@ -500,7 +500,7 @@ class AsyncClient(BaseClient):
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
-    stream: bool = False,
+    stream: Literal[False] = False,
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
@@ -516,7 +516,7 @@ class AsyncClient(BaseClient):
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
-    stream: bool = True,
+    stream: Literal[True] = True,
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
@@ -595,7 +595,7 @@ class AsyncClient(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
-    stream: bool = False,
+    stream: Literal[False] = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -663,7 +663,7 @@ class AsyncClient(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -671,7 +671,7 @@ class AsyncClient(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> AsyncIterator[Mapping[str, Any]]: ...
 
   async def pull(
@@ -701,7 +701,7 @@ class AsyncClient(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -709,7 +709,7 @@ class AsyncClient(BaseClient):
     self,
     model: str,
     insecure: bool = False,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> AsyncIterator[Mapping[str, Any]]: ...
 
   async def push(
@@ -741,7 +741,7 @@ class AsyncClient(BaseClient):
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
     quantize: Optional[str] = None,
-    stream: bool = False,
+    stream: Literal[False] = False,
   ) -> Mapping[str, Any]: ...
 
   @overload
@@ -751,7 +751,7 @@ class AsyncClient(BaseClient):
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
     quantize: Optional[str] = None,
-    stream: bool = True,
+    stream: Literal[True] = True,
   ) -> AsyncIterator[Mapping[str, Any]]: ...
 
   async def create(
