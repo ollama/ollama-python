@@ -1,8 +1,19 @@
 from ollama import ps, pull, chat
 
-pull('mistral')
-response = chat('mistral', messages=[{'role': 'user', 'content': 'Pick a number'}])
+response = pull('mistral', stream=True)
+progress_states = set()
+for progress in response:
+  if progress.get('status') in progress_states:
+    continue
+  progress_states.add(progress.get('status'))
+  print(progress.get('status'))
+
+print('\n')
+
+response = chat('mistral', messages=[{'role': 'user', 'content': 'Hello!'}])
 print(response['message']['content'])
+
+print('\n')
 
 response = ps()
 
