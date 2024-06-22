@@ -387,6 +387,7 @@ class Client(BaseClient):
         'modelfile': modelfile,
         'stream': stream,
         'quantize': quantize,
+        'path': str(realpath),
       },
       stream=stream,
     )
