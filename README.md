@@ -2,24 +2,6 @@
 
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
 
-## Prerequisites
-
-You need to have a local ollama server running to be able to continue. To do this:
-
-- Download: https://ollama.com/
-- Run an LLM: https://ollama.com/library
-    - Example: `ollama run llama2`
-    - Example: `ollama run llama2:70b`
-
-Then:
-
-```sh
-curl https://ollama.ai/install.sh | sh
-ollama serve
-```
-
-Next you can go ahead with `ollama-python`.
-
 ## Install
 
 ```sh
