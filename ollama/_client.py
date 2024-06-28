@@ -156,7 +156,7 @@ class Client(BaseClient):
     if not model:
       raise RequestError('must provide a model')
 
-    return self._request_stream(
+    response = self._request_stream(
       'POST',
       '/api/generate',
       json={
@@ -174,6 +174,13 @@ class Client(BaseClient):
       },
       stream=stream,
     )
+
+    
+    if format == 'json':
+        if 'response' in response and isinstance(response['response'], str):
+          response['response'] = json.loads(response['response'])
+
+    return response
 
   @overload
   def chat(
