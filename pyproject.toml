@@ -18,7 +18,7 @@ pytest-asyncio = "^0.23.2"
 pytest-cov = ">=4.1,<6.0"
 pytest-httpserver = "^1.0.8"
 pillow = "^10.2.0"
-ruff = ">=0.1.8,<0.5.0"
+ruff = ">=0.5.1,<0.6.0"
 
 [build-system]
 requires = ["poetry-core"]
