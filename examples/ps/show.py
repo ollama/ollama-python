@@ -2,9 +2,11 @@ from ollama import show, pull
 
 import json
 
+
 def prettify_json(data):
-    pretty_json = json.dumps(data, indent=4)
-    return pretty_json
+  pretty_json = json.dumps(data, indent=4)
+  return pretty_json
+
 
 response = pull('llava', stream=True)
 progress_states = set()

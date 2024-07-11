@@ -253,7 +253,6 @@ class Client(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Any]:
-    
     if not model:
       raise RequestError('must provide a model')
 
@@ -661,7 +660,7 @@ class AsyncClient(BaseClient):
       },
       stream=stream,
     )
-  
+
   async def embed(
     self,
     model: str = '',
@@ -670,7 +669,6 @@ class AsyncClient(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Any]:
-    
     if not model:
       raise RequestError('must provide a model')
 
