@@ -21,7 +21,7 @@ __all__ = [
   'ResponseError',
   'generate',
   'chat',
-  'embeddings',
+  'embed',
   'pull',
   'push',
   'create',
@@ -30,13 +30,14 @@ __all__ = [
   'copy',
   'show',
   'ps',
+  'embeddings',
 ]
 
 _client = Client()
 
 generate = _client.generate
 chat = _client.chat
-embeddings = _client.embeddings
+embed = _client.embed
 pull = _client.pull
 push = _client.push
 create = _client.create
@@ -45,3 +46,6 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+
+# Legacy
+embeddings = _client.embeddings
