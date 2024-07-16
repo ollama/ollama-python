@@ -27,7 +27,7 @@ try:
 except metadata.PackageNotFoundError:
   __version__ = '0.0.0'
 
-from ollama._types import Message, Options, RequestError, ResponseError, ToolCall, Tool
+from ollama._types import Message, Options, RequestError, ResponseError, Tool
 
 
 class BaseClient:
