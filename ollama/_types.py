@@ -52,6 +52,8 @@ class GenerateResponse(BaseGenerateResponse):
   context: Sequence[int]
   'Tokenized history up to the point of the response.'
 
+  tool_calls: Sequence[Any]
+  'List of tool calls made by the model.'
 
 class Message(TypedDict):
   """

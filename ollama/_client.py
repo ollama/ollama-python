@@ -109,6 +109,7 @@ class Client(BaseClient):
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
+    tools: Optional[Sequence[Any]] = None,
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Any]: ...
@@ -125,6 +126,7 @@ class Client(BaseClient):
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
+    tools: Optional[Sequence[Any]] = None,
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Iterator[Mapping[str, Any]]: ...
@@ -140,6 +142,7 @@ class Client(BaseClient):
     raw: bool = False,
     format: Literal['', 'json'] = '',
     images: Optional[Sequence[AnyStr]] = None,
+    tools: Optional[Sequence[Any]] = None,
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
@@ -168,6 +171,7 @@ class Client(BaseClient):
         'stream': stream,
         'raw': raw,
         'images': [_encode_image(image) for image in images or []],
+        'tools': tools or [],
         'format': format,
         'options': options or {},
         'keep_alive': keep_alive,
