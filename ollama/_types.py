@@ -1,5 +1,5 @@
 import json
-from typing import Any, TypedDict, Sequence, Literal
+from typing import Any, TypedDict, Sequence, Literal, Mapping
 
 import sys
 
@@ -52,6 +52,24 @@ class GenerateResponse(BaseGenerateResponse):
   context: Sequence[int]
   'Tokenized history up to the point of the response.'
 
+class ToolCallFunction(TypedDict):
+  """
+  Tool call function.
+  """
+  
+  name: str
+  'Name of the function.'
+  
+  args: NotRequired[Mapping[str, Any]]
+  'Arguments of the function.'
+  
+class ToolCall(TypedDict):
+  """
+  Model tool calls.
+  """
+  
+  function: ToolCallFunction
+  'Function to be called.'
 
 class Message(TypedDict):
   """
@@ -75,7 +93,30 @@ class Message(TypedDict):
 
   Valid image formats depend on the model. See the model card for more information.
   """
+  
+  tool_calls: NotRequired[Sequence[ToolCall]]
+  """
+  Tools calls to be made by the model.  
+  """
 
+class Property(TypedDict):
+    type: str
+    description: str
+    enum: NotRequired[Sequence[str]]  # `enum` is optional and can be a list of strings
+
+class Parameters(TypedDict):
+    type: str
+    required: Sequence[str]
+    properties: Mapping[str, Property]
+
+class ToolFunction(TypedDict):
+    name: str
+    description: str
+    parameters: Parameters
+
+class Tool(TypedDict):
+    type: str
+    function: ToolFunction
 
 class ChatResponse(BaseGenerateResponse):
   """
