@@ -99,7 +99,7 @@ class Message(TypedDict):
 
   tool_calls: NotRequired[Sequence[ToolCall]]
   """
-  Tools calls to be made by the model.  
+  Tools calls to be made by the model.
   """
 
 

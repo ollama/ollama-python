@@ -234,7 +234,7 @@ class Client(BaseClient):
       json={
         'model': model,
         'messages': messages,
-        'tools': tools,
+        'tools': tools or [],
         'stream': stream,
         'format': format,
         'options': options or {},
@@ -625,7 +625,7 @@ class AsyncClient(BaseClient):
       json={
         'model': model,
         'messages': messages,
-        'tools': tools,
+        'tools': tools or [],
         'stream': stream,
         'format': format,
         'options': options or {},
