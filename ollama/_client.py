@@ -27,7 +27,7 @@ try:
 except metadata.PackageNotFoundError:
   __version__ = '0.0.0'
 
-from ollama._types import Message, Options, RequestError, ResponseError
+from ollama._types import Message, Options, RequestError, ResponseError, Tool
 
 
 class BaseClient:
@@ -180,6 +180,7 @@ class Client(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: Literal[False] = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -191,6 +192,7 @@ class Client(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: Literal[True] = True,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -201,6 +203,7 @@ class Client(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: bool = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -222,12 +225,6 @@ class Client(BaseClient):
     messages = deepcopy(messages)
 
     for message in messages or []:
-      if not isinstance(message, dict):
-        raise TypeError('messages must be a list of Message or dict-like objects')
-      if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
-        raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if 'content' not in message:
-        raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
 
@@ -237,6 +234,7 @@ class Client(BaseClient):
       json={
         'model': model,
         'messages': messages,
+        'tools': tools or [],
         'stream': stream,
         'format': format,
         'options': options or {},
@@ -574,6 +572,7 @@ class AsyncClient(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: Literal[False] = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -585,6 +584,7 @@ class AsyncClient(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: Literal[True] = True,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -595,6 +595,7 @@ class AsyncClient(BaseClient):
     self,
     model: str = '',
     messages: Optional[Sequence[Message]] = None,
+    tools: Optional[Sequence[Tool]] = None,
     stream: bool = False,
     format: Literal['', 'json'] = '',
     options: Optional[Options] = None,
@@ -615,12 +616,6 @@ class AsyncClient(BaseClient):
     messages = deepcopy(messages)
 
     for message in messages or []:
-      if not isinstance(message, dict):
-        raise TypeError('messages must be a list of strings')
-      if not (role := message.get('role')) or role not in ['system', 'user', 'assistant']:
-        raise RequestError('messages must contain a role and it must be one of "system", "user", or "assistant"')
-      if 'content' not in message:
-        raise RequestError('messages must contain content')
       if images := message.get('images'):
         message['images'] = [_encode_image(image) for image in images]
 
@@ -630,6 +625,7 @@ class AsyncClient(BaseClient):
       json={
         'model': model,
         'messages': messages,
+        'tools': tools or [],
         'stream': stream,
         'format': format,
         'options': options or {},

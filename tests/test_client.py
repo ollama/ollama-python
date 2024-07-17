@@ -26,6 +26,7 @@ def test_client_chat(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
       'stream': False,
       'format': '',
       'options': {},
@@ -73,6 +74,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
       'stream': True,
       'format': '',
       'options': {},
@@ -102,6 +104,7 @@ def test_client_chat_images(httpserver: HTTPServer):
           'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
         },
       ],
+      'tools': [],
       'stream': False,
       'format': '',
       'options': {},
@@ -522,6 +525,7 @@ async def test_async_client_chat(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
       'stream': False,
       'format': '',
       'options': {},
@@ -560,6 +564,7 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
       'stream': True,
       'format': '',
       'options': {},
@@ -590,6 +595,7 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
           'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
         },
       ],
+      'tools': [],
       'stream': False,
       'format': '',
       'options': {},
