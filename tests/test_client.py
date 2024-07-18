@@ -137,6 +137,7 @@ def test_client_generate(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
@@ -182,6 +183,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
@@ -210,6 +212,7 @@ def test_client_generate_images(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
@@ -619,6 +622,7 @@ async def test_async_client_generate(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
@@ -659,6 +663,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
@@ -688,6 +693,7 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
+      'suffix': '',
       'system': '',
       'template': '',
       'context': [],
