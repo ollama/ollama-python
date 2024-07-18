@@ -21,6 +21,7 @@ __all__ = [
   'ResponseError',
   'generate',
   'chat',
+  'embed',
   'embeddings',
   'pull',
   'push',
@@ -36,6 +37,7 @@ _client = Client()
 
 generate = _client.generate
 chat = _client.chat
+embed = _client.embed
 embeddings = _client.embeddings
 pull = _client.pull
 push = _client.push

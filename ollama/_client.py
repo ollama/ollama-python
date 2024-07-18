@@ -243,6 +243,29 @@ class Client(BaseClient):
       stream=stream,
     )
 
+  def embed(
+    self,
+    model: str = '',
+    input: Union[str, Sequence[AnyStr]] = '',
+    truncate: bool = True,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    if not model:
+      raise RequestError('must provide a model')
+
+    return self._request(
+      'POST',
+      '/api/embed',
+      json={
+        'model': model,
+        'input': input,
+        'truncate': truncate,
+        'options': options or {},
+        'keep_alive': keep_alive,
+      },
+    ).json()
+
   def embeddings(
     self,
     model: str = '',
@@ -633,6 +656,31 @@ class AsyncClient(BaseClient):
       },
       stream=stream,
     )
+
+  async def embed(
+    self,
+    model: str = '',
+    input: Union[str, Sequence[AnyStr]] = '',
+    truncate: bool = True,
+    options: Optional[Options] = None,
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> Mapping[str, Any]:
+    if not model:
+      raise RequestError('must provide a model')
+
+    response = await self._request(
+      'POST',
+      '/api/embed',
+      json={
+        'model': model,
+        'input': input,
+        'truncate': truncate,
+        'options': options or {},
+        'keep_alive': keep_alive,
+      },
+    )
+
+    return response.json()
 
   async def embeddings(
     self,
