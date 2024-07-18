@@ -101,10 +101,16 @@ ollama.pull('llama3')
 ollama.push('user/llama3')
 ```
 
-### Embeddings
+### Embed
 
 ```python
-ollama.embeddings(model='llama3', prompt='The sky is blue because of rayleigh scattering')
+ollama.embed(model='llama3', input='Why is the sky blue?')
+```
+
+### Embed (Batch Embedding)
+
+```python
+ollama.embed(model='llama3', input=['Why is the sky blue?', 'Why is the grass green?'])
 ```
 
 ### Ps
