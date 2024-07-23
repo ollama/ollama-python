@@ -79,10 +79,10 @@ class Message(TypedDict):
   Chat message.
   """
 
-  role: Literal['user', 'assistant', 'system']
-  "Assumed role of the message. Response messages always has role 'assistant'."
+  role: Literal['user', 'assistant', 'system', 'tool']
+  "Assumed role of the message. Response messages always has role 'assistant' or 'tool'."
 
-  content: str
+  content: NotRequired[str]
   'Content of the message. Response messages contains message fragments when streaming.'
 
   images: NotRequired[Sequence[Any]]
