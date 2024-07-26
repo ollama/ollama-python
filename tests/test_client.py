@@ -4,11 +4,12 @@ import json
 import pytest
 import tempfile
 from pathlib import Path
+from typing import NamedTuple, Literal
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 from PIL import Image
 
-from ollama._client import Client, AsyncClient
+from ollama import Client, AsyncClient, ToolRegistry
 
 
 class PrefixPattern(URIPattern):
@@ -129,6 +130,81 @@ def test_client_chat_images(httpserver: HTTPServer):
     assert response['message']['role'] == 'assistant'
     assert response['message']['content'] == "I don't know."
 
+
+def test_client_chat_tools(httpserver: HTTPServer):
+  registry = ToolRegistry()
+
+  @registry.register
+  def get_flight_times(departure: str, arrival: str) -> str:
+    """
+    Get flight times.
+    :param departure: Departure location code
+    :param arrival: Arrival location code
+    """
+    flights = {
+      'NYC-LAX': {'departure': '08:00 AM', 'arrival': '11:30 AM', 'duration': '5h 30m'},
+      'LAX-NYC': {'departure': '02:00 PM', 'arrival': '10:30 PM', 'duration': '5h 30m'},
+      'LHR-JFK': {'departure': '10:00 AM', 'arrival': '01:00 PM', 'duration': '8h 00m'},
+      'JFK-LHR': {'departure': '09:00 PM', 'arrival': '09:00 AM', 'duration': '7h 00m'},
+      'CDG-DXB': {'departure': '11:00 AM', 'arrival': '08:00 PM', 'duration': '6h 00m'},
+      'DXB-CDG': {'departure': '03:00 AM', 'arrival': '07:30 AM', 'duration': '7h 30m'},
+    }
+
+    key = f'{departure}-{arrival}'.upper()
+    return flights.get(key, {'error': 'Flight not found'})
+  
+  tools = registry.tools
+  assert tools[0]['type'] == "function"
+  assert tools[0]['function']['name'] == "get_flight_times"
+  assert tools[0]['function']['description'] == "Get flight times."
+  assert tools[0]['function']['parameters']['type'] == "object"
+  assert tools[0]['function']['parameters']['required'] == ['departure', 'arrival']
+  assert tools[0]['function']['parameters']['properties']['departure']['type'] == "string"
+  assert tools[0]['function']['parameters']['properties']['departure']['description'] == "Departure location code"
+  assert tools[0]['function']['parameters']['properties']['arrival']['type'] == "string"
+  assert tools[0]['function']['parameters']['properties']['arrival']['description'] == "Arrival location code"
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'What is the flight time from New York (NYC) to Los Angeles (LAX)?'}],
+      'tools': tools,
+      'stream': False,
+      'format': '',
+      'options': {},
+      'keep_alive': None,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy', 
+      'message': {
+        'role': 'assistant', 
+        'content': '', 
+        'tool_calls': [{
+          'function': {
+            'name': 'get_flight_times', 
+            'arguments': {'arrival': 'LAX', 'departure': 'NYC'}
+          }
+        }]
+      }
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'What is the flight time from New York (NYC) to Los Angeles (LAX)?'}], tools=tools)
+  assert response['model'] == 'dummy'
+  assert response['message']['role'] == 'assistant'
+  assert response['message']['content'] == ""
+  assert response['message']['tool_calls'][0]['function']['name'] == "get_flight_times"
+  assert response['message']['tool_calls'][0]['function']['arguments']['arrival'] == "LAX"
+  assert response['message']['tool_calls'][0]['function']['arguments']['departure'] == "NYC"
+
+  tool_output = registry.invoke(**response['message']['tool_calls'][0]['function'])
+  assert tool_output['departure'] == "08:00 AM"
+  assert tool_output['arrival'] == "11:30 AM"
+  assert tool_output['duration'] == "5h 30m"
 
 def test_client_generate(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
@@ -613,6 +689,73 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
     response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': [b.getvalue()]}])
     assert isinstance(response, dict)
 
+
+@pytest.mark.asyncio
+async def test_async_client_chat_tools(httpserver: HTTPServer):
+  registry = ToolRegistry()
+
+  @registry.register
+  class User(NamedTuple):
+    """
+    User Information
+    :param name: Name of the user
+    :param role: Role assigned to the user
+    """
+    name: str
+    role: Literal['admin', 'developer', 'tester']
+  
+  tools = registry.tools
+  assert tools[0]['type'] == "function"
+  assert tools[0]['function']['name'] == "User"
+  assert tools[0]['function']['description'] == "User Information"
+  assert tools[0]['function']['parameters']['type'] == "object"
+  assert tools[0]['function']['parameters']['required'] == ['name', 'role']
+  assert tools[0]['function']['parameters']['properties']['name']['type'] == "string"
+  assert tools[0]['function']['parameters']['properties']['name']['description'] == "Name of the user"
+  assert tools[0]['function']['parameters']['properties']['role']['type'] == "string"
+  assert tools[0]['function']['parameters']['properties']['role']['enum'] == ['admin', 'developer', 'tester']
+  assert tools[0]['function']['parameters']['properties']['role']['description'] == "Role assigned to the user"
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'User Jeffery is an admin of Ollama'}],
+      'tools': tools,
+      'stream': False,
+      'format': '',
+      'options': {},
+      'keep_alive': None,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy', 
+      'message': {
+        'role': 'assistant', 
+        'content': '', 
+        'tool_calls': [{
+          'function': {
+            'name': 'User', 
+            'arguments': {'name': 'Jeffery', 'role': 'admin'}
+          }
+        }]
+      }
+    }
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'User Jeffery is an admin of Ollama'}], tools=tools)
+  assert response['model'] == 'dummy'
+  assert response['message']['role'] == 'assistant'
+  assert response['message']['content'] == ""
+  assert response['message']['tool_calls'][0]['function']['name'] == "User"
+  assert response['message']['tool_calls'][0]['function']['arguments']['name'] == "Jeffery"
+  assert response['message']['tool_calls'][0]['function']['arguments']['role'] == "admin"
+
+  tool_output = registry.invoke(**response['message']['tool_calls'][0]['function'])
+  assert tool_output.name == "Jeffery"
+  assert tool_output.role == "admin"
 
 @pytest.mark.asyncio
 async def test_async_client_generate(httpserver: HTTPServer):

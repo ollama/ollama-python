@@ -61,7 +61,7 @@ class ToolCallFunction(TypedDict):
   name: str
   'Name of the function.'
 
-  args: NotRequired[Mapping[str, Any]]
+  arguments: NotRequired[Mapping[str, Any]]
   'Arguments of the function.'
 
 
@@ -79,7 +79,7 @@ class Message(TypedDict):
   Chat message.
   """
 
-  role: Literal['user', 'assistant', 'system']
+  role: Literal['user', 'assistant', 'system', 'tool']
   "Assumed role of the message. Response messages always has role 'assistant'."
 
   content: str
@@ -105,7 +105,7 @@ class Message(TypedDict):
 
 class Property(TypedDict):
   type: str
-  description: str
+  description: NotRequired[str]
   enum: NotRequired[Sequence[str]]  # `enum` is optional and can be a list of strings
 
 
@@ -117,7 +117,7 @@ class Parameters(TypedDict):
 
 class ToolFunction(TypedDict):
   name: str
-  description: str
+  description: NotRequired[str]
   parameters: Parameters
 
 

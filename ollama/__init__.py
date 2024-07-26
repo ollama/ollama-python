@@ -8,6 +8,7 @@ from ollama._types import (
   RequestError,
   ResponseError,
 )
+from ollama.tool_calling import * 
 
 __all__ = [
   'Client',
@@ -17,8 +18,12 @@ __all__ = [
   'ProgressResponse',
   'Message',
   'Options',
+  'ToolRegistry',
   'RequestError',
   'ResponseError',
+  'ToolRegisteredError',
+  'ToolNotRegisteredError',
+  'ParseError',
   'generate',
   'chat',
   'embed',
