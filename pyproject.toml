@@ -21,7 +21,6 @@ pytest-cov = ">=4.1,<6.0"
 pytest-httpserver = "^1.0.8"
 pillow = "^10.2.0"
 ruff = ">=0.1.8,<0.6.0"
-ipykernel = "^6.29.5"
 
 [build-system]
 requires = ["poetry-core"]
