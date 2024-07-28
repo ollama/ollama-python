@@ -11,7 +11,6 @@ repository = "https://github.com/jmorganca/ollama-python"
 [tool.poetry.dependencies]
 python = "^3.8"
 httpx = "^0.27.0"
-pydantic = ">=2.6.0"
 docstring-parser = "0.16"
 
 [tool.poetry.group.dev.dependencies]

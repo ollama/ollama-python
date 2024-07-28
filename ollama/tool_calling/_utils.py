@@ -1,10 +1,27 @@
+import sys
 import inspect
 import asyncio
 import typing as t
 from enum import Enum
 from pathlib import Path
-from pydantic import BaseModel
 from docstring_parser import parse_from_object, Docstring
+
+try:
+    from pydantic import BaseModel
+except ImportError:
+    class ModelPrivateAttr:
+        __slots__: t.Tuple[str, str]
+
+        def get_default(self) -> t.Any:
+            ...
+        def __eq__(self, other: t.Any) -> bool:
+            ...
+
+    class BaseModel(t.Protocol):
+        __class_vars__: t.ClassVar[set[str]]
+        __private_attributes__: t.ClassVar[dict[str, ModelPrivateAttr]]
+        __signature__: t.ClassVar[inspect.Signature]
+
 
 _SUPPORTED_TYPE_MAP = {
     # Builtins
@@ -72,8 +89,8 @@ def has_orig_bases(__obj, __base: str):
         return True
     return False
 
-# Function-related definitions
 
+# Function-related definitions
 P = t.ParamSpec("P")
 R = t.TypeVar("R")
 
@@ -151,9 +168,10 @@ def compile_function_object(
 PydanticModel = t.TypeVar("PydanticModel", bound=BaseModel)
 
 def is_pydantic_model(__obj):
+    if getattr(BaseModel, '_is_protocol', False):
+        return False
+    
     is_class = isinstance(__obj, type)
-    import sys
-
     if sys.version_info < (3, 10):
         if len(typing.get_args(__obj)) == 0:
             return False
@@ -282,15 +300,26 @@ def parse_property(__annotation: t.Type | t.ForwardRef) -> t.Dict[str, t.Any]:
     Parse the annotation to tool-calling specific property map
     """
     if isinstance(__annotation, t.ForwardRef):
-        __annotation = __annotation._evaluate({}, {}, frozenset())
+        ns = getattr(__annotation, "__globals__", None)
+        __annotation = __annotation._evaluate(ns, ns, frozenset())
 
     origin: t.Type = t.get_origin(__annotation) or __annotation
-    args = t.get_args(__annotation)
+    args = list(t.get_args(__annotation))
     if args:
-        if origin is t.Literal:
-            return {'type': 'string', 'enum': list(args)}
         if origin in (list, t.List):
             return {'type': 'array', 'items': parse_property(args[0])}
+        if origin is t.Literal:
+            types = {type(e) for e in args}
+            if types == {str}:
+                return {'enum': args, 'type': 'string'}
+            elif types == {int}:
+                return {'enum': args, 'type': 'integer'}
+            elif types == {float}:
+                return {'enum': args, 'type': 'number'}
+            elif types == {bool}:
+                return {'enum': args, 'type': 'boolean'}
+            else:
+                raise ParseError("Literal args must be of same type.")
         
     if issubclass(origin, Path):
         return {'type': 'string'}
@@ -324,15 +353,17 @@ def parse_value(__annotation: t.Type | t.ForwardRef, raw_value: t.Any):
     """
     rest_err = lambda v: f"but received value of type {type(v)!r} instead."
     if isinstance(__annotation, t.ForwardRef):
-        __annotation = __annotation._evaluate({}, {}, frozenset())
-    
+        ns = getattr(__annotation, "__globals__", None)
+        __annotation = __annotation._evaluate(ns, ns, frozenset())
+
     origin: t.Type = t.get_origin(__annotation) or __annotation
-    args = t.get_args(__annotation)
+    args = list(t.get_args(__annotation))
     if args:
         if origin is t.Literal:
-            if not isinstance(raw_value, str):
+            arg_type = type(args[0])
+            if not isinstance(raw_value, arg_type):
                 raise ParseError(
-                    f"Expected string value for Literal parameter, {rest_err(raw_value)}" 
+                    f"Expected {arg_type.__name__} value for Literal parameter, {rest_err(raw_value)}" 
                 )
             if raw_value not in args:
                 raise ParseError(
