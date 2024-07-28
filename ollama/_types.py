@@ -61,7 +61,7 @@ class ToolCallFunction(TypedDict):
   name: str
   'Name of the function.'
 
-  args: NotRequired[Mapping[str, Any]]
+  arguments: NotRequired[Mapping[str, Any]]
   'Arguments of the function.'
 
 
