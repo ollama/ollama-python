@@ -1,7 +1,6 @@
 from enum import Enum
 import typing as t
-import ollama._toolfuncs as ollama_tools
-
+import ollama
 
 class ExampleEnum(Enum):
     FOO = "foo"
@@ -9,7 +8,7 @@ class ExampleEnum(Enum):
     BAZ = "baz"
 
 
-@ollama_tools.annotated_tool
+@ollama.annotated_tool
 def example_1(
     expr_1: t.Annotated[str, "first simple str value"],
     expr_2: t.Annotated[str, "second simple str value"],

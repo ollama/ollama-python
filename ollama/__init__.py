@@ -8,6 +8,7 @@ from ollama._types import (
   RequestError,
   ResponseError,
 )
+from ollama._toolfuncs import annotated_tool
 
 __all__ = [
   'Client',
