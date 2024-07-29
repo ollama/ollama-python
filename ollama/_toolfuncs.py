@@ -1,6 +1,12 @@
 import inspect
 from enum import EnumMeta
-from types import NoneType
+
+try:
+    # Python 3.10+
+    from types import NoneType
+except ImportError:
+    NoneType = type(None)
+
 from typing import (
     Annotated,
     Dict,
