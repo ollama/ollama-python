@@ -1,6 +1,10 @@
-from enum import Enum
 import typing as t
 import ollama
+import pytest
+
+from enum import Enum
+from ollama._toolfuncs import CannotParseParameters
+
 
 class ExampleEnum(Enum):
     FOO = "foo"
@@ -125,3 +129,10 @@ def test_optional_unannotated_enum_1():
     assert _["type"] == "string"
     assert _["description"] == "opt enum 2"
     assert _["is_optional"] is True
+
+
+def test_unsupported_parameter():
+    def foo(unsupported: t.Annotated[t.Callable, "a function being passed"]):
+        """this is not supported - expect CannotParseParameters"""
+
+    assert pytest.raises(CannotParseParameters, ollama.annotated_tool, foo)

@@ -136,9 +136,6 @@ def annotated_tool(orig_fn) -> Tool:
         if param_info["is_optional"]:
             required_params.discard(param_name)
 
-        if param_info["param_type"] is None:
-            raise Exception(param_name)
-
         optional_prop_kwargs = {}
         if "property_enum" in param_info:
             # don't put enum in the Property if not present in annotation
