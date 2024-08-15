@@ -8,7 +8,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 from PIL import Image
 
-from ollama._client import Client, AsyncClient
+from ollama._client import Client, AsyncClient, _parse_host
 
 
 class PrefixPattern(URIPattern):
@@ -992,3 +992,27 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile() as blob:
     response = await client._create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+
+def test_parse_host(httpserver: HTTPServer):
+  test_data = {
+    None: 'http://127.0.0.1:11434',
+    '': 'http://127.0.0.1:11434',
+    '1.2.3.4': 'http://1.2.3.4:11434',
+    ':56789': 'http://127.0.0.1:56789',
+    '1.2.3.4:56789': 'http://1.2.3.4:56789',
+    'http://1.2.3.4': 'http://1.2.3.4:80',
+    'https://1.2.3.4': 'https://1.2.3.4:443',
+    'https://1.2.3.4:56789': 'https://1.2.3.4:56789',
+    'example.com': 'http://example.com:11434',
+    'example.com:56789': 'http://example.com:56789',
+    'http://example.com': 'http://example.com:80',
+    'https://example.com': 'https://example.com:443',
+    'https://example.com:56789': 'https://example.com:56789',
+    'example.com/': 'http://example.com:11434',
+    'example.com:56789/': 'http://example.com:56789',
+    '[0001:002:003:0004::1]': 'http://[0001:002:003:0004::1]:11434',
+  }
+
+  for url in test_data:
+    assert test_data[url] == _parse_host(url)
