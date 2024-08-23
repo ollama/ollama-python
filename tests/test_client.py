@@ -1011,6 +1011,10 @@ def test_parse_host(httpserver: HTTPServer):
     'https://example.com:56789': 'https://example.com:56789',
     'example.com/': 'http://example.com:11434',
     'example.com:56789/': 'http://example.com:56789',
+    'example.com/path': 'http://example.com:11434/path',
+    'example.com:56789/path': 'http://example.com:56789/path',
+    'https://example.com:56789/path': 'https://example.com:56789/path',
+    'example.com:56789/path/': 'http://example.com:56789/path',
     '[0001:002:003:0004::1]': 'http://[0001:002:003:0004::1]:11434',
   }
 
