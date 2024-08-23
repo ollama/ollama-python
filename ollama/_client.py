@@ -987,6 +987,14 @@ def _parse_host(host: Optional[str]) -> str:
   'http://example.com:11434'
   >>> _parse_host('example.com:56789/')
   'http://example.com:56789'
+  >>> _parse_host('example.com/path')
+  'http://example.com:11434/path'
+  >>> _parse_host('example.com:56789/path')
+  'http://example.com:56789/path'
+  >>> _parse_host('https://example.com:56789/path')
+  'https://example.com:56789/path'
+  >>> _parse_host('example.com:56789/path/')
+  'http://example.com:56789/path'
   """
 
   host, port = host or '', 11434
@@ -1001,5 +1009,8 @@ def _parse_host(host: Optional[str]) -> str:
   split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
   host = split.hostname or '127.0.0.1'
   port = split.port or port
+
+  if path := split.path.strip('/'):
+    return f'{scheme}://{host}:{port}/{path}'
 
   return f'{scheme}://{host}:{port}'
