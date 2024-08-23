@@ -735,4 +735,7 @@ def _parse_host(host: Optional[str]) -> str:
   port = split.port or port
   path = split.path or ''
 
-  return f'{scheme}://{host}:{port}{path}'
+  if path := split.path.strip('/'):
+    return f'{scheme}://{host}:{port}/{path}'
+
+  return f'{scheme}://{host}:{port}'
