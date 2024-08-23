@@ -718,7 +718,7 @@ def _parse_host(host: Optional[str]) -> str:
   >>> _parse_host('https://example.com:56789/path')
   'https://example.com:56789/path'
   >>> _parse_host('example.com:56789/path/')
-  'http://example.com:56789/path/'
+  'http://example.com:56789/path'
   """
 
   host, port = host or '', 11434
