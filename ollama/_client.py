@@ -987,6 +987,14 @@ def _parse_host(host: Optional[str]) -> str:
   'http://example.com:11434'
   >>> _parse_host('example.com:56789/')
   'http://example.com:56789'
+  >>> _parse_host('example.com/path')
+  'http://example.com:11434/path'
+  >>> _parse_host('example.com:56789/path')
+  'http://example.com:56789/path'
+  >>> _parse_host('https://example.com:56789/path')
+  'https://example.com:56789/path'
+  >>> _parse_host('example.com:56789/path/')
+  'http://example.com:56789/path'
   >>> _parse_host('[0001:002:003:0004::1]')
   'http://[0001:002:003:0004::1]:11434'
   """
@@ -1003,6 +1011,9 @@ def _parse_host(host: Optional[str]) -> str:
   split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
   host = split.hostname or '127.0.0.1'
   port = split.port or port
+
+  if path := split.path.strip('/'):
+    return f'{scheme}://{host}:{port}/{path}'
 
   # Fix missing square brackets for IPv6 from urlsplit
   if hostport.startswith('['):
