@@ -8,7 +8,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 from PIL import Image
 
-from ollama._client import Client, AsyncClient, _parse_host
+from ollama._client import Client, AsyncClient
 
 
 class PrefixPattern(URIPattern):
