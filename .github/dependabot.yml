@@ -3,8 +3,12 @@ updates:
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: daily
+      interval: weekly
   - package-ecosystem: pip
     directory: /
     schedule:
       interval: daily
+  - package-ecosystem: pip
+    directory: /examples/pull-progress
+    schedule:
+      interval: weekly
