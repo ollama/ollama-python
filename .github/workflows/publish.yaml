@@ -13,16 +13,21 @@ jobs:
       id-token: write
       contents: write
     steps:
-      - uses: actions/checkout@v4
-      - run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: install poetry
+        run: pipx install poetry
+      - name: setup latest python 3
+        uses: actions/setup-python@v5
         with:
           python-version: '3.x'
           cache: poetry
-      - run: |
+      - name: build new version ${{ env.GITHUB_REF_NAME }}
+        run: |
           poetry version ${GITHUB_REF_NAME#v}
           poetry build
       - uses: pypa/gh-action-pypi-publish@release/v1
-      - run: gh release upload $GITHUB_REF_NAME dist/*
+      - name: upload new release ${{ env.GITHUB_REF_NAME }}
+        run: gh release upload $GITHUB_REF_NAME dist/*
         env:
           GH_TOKEN: ${{ github.token }}

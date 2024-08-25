@@ -10,15 +10,21 @@ jobs:
         python-version: ['3.8', '3.9', '3.10', '3.11', '3.12']
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - name: checkout
+        uses: actions/checkout@v4
+      - name: install poetry
+        run: pipx install poetry
+      - name: setup python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
           cache: poetry
-      - run: poetry install --with=dev
-      - run: poetry run ruff check --output-format=github .
-      - run: poetry run ruff format --check .
+      - name: install (dev) dependencies
+        run: poetry install --with=dev
+      - name: lint code
+        run: poetry run ruff check --output-format=github .
+      - name: check formatting
+        run: poetry run ruff format --check .
       - run: poetry run pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=ollama --cov-report=xml --cov-report=html
       - name: check poetry.lock is up-to-date
         run: poetry check --lock
@@ -26,8 +32,9 @@ jobs:
         run: |
           poetry export >requirements.txt
           git diff --exit-code requirements.txt
-      - uses: actions/upload-artifact@v4
+      - name: upload test results
+        uses: actions/upload-artifact@v4
         with:
           name: pytest-results-${{ matrix.python-version }}
           path: junit/test-results-${{ matrix.python-version }}.xml
-        if: ${{ always() }}
+        if: always()
