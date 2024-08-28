@@ -495,7 +495,7 @@ class AsyncClient(BaseClient):
         try:
           r.raise_for_status()
         except httpx.HTTPStatusError as e:
-          e.response.read()
+          await e.response.aread()
           raise ResponseError(e.response.text, e.response.status_code) from None
 
         async for line in r.aiter_lines():
