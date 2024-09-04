@@ -28,9 +28,6 @@ def test_client_chat(httpserver: HTTPServer):
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
       'tools': [],
       'stream': False,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -76,9 +73,6 @@ def test_client_chat_stream(httpserver: HTTPServer):
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
       'tools': [],
       'stream': True,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -106,9 +100,6 @@ def test_client_chat_images(httpserver: HTTPServer):
       ],
       'tools': [],
       'stream': False,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -137,16 +128,7 @@ def test_client_generate(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': False,
-      'raw': False,
-      'images': [],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -183,16 +165,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': True,
-      'raw': False,
-      'images': [],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -212,16 +185,8 @@ def test_client_generate_images(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': False,
-      'raw': False,
       'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_json(
     {
@@ -244,15 +209,11 @@ def test_client_pull(httpserver: HTTPServer):
     '/api/pull',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': False,
     },
-  ).respond_with_json(
-    {
-      'status': 'success',
-    }
-  )
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
   response = client.pull('dummy')
@@ -274,7 +235,7 @@ def test_client_pull_stream(httpserver: HTTPServer):
     '/api/pull',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': True,
     },
@@ -293,15 +254,15 @@ def test_client_push(httpserver: HTTPServer):
     '/api/push',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': False,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
   response = client.push('dummy')
-  assert isinstance(response, dict)
+  assert response['status'] == 'success'
 
 
 def test_client_push_stream(httpserver: HTTPServer):
@@ -317,7 +278,7 @@ def test_client_push_stream(httpserver: HTTPServer):
     '/api/push',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': True,
     },
@@ -337,12 +298,11 @@ def test_client_create_path(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
@@ -352,7 +312,7 @@ def test_client_create_path(httpserver: HTTPServer):
       modelfile.flush()
 
       response = client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 def test_client_create_path_relative(httpserver: HTTPServer):
@@ -361,12 +321,11 @@ def test_client_create_path_relative(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
@@ -376,7 +335,7 @@ def test_client_create_path_relative(httpserver: HTTPServer):
       modelfile.flush()
 
       response = client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 @pytest.fixture
@@ -394,12 +353,11 @@ def test_client_create_path_user_home(httpserver: HTTPServer, userhomedir):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
@@ -409,7 +367,7 @@ def test_client_create_path_user_home(httpserver: HTTPServer, userhomedir):
       modelfile.flush()
 
       response = client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 def test_client_create_modelfile(httpserver: HTTPServer):
@@ -418,18 +376,17 @@ def test_client_create_modelfile(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
     response = client.create('dummy', modelfile=f'FROM {blob.name}')
-    assert isinstance(response, dict)
+    assert response['status'] == 'success'
 
 
 def test_client_create_modelfile_roundtrip(httpserver: HTTPServer):
@@ -438,7 +395,7 @@ def test_client_create_modelfile_roundtrip(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': '''FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>
 {{.Prompt}} [/INST]"""
@@ -452,9 +409,8 @@ PARAMETER stop [/INST]
 PARAMETER stop <<SYS>>
 PARAMETER stop <</SYS>>''',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
@@ -478,7 +434,7 @@ PARAMETER stop <</SYS>>''',
         ]
       ),
     )
-    assert isinstance(response, dict)
+    assert response['status'] == 'success'
 
 
 def test_client_create_from_library(httpserver: HTTPServer):
@@ -486,17 +442,16 @@ def test_client_create_from_library(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM llama2',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
   response = client.create('dummy', modelfile='FROM llama2')
-  assert isinstance(response, dict)
+  assert response['status'] == 'success'
 
 
 def test_client_create_blob(httpserver: HTTPServer):
@@ -524,14 +479,14 @@ def test_client_delete(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
   client = Client(httpserver.url_for('/api/delete'))
   response = client.delete('dummy')
-  assert response == {'status': 'success'}
+  assert response['status'] == 'success'
 
 
 def test_client_copy(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/copy'), method='POST').respond_with_response(Response(status=200))
   client = Client(httpserver.url_for('/api/copy'))
   response = client.copy('dum', 'dummer')
-  assert response == {'status': 'success'}
+  assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -544,15 +499,22 @@ async def test_async_client_chat(httpserver: HTTPServer):
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
       'tools': [],
       'stream': False,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
 
   client = AsyncClient(httpserver.url_for('/'))
   response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
-  assert isinstance(response, dict)
+  assert response['model'] == 'dummy'
+  assert response['message']['role'] == 'assistant'
+  assert response['message']['content'] == "I don't know."
 
 
 @pytest.mark.asyncio
@@ -583,9 +545,6 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
       'tools': [],
       'stream': True,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -614,18 +573,25 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
       ],
       'tools': [],
       'stream': False,
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
 
   client = AsyncClient(httpserver.url_for('/'))
 
   with io.BytesIO() as b:
     Image.new('RGB', (1, 1)).save(b, 'PNG')
     response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': [b.getvalue()]}])
-    assert isinstance(response, dict)
+    assert response['model'] == 'dummy'
+    assert response['message']['role'] == 'assistant'
+    assert response['message']['content'] == "I don't know."
 
 
 @pytest.mark.asyncio
@@ -636,22 +602,19 @@ async def test_async_client_generate(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': False,
-      'raw': False,
-      'images': [],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'Because it is.',
+    }
+  )
 
   client = AsyncClient(httpserver.url_for('/'))
   response = await client.generate('dummy', 'Why is the sky blue?')
-  assert isinstance(response, dict)
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
 
 
 @pytest.mark.asyncio
@@ -677,16 +640,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': True,
-      'raw': False,
-      'images': [],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
   ).respond_with_handler(stream_handler)
 
@@ -707,25 +661,23 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
-      'suffix': '',
-      'system': '',
-      'template': '',
-      'context': [],
       'stream': False,
-      'raw': False,
       'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
-      'format': '',
-      'options': {},
-      'keep_alive': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'Because it is.',
+    }
+  )
 
   client = AsyncClient(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as temp:
     Image.new('RGB', (1, 1)).save(temp, 'PNG')
     response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-    assert isinstance(response, dict)
+    assert response['model'] == 'dummy'
+    assert response['response'] == 'Because it is.'
 
 
 @pytest.mark.asyncio
@@ -734,15 +686,15 @@ async def test_async_client_pull(httpserver: HTTPServer):
     '/api/pull',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': False,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
   response = await client.pull('dummy')
-  assert isinstance(response, dict)
+  assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -761,7 +713,7 @@ async def test_async_client_pull_stream(httpserver: HTTPServer):
     '/api/pull',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': True,
     },
@@ -781,15 +733,15 @@ async def test_async_client_push(httpserver: HTTPServer):
     '/api/push',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': False,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
   response = await client.push('dummy')
-  assert isinstance(response, dict)
+  assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -806,7 +758,7 @@ async def test_async_client_push_stream(httpserver: HTTPServer):
     '/api/push',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'insecure': False,
       'stream': True,
     },
@@ -827,12 +779,11 @@ async def test_async_client_create_path(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
@@ -842,7 +793,7 @@ async def test_async_client_create_path(httpserver: HTTPServer):
       modelfile.flush()
 
       response = await client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -852,12 +803,11 @@ async def test_async_client_create_path_relative(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
@@ -867,7 +817,7 @@ async def test_async_client_create_path_relative(httpserver: HTTPServer):
       modelfile.flush()
 
       response = await client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -877,12 +827,11 @@ async def test_async_client_create_path_user_home(httpserver: HTTPServer, userho
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
@@ -892,7 +841,7 @@ async def test_async_client_create_path_user_home(httpserver: HTTPServer, userho
       modelfile.flush()
 
       response = await client.create('dummy', path=modelfile.name)
-      assert isinstance(response, dict)
+      assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -902,18 +851,17 @@ async def test_async_client_create_modelfile(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
     response = await client.create('dummy', modelfile=f'FROM {blob.name}')
-    assert isinstance(response, dict)
+    assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -923,7 +871,7 @@ async def test_async_client_create_modelfile_roundtrip(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': '''FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>
 {{.Prompt}} [/INST]"""
@@ -937,9 +885,8 @@ PARAMETER stop [/INST]
 PARAMETER stop <<SYS>>
 PARAMETER stop <</SYS>>''',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
@@ -963,7 +910,7 @@ PARAMETER stop <</SYS>>''',
         ]
       ),
     )
-    assert isinstance(response, dict)
+    assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -972,17 +919,16 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
     '/api/create',
     method='POST',
     json={
-      'name': 'dummy',
+      'model': 'dummy',
       'modelfile': 'FROM llama2',
       'stream': False,
-      'quantize': None,
     },
-  ).respond_with_json({})
+  ).respond_with_json({'status': 'success'})
 
   client = AsyncClient(httpserver.url_for('/'))
 
   response = await client.create('dummy', modelfile='FROM llama2')
-  assert isinstance(response, dict)
+  assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -1013,7 +959,7 @@ async def test_async_client_delete(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
   client = AsyncClient(httpserver.url_for('/api/delete'))
   response = await client.delete('dummy')
-  assert response == {'status': 'success'}
+  assert response['status'] == 'success'
 
 
 @pytest.mark.asyncio
@@ -1021,4 +967,4 @@ async def test_async_client_copy(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/copy'), method='POST').respond_with_response(Response(status=200))
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
-  assert response == {'status': 'success'}
+  assert response['status'] == 'success'

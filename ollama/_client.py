@@ -1,18 +1,24 @@
-import ipaddress
 import os
 import io
 import json
-import httpx
-import binascii
 import platform
+import ipaddress
 import urllib.parse
 from os import PathLike
 from pathlib import Path
-from copy import deepcopy
 from hashlib import sha256
-from base64 import b64encode, b64decode
 
-from typing import Any, AnyStr, Union, Optional, Sequence, Mapping, Literal, overload
+from typing import (
+  Any,
+  Literal,
+  Mapping,
+  Optional,
+  Sequence,
+  Type,
+  TypeVar,
+  Union,
+  overload,
+)
 
 import sys
 
@@ -28,7 +34,38 @@ try:
 except metadata.PackageNotFoundError:
   __version__ = '0.0.0'
 
-from ollama._types import Message, Options, RequestError, ResponseError, Tool
+import httpx
+
+from ollama._types import (
+  ChatRequest,
+  ChatResponse,
+  CreateRequest,
+  CopyRequest,
+  DeleteRequest,
+  EmbedRequest,
+  EmbedResponse,
+  EmbeddingsRequest,
+  EmbeddingsResponse,
+  GenerateRequest,
+  GenerateResponse,
+  Image,
+  ListResponse,
+  Message,
+  Options,
+  ProcessResponse,
+  ProgressResponse,
+  PullRequest,
+  PushRequest,
+  RequestError,
+  ResponseError,
+  ShowRequest,
+  ShowResponse,
+  StatusResponse,
+  Tool,
+)
+
+
+T = TypeVar('T')
 
 
 class BaseClient:
@@ -38,6 +75,7 @@ class BaseClient:
     host: Optional[str] = None,
     follow_redirects: bool = True,
     timeout: Any = None,
+    headers: Optional[Mapping[str, str]] = None,
     **kwargs,
   ) -> None:
     """
@@ -48,16 +86,15 @@ class BaseClient:
     `kwargs` are passed to the httpx client.
     """
 
-    headers = kwargs.pop('headers', {})
-    headers['Content-Type'] = 'application/json'
-    headers['Accept'] = 'application/json'
-    headers['User-Agent'] = f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}'
-
     self._client = client(
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
-      headers=headers,
+      headers={
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+      }.update(headers or {}),
       **kwargs,
     )
 
@@ -66,37 +103,67 @@ class Client(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
-  def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
-    response = self._client.request(method, url, **kwargs)
-
+  def _request_raw(self, *args, **kwargs):
+    r = self._client.request(*args, **kwargs)
     try:
-      response.raise_for_status()
+      r.raise_for_status()
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
+    return r
 
-    return response
-
-  def _stream(self, method: str, url: str, **kwargs) -> Iterator[Mapping[str, Any]]:
-    with self._client.stream(method, url, **kwargs) as r:
-      try:
-        r.raise_for_status()
-      except httpx.HTTPStatusError as e:
-        e.response.read()
-        raise ResponseError(e.response.text, e.response.status_code) from None
-
-      for line in r.iter_lines():
-        partial = json.loads(line)
-        if e := partial.get('error'):
-          raise ResponseError(e)
-        yield partial
-
-  def _request_stream(
+  @overload
+  def _request(
     self,
+    cls: Type[T],
+    *args,
+    stream: Literal[False] = False,
+    **kwargs,
+  ) -> T: ...
+
+  @overload
+  def _request(
+    self,
+    cls: Type[T],
+    *args,
+    stream: Literal[True] = True,
+    **kwargs,
+  ) -> Iterator[T]: ...
+
+  @overload
+  def _request(
+    self,
+    cls: Type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
-    return self._stream(*args, **kwargs) if stream else self._request(*args, **kwargs).json()
+  ) -> Union[T, Iterator[T]]: ...
+
+  def _request(
+    self,
+    cls: Type[T],
+    *args,
+    stream: bool = False,
+    **kwargs,
+  ) -> Union[T, Iterator[T]]:
+    if stream:
+
+      def inner():
+        with self._client.stream(*args, **kwargs) as r:
+          try:
+            r.raise_for_status()
+          except httpx.HTTPStatusError as e:
+            e.response.read()
+            raise ResponseError(e.response.text, e.response.status_code) from None
+
+          for line in r.iter_lines():
+            part = json.loads(line)
+            if err := part.get('error'):
+              raise ResponseError(err)
+            yield cls(**part)
+
+      return inner()
+
+    return cls(**self._request_raw(*args, **kwargs).json())
 
   @overload
   def generate(
@@ -104,16 +171,17 @@ class Client(BaseClient):
     model: str = '',
     prompt: str = '',
     suffix: str = '',
+    *,
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]: ...
+  ) -> GenerateResponse: ...
 
   @overload
   def generate(
@@ -121,32 +189,34 @@ class Client(BaseClient):
     model: str = '',
     prompt: str = '',
     suffix: str = '',
+    *,
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Iterator[Mapping[str, Any]]: ...
+  ) -> Iterator[GenerateResponse]: ...
 
   def generate(
     self,
     model: str = '',
-    prompt: str = '',
-    suffix: str = '',
-    system: str = '',
-    template: str = '',
+    prompt: Optional[str] = None,
+    suffix: Optional[str] = None,
+    *,
+    system: Optional[str] = None,
+    template: Optional[str] = None,
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
-    raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    raw: Optional[bool] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+  ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
     """
     Create a response using the requested model.
 
@@ -157,26 +227,24 @@ class Client(BaseClient):
     Returns `GenerateResponse` if `stream` is `False`, otherwise returns a `GenerateResponse` generator.
     """
 
-    if not model:
-      raise RequestError('must provide a model')
-
-    return self._request_stream(
+    return self._request(
+      GenerateResponse,
       'POST',
       '/api/generate',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'suffix': suffix,
-        'system': system,
-        'template': template,
-        'context': context or [],
-        'stream': stream,
-        'raw': raw,
-        'images': [_encode_image(image) for image in images or []],
-        'format': format,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=GenerateRequest(
+        model=model,
+        prompt=prompt,
+        suffix=suffix,
+        system=system,
+        template=template,
+        context=context,
+        stream=stream,
+        raw=raw,
+        format=format,
+        images=[Image(value=image) for image in images] if images else None,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -184,36 +252,39 @@ class Client(BaseClient):
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: Literal[False] = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]: ...
+  ) -> ChatResponse: ...
 
   @overload
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: Literal[True] = True,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Iterator[Mapping[str, Any]]: ...
+  ) -> Iterator[ChatResponse]: ...
 
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: bool = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+  ) -> Union[ChatResponse, Iterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
 
@@ -224,109 +295,104 @@ class Client(BaseClient):
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
 
-    if not model:
-      raise RequestError('must provide a model')
-
-    messages = deepcopy(messages)
-
-    for message in messages or []:
-      if images := message.get('images'):
-        message['images'] = [_encode_image(image) for image in images]
-
-    return self._request_stream(
+    return self._request(
+      ChatResponse,
       'POST',
       '/api/chat',
-      json={
-        'model': model,
-        'messages': messages,
-        'tools': tools or [],
-        'stream': stream,
-        'format': format,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=ChatRequest(
+        model=model,
+        messages=[message for message in _copy_messages(messages)],
+        tools=[tool for tool in _copy_tools(tools)],
+        stream=stream,
+        format=format,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
   def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[AnyStr]] = '',
-    truncate: bool = True,
-    options: Optional[Options] = None,
+    input: Union[str, Sequence[str]] = '',
+    truncate: Optional[bool] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]:
-    if not model:
-      raise RequestError('must provide a model')
-
+  ) -> EmbedResponse:
     return self._request(
+      EmbedResponse,
       'POST',
       '/api/embed',
-      json={
-        'model': model,
-        'input': input,
-        'truncate': truncate,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
-    ).json()
+      json=EmbedRequest(
+        model=model,
+        input=input,
+        truncate=truncate,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
+    )
 
   def embeddings(
     self,
     model: str = '',
-    prompt: str = '',
-    options: Optional[Options] = None,
+    prompt: Optional[str] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Sequence[float]]:
+  ) -> EmbeddingsResponse:
     """
     Deprecated in favor of `embed`.
     """
     return self._request(
+      EmbeddingsResponse,
       'POST',
       '/api/embeddings',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
-    ).json()
+      json=EmbeddingsRequest(
+        model=model,
+        prompt=prompt,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
+    )
 
   @overload
   def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[True] = True,
-  ) -> Iterator[Mapping[str, Any]]: ...
+  ) -> Iterator[ProgressResponse]: ...
 
   def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    return self._request_stream(
+    return self._request(
+      ProgressResponse,
       'POST',
       '/api/pull',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
+      json=PullRequest(
+        model=model,
+        insecure=insecure,
+        stream=stream,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -334,37 +400,41 @@ class Client(BaseClient):
   def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[True] = True,
-  ) -> Iterator[Mapping[str, Any]]: ...
+  ) -> Iterator[ProgressResponse]: ...
 
   def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    return self._request_stream(
+    return self._request(
+      ProgressResponse,
       'POST',
       '/api/push',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
+      json=PushRequest(
+        model=model,
+        insecure=insecure,
+        stream=stream,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -374,9 +444,10 @@ class Client(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   def create(
@@ -384,18 +455,20 @@ class Client(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: Literal[True] = True,
-  ) -> Iterator[Mapping[str, Any]]: ...
+  ) -> Iterator[ProgressResponse]: ...
 
   def create(
     self,
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], Iterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -408,15 +481,16 @@ class Client(BaseClient):
     else:
       raise RequestError('must provide either path or modelfile')
 
-    return self._request_stream(
+    return self._request(
+      ProgressResponse,
       'POST',
       '/api/create',
-      json={
-        'name': model,
-        'modelfile': modelfile,
-        'stream': stream,
-        'quantize': quantize,
-      },
+      json=CreateRequest(
+        model=model,
+        modelfile=modelfile,
+        stream=stream,
+        quantize=quantize,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -450,76 +524,131 @@ class Client(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     try:
-      self._request('HEAD', f'/api/blobs/{digest}')
+      self._request_raw('HEAD', f'/api/blobs/{digest}')
     except ResponseError as e:
       if e.status_code != 404:
         raise
 
       with open(path, 'rb') as r:
-        self._request('POST', f'/api/blobs/{digest}', content=r)
+        self._request_raw('POST', f'/api/blobs/{digest}', content=r)
 
     return digest
 
-  def delete(self, model: str) -> Mapping[str, Any]:
-    response = self._request('DELETE', '/api/delete', json={'name': model})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+  def list(self) -> ListResponse:
+    return self._request(
+      ListResponse,
+      'GET',
+      '/api/tags',
+    )
 
-  def list(self) -> Mapping[str, Any]:
-    return self._request('GET', '/api/tags').json()
+  def delete(self, model: str) -> StatusResponse:
+    r = self._request_raw(
+      'DELETE',
+      '/api/delete',
+      json=DeleteRequest(
+        model=model,
+      ).model_dump(exclude_none=True),
+    )
+    return StatusResponse(
+      status='success' if r.status_code == 200 else 'error',
+    )
 
-  def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+  def copy(self, source: str, destination: str) -> StatusResponse:
+    r = self._request_raw(
+      'POST',
+      '/api/copy',
+      json=CopyRequest(
+        source=source,
+        destination=destination,
+      ).model_dump(exclude_none=True),
+    )
+    return StatusResponse(
+      status='success' if r.status_code == 200 else 'error',
+    )
 
-  def show(self, model: str) -> Mapping[str, Any]:
-    return self._request('POST', '/api/show', json={'name': model}).json()
+  def show(self, model: str) -> ShowResponse:
+    return self._request(
+      ShowResponse,
+      'POST',
+      '/api/show',
+      json=ShowRequest(
+        model=model,
+      ).model_dump(exclude_none=True),
+    )
 
-  def ps(self) -> Mapping[str, Any]:
-    return self._request('GET', '/api/ps').json()
+  def ps(self) -> ProcessResponse:
+    return self._request(
+      ProcessResponse,
+      'GET',
+      '/api/ps',
+    )
 
 
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.AsyncClient, host, **kwargs)
 
-  async def _request(self, method: str, url: str, **kwargs) -> httpx.Response:
-    response = await self._client.request(method, url, **kwargs)
-
+  async def _request_raw(self, *args, **kwargs):
+    r = await self._client.request(*args, **kwargs)
     try:
-      response.raise_for_status()
+      r.raise_for_status()
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
+    return r
 
-    return response
-
-  async def _stream(self, method: str, url: str, **kwargs) -> AsyncIterator[Mapping[str, Any]]:
-    async def inner():
-      async with self._client.stream(method, url, **kwargs) as r:
-        try:
-          r.raise_for_status()
-        except httpx.HTTPStatusError as e:
-          await e.response.aread()
-          raise ResponseError(e.response.text, e.response.status_code) from None
-
-        async for line in r.aiter_lines():
-          partial = json.loads(line)
-          if e := partial.get('error'):
-            raise ResponseError(e)
-          yield partial
-
-    return inner()
-
-  async def _request_stream(
+  @overload
+  async def _request(
     self,
+    cls: Type[T],
+    *args,
+    stream: Literal[False] = False,
+    **kwargs,
+  ) -> T: ...
+
+  @overload
+  async def _request(
+    self,
+    cls: Type[T],
+    *args,
+    stream: Literal[True] = True,
+    **kwargs,
+  ) -> AsyncIterator[T]: ...
+
+  @overload
+  async def _request(
+    self,
+    cls: Type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
-    if stream:
-      return await self._stream(*args, **kwargs)
+  ) -> Union[T, AsyncIterator[T]]: ...
 
-    response = await self._request(*args, **kwargs)
-    return response.json()
+  async def _request(
+    self,
+    cls: Type[T],
+    *args,
+    stream: bool = False,
+    **kwargs,
+  ) -> Union[T, AsyncIterator[T]]:
+    if stream:
+
+      async def inner():
+        async with self._client.stream(*args, **kwargs) as r:
+          try:
+            r.raise_for_status()
+          except httpx.HTTPStatusError as e:
+            await e.response.aread()
+            raise ResponseError(e.response.text, e.response.status_code) from None
+
+          async for line in r.aiter_lines():
+            part = json.loads(line)
+            if err := part.get('error'):
+              raise ResponseError(err)
+            yield cls(**part)
+
+      return inner()
+
+    return cls(**(await self._request_raw(*args, **kwargs)).json())
 
   @overload
   async def generate(
@@ -527,16 +656,17 @@ class AsyncClient(BaseClient):
     model: str = '',
     prompt: str = '',
     suffix: str = '',
+    *,
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]: ...
+  ) -> GenerateResponse: ...
 
   @overload
   async def generate(
@@ -544,32 +674,34 @@ class AsyncClient(BaseClient):
     model: str = '',
     prompt: str = '',
     suffix: str = '',
+    *,
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> AsyncIterator[Mapping[str, Any]]: ...
+  ) -> AsyncIterator[GenerateResponse]: ...
 
   async def generate(
     self,
     model: str = '',
-    prompt: str = '',
-    suffix: str = '',
-    system: str = '',
-    template: str = '',
+    prompt: Optional[str] = None,
+    suffix: Optional[str] = None,
+    *,
+    system: Optional[str] = None,
+    template: Optional[str] = None,
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
-    raw: bool = False,
-    format: Literal['', 'json'] = '',
-    images: Optional[Sequence[AnyStr]] = None,
-    options: Optional[Options] = None,
+    raw: Optional[bool] = None,
+    format: Optional[Literal['', 'json']] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+  ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
     """
     Create a response using the requested model.
 
@@ -579,26 +711,24 @@ class AsyncClient(BaseClient):
 
     Returns `GenerateResponse` if `stream` is `False`, otherwise returns an asynchronous `GenerateResponse` generator.
     """
-    if not model:
-      raise RequestError('must provide a model')
-
-    return await self._request_stream(
+    return await self._request(
+      GenerateResponse,
       'POST',
       '/api/generate',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'suffix': suffix,
-        'system': system,
-        'template': template,
-        'context': context or [],
-        'stream': stream,
-        'raw': raw,
-        'images': [_encode_image(image) for image in images or []],
-        'format': format,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=GenerateRequest(
+        model=model,
+        prompt=prompt,
+        suffix=suffix,
+        system=system,
+        template=template,
+        context=context,
+        stream=stream,
+        raw=raw,
+        format=format,
+        images=[Image(value=image) for image in images] if images else None,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -606,36 +736,39 @@ class AsyncClient(BaseClient):
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: Literal[False] = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]: ...
+  ) -> ChatResponse: ...
 
   @overload
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: Literal[True] = True,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> AsyncIterator[Mapping[str, Any]]: ...
+  ) -> AsyncIterator[ChatResponse]: ...
 
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Message]] = None,
-    tools: Optional[Sequence[Tool]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
     stream: bool = False,
-    format: Literal['', 'json'] = '',
-    options: Optional[Options] = None,
+    format: Optional[Literal['', 'json']] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+  ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
 
@@ -645,113 +778,105 @@ class AsyncClient(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns an asynchronous `ChatResponse` generator.
     """
-    if not model:
-      raise RequestError('must provide a model')
 
-    messages = deepcopy(messages)
-
-    for message in messages or []:
-      if images := message.get('images'):
-        message['images'] = [_encode_image(image) for image in images]
-
-    return await self._request_stream(
+    return await self._request(
+      ChatResponse,
       'POST',
       '/api/chat',
-      json={
-        'model': model,
-        'messages': messages,
-        'tools': tools or [],
-        'stream': stream,
-        'format': format,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=ChatRequest(
+        model=model,
+        messages=[message for message in _copy_messages(messages)],
+        tools=[tool for tool in _copy_tools(tools)],
+        stream=stream,
+        format=format,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
   async def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[AnyStr]] = '',
-    truncate: bool = True,
-    options: Optional[Options] = None,
+    input: Union[str, Sequence[str]] = '',
+    truncate: Optional[bool] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Any]:
-    if not model:
-      raise RequestError('must provide a model')
-
-    response = await self._request(
+  ) -> EmbedResponse:
+    return await self._request(
+      EmbedResponse,
       'POST',
       '/api/embed',
-      json={
-        'model': model,
-        'input': input,
-        'truncate': truncate,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=EmbedRequest(
+        model=model,
+        input=input,
+        truncate=truncate,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
-
-    return response.json()
 
   async def embeddings(
     self,
     model: str = '',
-    prompt: str = '',
-    options: Optional[Options] = None,
+    prompt: Optional[str] = None,
+    options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
-  ) -> Mapping[str, Sequence[float]]:
+  ) -> EmbeddingsResponse:
     """
     Deprecated in favor of `embed`.
     """
-    response = await self._request(
+    return await self._request(
+      EmbeddingsResponse,
       'POST',
       '/api/embeddings',
-      json={
-        'model': model,
-        'prompt': prompt,
-        'options': options or {},
-        'keep_alive': keep_alive,
-      },
+      json=EmbeddingsRequest(
+        model=model,
+        prompt=prompt,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
 
-    return response.json()
-
   @overload
   async def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   async def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[True] = True,
-  ) -> AsyncIterator[Mapping[str, Any]]: ...
+  ) -> AsyncIterator[ProgressResponse]: ...
 
   async def pull(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    return await self._request_stream(
+    return await self._request(
+      ProgressResponse,
       'POST',
       '/api/pull',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
+      json=PullRequest(
+        model=model,
+        insecure=insecure,
+        stream=stream,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -759,37 +884,41 @@ class AsyncClient(BaseClient):
   async def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   async def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: Literal[True] = True,
-  ) -> AsyncIterator[Mapping[str, Any]]: ...
+  ) -> AsyncIterator[ProgressResponse]: ...
 
   async def push(
     self,
     model: str,
+    *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    return await self._request_stream(
+    return await self._request(
+      ProgressResponse,
       'POST',
       '/api/push',
-      json={
-        'name': model,
-        'insecure': insecure,
-        'stream': stream,
-      },
+      json=PushRequest(
+        model=model,
+        insecure=insecure,
+        stream=stream,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -799,9 +928,10 @@ class AsyncClient(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: Literal[False] = False,
-  ) -> Mapping[str, Any]: ...
+  ) -> ProgressResponse: ...
 
   @overload
   async def create(
@@ -809,18 +939,20 @@ class AsyncClient(BaseClient):
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: Literal[True] = True,
-  ) -> AsyncIterator[Mapping[str, Any]]: ...
+  ) -> AsyncIterator[ProgressResponse]: ...
 
   async def create(
     self,
     model: str,
     path: Optional[Union[str, PathLike]] = None,
     modelfile: Optional[str] = None,
+    *,
     quantize: Optional[str] = None,
     stream: bool = False,
-  ) -> Union[Mapping[str, Any], AsyncIterator[Mapping[str, Any]]]:
+  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -833,15 +965,16 @@ class AsyncClient(BaseClient):
     else:
       raise RequestError('must provide either path or modelfile')
 
-    return await self._request_stream(
+    return await self._request(
+      ProgressResponse,
       'POST',
       '/api/create',
-      json={
-        'name': model,
-        'modelfile': modelfile,
-        'stream': stream,
-        'quantize': quantize,
-      },
+      json=CreateRequest(
+        model=model,
+        modelfile=modelfile,
+        stream=stream,
+        quantize=quantize,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
@@ -875,7 +1008,7 @@ class AsyncClient(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     try:
-      await self._request('HEAD', f'/api/blobs/{digest}')
+      await self._request_raw('HEAD', f'/api/blobs/{digest}')
     except ResponseError as e:
       if e.status_code != 404:
         raise
@@ -888,60 +1021,70 @@ class AsyncClient(BaseClient):
               break
             yield chunk
 
-      await self._request('POST', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
-  async def delete(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('DELETE', '/api/delete', json={'name': model})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+  async def list(self) -> ListResponse:
+    return await self._request(
+      ListResponse,
+      'GET',
+      '/api/tags',
+    )
 
-  async def list(self) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/tags')
-    return response.json()
+  async def delete(self, model: str) -> StatusResponse:
+    r = await self._request_raw(
+      'DELETE',
+      '/api/delete',
+      json=DeleteRequest(
+        model=model,
+      ).model_dump(exclude_none=True),
+    )
+    return StatusResponse(
+      status='success' if r.status_code == 200 else 'error',
+    )
 
-  async def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
-    return {'status': 'success' if response.status_code == 200 else 'error'}
+  async def copy(self, source: str, destination: str) -> StatusResponse:
+    r = await self._request_raw(
+      'POST',
+      '/api/copy',
+      json=CopyRequest(
+        source=source,
+        destination=destination,
+      ).model_dump(exclude_none=True),
+    )
+    return StatusResponse(
+      status='success' if r.status_code == 200 else 'error',
+    )
 
-  async def show(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/show', json={'name': model})
-    return response.json()
+  async def show(self, model: str) -> ShowResponse:
+    return await self._request(
+      ShowResponse,
+      'POST',
+      '/api/show',
+      json=ShowRequest(
+        model=model,
+      ).model_dump(exclude_none=True),
+    )
 
-  async def ps(self) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/ps')
-    return response.json()
+  async def ps(self) -> ProcessResponse:
+    return await self._request(
+      ProcessResponse,
+      'GET',
+      '/api/ps',
+    )
 
 
-def _encode_image(image) -> str:
-  """
-  >>> _encode_image(b'ollama')
-  'b2xsYW1h'
-  >>> _encode_image(io.BytesIO(b'ollama'))
-  'b2xsYW1h'
-  >>> _encode_image('LICENSE')
-  'TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgT2xsYW1hCgpQZXJtaXNzaW9uIGlzIGhlcmVieSBncmFudGVkLCBmcmVlIG9mIGNoYXJnZSwgdG8gYW55IHBlcnNvbiBvYnRhaW5pbmcgYSBjb3B5Cm9mIHRoaXMgc29mdHdhcmUgYW5kIGFzc29jaWF0ZWQgZG9jdW1lbnRhdGlvbiBmaWxlcyAodGhlICJTb2Z0d2FyZSIpLCB0byBkZWFsCmluIHRoZSBTb2Z0d2FyZSB3aXRob3V0IHJlc3RyaWN0aW9uLCBpbmNsdWRpbmcgd2l0aG91dCBsaW1pdGF0aW9uIHRoZSByaWdodHMKdG8gdXNlLCBjb3B5LCBtb2RpZnksIG1lcmdlLCBwdWJsaXNoLCBkaXN0cmlidXRlLCBzdWJsaWNlbnNlLCBhbmQvb3Igc2VsbApjb3BpZXMgb2YgdGhlIFNvZnR3YXJlLCBhbmQgdG8gcGVybWl0IHBlcnNvbnMgdG8gd2hvbSB0aGUgU29mdHdhcmUgaXMKZnVybmlzaGVkIHRvIGRvIHNvLCBzdWJqZWN0IHRvIHRoZSBmb2xsb3dpbmcgY29uZGl0aW9uczoKClRoZSBhYm92ZSBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Npb24gbm90aWNlIHNoYWxsIGJlIGluY2x1ZGVkIGluIGFsbApjb3BpZXMgb3Igc3Vic3RhbnRpYWwgcG9ydGlvbnMgb2YgdGhlIFNvZnR3YXJlLgoKVEhFIFNPRlRXQVJFIElTIFBST1ZJREVEICJBUyBJUyIsIFdJVEhPVVQgV0FSUkFOVFkgT0YgQU5ZIEtJTkQsIEVYUFJFU1MgT1IKSU1QTElFRCwgSU5DTFVESU5HIEJVVCBOT1QgTElNSVRFRCBUTyBUSEUgV0FSUkFOVElFUyBPRiBNRVJDSEFOVEFCSUxJVFksCkZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFIEFORCBOT05JTkZSSU5HRU1FTlQuIElOIE5PIEVWRU5UIFNIQUxMIFRIRQpBVVRIT1JTIE9SIENPUFlSSUdIVCBIT0xERVJTIEJFIExJQUJMRSBGT1IgQU5ZIENMQUlNLCBEQU1BR0VTIE9SIE9USEVSCkxJQUJJTElUWSwgV0hFVEhFUiBJTiBBTiBBQ1RJT04gT0YgQ09OVFJBQ1QsIFRPUlQgT1IgT1RIRVJXSVNFLCBBUklTSU5HIEZST00sCk9VVCBPRiBPUiBJTiBDT05ORUNUSU9OIFdJVEggVEhFIFNPRlRXQVJFIE9SIFRIRSBVU0UgT1IgT1RIRVIgREVBTElOR1MgSU4gVEhFClNPRlRXQVJFLgo='
-  >>> _encode_image(Path('LICENSE'))
-  'TUlUIExpY2Vuc2UKCkNvcHlyaWdodCAoYykgT2xsYW1hCgpQZXJtaXNzaW9uIGlzIGhlcmVieSBncmFudGVkLCBmcmVlIG9mIGNoYXJnZSwgdG8gYW55IHBlcnNvbiBvYnRhaW5pbmcgYSBjb3B5Cm9mIHRoaXMgc29mdHdhcmUgYW5kIGFzc29jaWF0ZWQgZG9jdW1lbnRhdGlvbiBmaWxlcyAodGhlICJTb2Z0d2FyZSIpLCB0byBkZWFsCmluIHRoZSBTb2Z0d2FyZSB3aXRob3V0IHJlc3RyaWN0aW9uLCBpbmNsdWRpbmcgd2l0aG91dCBsaW1pdGF0aW9uIHRoZSByaWdodHMKdG8gdXNlLCBjb3B5LCBtb2RpZnksIG1lcmdlLCBwdWJsaXNoLCBkaXN0cmlidXRlLCBzdWJsaWNlbnNlLCBhbmQvb3Igc2VsbApjb3BpZXMgb2YgdGhlIFNvZnR3YXJlLCBhbmQgdG8gcGVybWl0IHBlcnNvbnMgdG8gd2hvbSB0aGUgU29mdHdhcmUgaXMKZnVybmlzaGVkIHRvIGRvIHNvLCBzdWJqZWN0IHRvIHRoZSBmb2xsb3dpbmcgY29uZGl0aW9uczoKClRoZSBhYm92ZSBjb3B5cmlnaHQgbm90aWNlIGFuZCB0aGlzIHBlcm1pc3Npb24gbm90aWNlIHNoYWxsIGJlIGluY2x1ZGVkIGluIGFsbApjb3BpZXMgb3Igc3Vic3RhbnRpYWwgcG9ydGlvbnMgb2YgdGhlIFNvZnR3YXJlLgoKVEhFIFNPRlRXQVJFIElTIFBST1ZJREVEICJBUyBJUyIsIFdJVEhPVVQgV0FSUkFOVFkgT0YgQU5ZIEtJTkQsIEVYUFJFU1MgT1IKSU1QTElFRCwgSU5DTFVESU5HIEJVVCBOT1QgTElNSVRFRCBUTyBUSEUgV0FSUkFOVElFUyBPRiBNRVJDSEFOVEFCSUxJVFksCkZJVE5FU1MgRk9SIEEgUEFSVElDVUxBUiBQVVJQT1NFIEFORCBOT05JTkZSSU5HRU1FTlQuIElOIE5PIEVWRU5UIFNIQUxMIFRIRQpBVVRIT1JTIE9SIENPUFlSSUdIVCBIT0xERVJTIEJFIExJQUJMRSBGT1IgQU5ZIENMQUlNLCBEQU1BR0VTIE9SIE9USEVSCkxJQUJJTElUWSwgV0hFVEhFUiBJTiBBTiBBQ1RJT04gT0YgQ09OVFJBQ1QsIFRPUlQgT1IgT1RIRVJXSVNFLCBBUklTSU5HIEZST00sCk9VVCBPRiBPUiBJTiBDT05ORUNUSU9OIFdJVEggVEhFIFNPRlRXQVJFIE9SIFRIRSBVU0UgT1IgT1RIRVIgREVBTElOR1MgSU4gVEhFClNPRlRXQVJFLgo='
-  >>> _encode_image('YWJj')
-  'YWJj'
-  >>> _encode_image(b'YWJj')
-  'YWJj'
-  """
+def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
+  for message in messages or []:
+    yield Message.model_validate(
+      {k: [Image(value=image) for image in v] if k == 'images' else v for k, v in dict(message).items() if v},
+    )
 
-  if p := _as_path(image):
-    return b64encode(p.read_bytes()).decode('utf-8')
 
-  try:
-    b64decode(image, validate=True)
-    return image if isinstance(image, str) else image.decode('utf-8')
-  except (binascii.Error, TypeError):
-    ...
-
-  if b := _as_bytesio(image):
-    return b64encode(b.read()).decode('utf-8')
-
-  raise RequestError('image must be bytes, path-like object, or file-like object')
+def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]]) -> Iterator[Tool]:
+  for tool in tools or []:
+    yield Tool.model_validate(tool)
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
@@ -951,14 +1094,6 @@ def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
         return p
     except Exception:
       ...
-  return None
-
-
-def _as_bytesio(s: Any) -> Union[io.BytesIO, None]:
-  if isinstance(s, io.BytesIO):
-    return s
-  elif isinstance(s, bytes):
-    return io.BytesIO(s)
   return None
 
 
@@ -1039,9 +1174,9 @@ def _parse_host(host: Optional[str]) -> str:
   host = split.hostname or '127.0.0.1'
   port = split.port or port
 
-  # Fix missing square brackets for IPv6 from urlsplit
   try:
     if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
+      # Fix missing square brackets for IPv6 from urlsplit
       host = f'[{host}]'
   except ValueError:
     ...
