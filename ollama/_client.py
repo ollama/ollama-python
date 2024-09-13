@@ -278,6 +278,9 @@ class Client(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Sequence[float]]:
+    """
+    Deprecated in favor of `embed`.
+    """
     return self._request(
       'POST',
       '/api/embeddings',
@@ -698,6 +701,9 @@ class AsyncClient(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Sequence[float]]:
+    """
+    Deprecated in favor of `embed`.
+    """
     response = await self._request(
       'POST',
       '/api/embeddings',
