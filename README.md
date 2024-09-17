@@ -164,6 +164,32 @@ async def chat():
 asyncio.run(chat())
 ```
 
+## OpenAI client
+
+Install [openai-python](https://github.com/openai/openai-python)
+
+```sh
+pip install openai
+```
+
+```python
+from openai import OpenAI
+
+client = OpenAI(
+    api_key = 'not required',
+    base_url = 'http://localhost:11434/v1'
+)
+
+completion = client.chat.completions.create(
+    model = 'llama3.1',
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Hello! Are you there?"}
+    ]
+)
+print(completion.choices[0].message.content)
+```
+
 ## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
