@@ -520,6 +520,20 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
+def test_client_delete(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
+  client = Client(httpserver.url_for('/api/delete'))
+  response = client.delete('dummy')
+  assert response == {'status': 'success'}
+
+
+def test_client_copy(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/copy'), method='POST').respond_with_response(Response(status=200))
+  client = Client(httpserver.url_for('/api/copy'))
+  response = client.copy('dum', 'dummer')
+  assert response == {'status': 'success'}
+
+
 @pytest.mark.asyncio
 async def test_async_client_chat(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
@@ -992,3 +1006,19 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile() as blob:
     response = await client._create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+
+@pytest.mark.asyncio
+async def test_async_client_delete(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
+  client = AsyncClient(httpserver.url_for('/api/delete'))
+  response = await client.delete('dummy')
+  assert response == {'status': 'success'}
+
+
+@pytest.mark.asyncio
+async def test_async_client_copy(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(PrefixPattern('/api/copy'), method='POST').respond_with_response(Response(status=200))
+  client = AsyncClient(httpserver.url_for('/api/copy'))
+  response = await client.copy('dum', 'dummer')
+  assert response == {'status': 'success'}

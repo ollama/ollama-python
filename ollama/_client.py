@@ -1,3 +1,4 @@
+import ipaddress
 import os
 import io
 import json
@@ -277,6 +278,9 @@ class Client(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Sequence[float]]:
+    """
+    Deprecated in favor of `embed`.
+    """
     return self._request(
       'POST',
       '/api/embeddings',
@@ -494,7 +498,7 @@ class AsyncClient(BaseClient):
         try:
           r.raise_for_status()
         except httpx.HTTPStatusError as e:
-          e.response.read()
+          await e.response.aread()
           raise ResponseError(e.response.text, e.response.status_code) from None
 
         async for line in r.aiter_lines():
@@ -697,6 +701,9 @@ class AsyncClient(BaseClient):
     options: Optional[Options] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Mapping[str, Sequence[float]]:
+    """
+    Deprecated in favor of `embed`.
+    """
     response = await self._request(
       'POST',
       '/api/embeddings',
@@ -987,6 +994,36 @@ def _parse_host(host: Optional[str]) -> str:
   'http://example.com:11434'
   >>> _parse_host('example.com:56789/')
   'http://example.com:56789'
+  >>> _parse_host('example.com/path')
+  'http://example.com:11434/path'
+  >>> _parse_host('example.com:56789/path')
+  'http://example.com:56789/path'
+  >>> _parse_host('https://example.com:56789/path')
+  'https://example.com:56789/path'
+  >>> _parse_host('example.com:56789/path/')
+  'http://example.com:56789/path'
+  >>> _parse_host('[0001:002:003:0004::1]')
+  'http://[0001:002:003:0004::1]:11434'
+  >>> _parse_host('[0001:002:003:0004::1]:56789')
+  'http://[0001:002:003:0004::1]:56789'
+  >>> _parse_host('http://[0001:002:003:0004::1]')
+  'http://[0001:002:003:0004::1]:80'
+  >>> _parse_host('https://[0001:002:003:0004::1]')
+  'https://[0001:002:003:0004::1]:443'
+  >>> _parse_host('https://[0001:002:003:0004::1]:56789')
+  'https://[0001:002:003:0004::1]:56789'
+  >>> _parse_host('[0001:002:003:0004::1]/')
+  'http://[0001:002:003:0004::1]:11434'
+  >>> _parse_host('[0001:002:003:0004::1]:56789/')
+  'http://[0001:002:003:0004::1]:56789'
+  >>> _parse_host('[0001:002:003:0004::1]/path')
+  'http://[0001:002:003:0004::1]:11434/path'
+  >>> _parse_host('[0001:002:003:0004::1]:56789/path')
+  'http://[0001:002:003:0004::1]:56789/path'
+  >>> _parse_host('https://[0001:002:003:0004::1]:56789/path')
+  'https://[0001:002:003:0004::1]:56789/path'
+  >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
+  'http://[0001:002:003:0004::1]:56789/path'
   """
 
   host, port = host or '', 11434
@@ -1001,5 +1038,15 @@ def _parse_host(host: Optional[str]) -> str:
   split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
   host = split.hostname or '127.0.0.1'
   port = split.port or port
+
+  # Fix missing square brackets for IPv6 from urlsplit
+  try:
+    if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
+      host = f'[{host}]'
+  except ValueError:
+    ...
+
+  if path := split.path.strip('/'):
+    return f'{scheme}://{host}:{port}/{path}'
 
   return f'{scheme}://{host}:{port}'
