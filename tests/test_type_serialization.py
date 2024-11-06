@@ -95,10 +95,10 @@ def test_process_response_serialization():
 
 
 def test_list_response_serialization():
-  resp = ListResponse(models=[ListResponse.Model(name='test-model', modified_at=datetime(2024, 1, 1), digest='sha256:abc', size=1000, details={'format': 'gguf'})])
+  resp = ListResponse(models=[ListResponse.Model(modified_at=datetime(2024, 1, 1), digest='sha256:abc', size=1000, details={'format': 'gguf'})])
 
   data = resp.model_dump(exclude_none=True)
-  assert data == {'models': [{'name': 'test-model', 'modified_at': datetime(2024, 1, 1), 'digest': 'sha256:abc', 'size': 1000, 'details': {'format': 'gguf'}}]}
+  assert data == {'models': [{'modified_at': datetime(2024, 1, 1), 'digest': 'sha256:abc', 'size': 1000, 'details': {'format': 'gguf'}}]}
 
 
 def test_error_classes():
