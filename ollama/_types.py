@@ -97,6 +97,7 @@ class BaseGenerateRequest(BaseStreamableRequest):
 class Image(BaseModel):
   value: Union[FilePath, Base64Str, bytes]
 
+  # This overloads the `model_dump` method and returns values depending on the type of the `value` field
   @model_serializer
   def serialize_model(self):
     if isinstance(self.value, Path):
@@ -333,7 +334,7 @@ class ModelDetails(SubscriptableBaseModel):
 
 
 class ListResponse(SubscriptableBaseModel):
-  class Model(BaseModel):
+  class Model(SubscriptableBaseModel):
     modified_at: Optional[datetime] = None
     digest: Optional[str] = None
     size: Optional[ByteSize] = None
@@ -394,7 +395,7 @@ class ShowResponse(SubscriptableBaseModel):
 
 
 class ProcessResponse(SubscriptableBaseModel):
-  class Model(BaseModel):
+  class Model(SubscriptableBaseModel):
     model: Optional[str] = None
     name: Optional[str] = None
     digest: Optional[str] = None
