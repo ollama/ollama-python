@@ -974,7 +974,7 @@ def test_headers():
   client = Client()
   assert client._client.headers['content-type'] == 'application/json'
   assert client._client.headers['accept'] == 'application/json'
-  assert 'ollama-python' in client._client.headers['user-agent']
+  assert client._client.headers['user-agent'].startswith('ollama-python/')
 
   client = Client(
     headers={

@@ -91,12 +91,7 @@ class BaseClient:
       follow_redirects=follow_redirects,
       timeout=timeout,
       # Lowercase all headers to ensure override
-      headers={
-        **{k.lower(): v for k, v in (headers or {}).items()},
-        'content-type': 'application/json',
-        'accept': 'application/json',
-        'user-agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
-      },
+      headers={k.lower(): v for k, v in {**(headers or {}), 'Content-Type': 'application/json', 'Accept': 'application/json', 'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}'}.items()},
       **kwargs,
     )
 
