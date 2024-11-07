@@ -90,11 +90,13 @@ class BaseClient:
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
+      # Lowercase all headers to ensure override
       headers={
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
-      }.update(headers or {}),
+        **{k.lower(): v for k, v in (headers or {}).items()},
+        'content-type': 'application/json',
+        'accept': 'application/json',
+        'user-agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+      },
       **kwargs,
     )
 

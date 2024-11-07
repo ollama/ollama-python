@@ -968,3 +968,19 @@ async def test_async_client_copy(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+def test_headers():
+  client = Client()
+  assert client._client.headers['content-type'] == 'application/json'
+  assert client._client.headers['accept'] == 'application/json'
+  assert 'ollama-python' in client._client.headers['user-agent']
+
+  client = Client(
+    headers={
+      'X-Custom': 'value',
+      'Content-Type': 'text/plain',
+    }
+  )
+  assert client._client.headers['x-custom'] == 'value'
+  assert client._client.headers['content-type'] == 'application/json'
