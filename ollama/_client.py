@@ -162,7 +162,7 @@ class Client(BaseClient):
 
     return self._request_stream(
       'POST',
-      '/api/generate',
+      'api/generate',
       json={
         'model': model,
         'prompt': prompt,
@@ -235,7 +235,7 @@ class Client(BaseClient):
 
     return self._request_stream(
       'POST',
-      '/api/chat',
+      'api/chat',
       json={
         'model': model,
         'messages': messages,
@@ -261,7 +261,7 @@ class Client(BaseClient):
 
     return self._request(
       'POST',
-      '/api/embed',
+      'api/embed',
       json={
         'model': model,
         'input': input,
@@ -283,7 +283,7 @@ class Client(BaseClient):
     """
     return self._request(
       'POST',
-      '/api/embeddings',
+      'api/embeddings',
       json={
         'model': model,
         'prompt': prompt,
@@ -321,7 +321,7 @@ class Client(BaseClient):
     """
     return self._request_stream(
       'POST',
-      '/api/pull',
+      'api/pull',
       json={
         'name': model,
         'insecure': insecure,
@@ -359,7 +359,7 @@ class Client(BaseClient):
     """
     return self._request_stream(
       'POST',
-      '/api/push',
+      'api/push',
       json={
         'name': model,
         'insecure': insecure,
@@ -410,7 +410,7 @@ class Client(BaseClient):
 
     return self._request_stream(
       'POST',
-      '/api/create',
+      'api/create',
       json={
         'name': model,
         'modelfile': modelfile,
@@ -450,32 +450,32 @@ class Client(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     try:
-      self._request('HEAD', f'/api/blobs/{digest}')
+      self._request('HEAD', f'api/blobs/{digest}')
     except ResponseError as e:
       if e.status_code != 404:
         raise
 
       with open(path, 'rb') as r:
-        self._request('POST', f'/api/blobs/{digest}', content=r)
+        self._request('POST', f'api/blobs/{digest}', content=r)
 
     return digest
 
   def delete(self, model: str) -> Mapping[str, Any]:
-    response = self._request('DELETE', '/api/delete', json={'name': model})
+    response = self._request('DELETE', 'api/delete', json={'name': model})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def list(self) -> Mapping[str, Any]:
-    return self._request('GET', '/api/tags').json()
+    return self._request('GET', 'api/tags').json()
 
   def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
+    response = self._request('POST', 'api/copy', json={'source': source, 'destination': destination})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   def show(self, model: str) -> Mapping[str, Any]:
-    return self._request('POST', '/api/show', json={'name': model}).json()
+    return self._request('POST', 'api/show', json={'name': model}).json()
 
   def ps(self) -> Mapping[str, Any]:
-    return self._request('GET', '/api/ps').json()
+    return self._request('GET', 'api/ps').json()
 
 
 class AsyncClient(BaseClient):
@@ -584,7 +584,7 @@ class AsyncClient(BaseClient):
 
     return await self._request_stream(
       'POST',
-      '/api/generate',
+      'api/generate',
       json={
         'model': model,
         'prompt': prompt,
@@ -656,7 +656,7 @@ class AsyncClient(BaseClient):
 
     return await self._request_stream(
       'POST',
-      '/api/chat',
+      'api/chat',
       json={
         'model': model,
         'messages': messages,
@@ -682,7 +682,7 @@ class AsyncClient(BaseClient):
 
     response = await self._request(
       'POST',
-      '/api/embed',
+      'api/embed',
       json={
         'model': model,
         'input': input,
@@ -706,7 +706,7 @@ class AsyncClient(BaseClient):
     """
     response = await self._request(
       'POST',
-      '/api/embeddings',
+      'api/embeddings',
       json={
         'model': model,
         'prompt': prompt,
@@ -746,7 +746,7 @@ class AsyncClient(BaseClient):
     """
     return await self._request_stream(
       'POST',
-      '/api/pull',
+      'api/pull',
       json={
         'name': model,
         'insecure': insecure,
@@ -784,7 +784,7 @@ class AsyncClient(BaseClient):
     """
     return await self._request_stream(
       'POST',
-      '/api/push',
+      'api/push',
       json={
         'name': model,
         'insecure': insecure,
@@ -835,7 +835,7 @@ class AsyncClient(BaseClient):
 
     return await self._request_stream(
       'POST',
-      '/api/create',
+      'api/create',
       json={
         'name': model,
         'modelfile': modelfile,
@@ -875,7 +875,7 @@ class AsyncClient(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     try:
-      await self._request('HEAD', f'/api/blobs/{digest}')
+      await self._request('HEAD', f'api/blobs/{digest}')
     except ResponseError as e:
       if e.status_code != 404:
         raise
@@ -888,28 +888,28 @@ class AsyncClient(BaseClient):
               break
             yield chunk
 
-      await self._request('POST', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request('POST', f'api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
   async def delete(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('DELETE', '/api/delete', json={'name': model})
+    response = await self._request('DELETE', 'api/delete', json={'name': model})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def list(self) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/tags')
+    response = await self._request('GET', 'api/tags')
     return response.json()
 
   async def copy(self, source: str, destination: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/copy', json={'source': source, 'destination': destination})
+    response = await self._request('POST', 'api/copy', json={'source': source, 'destination': destination})
     return {'status': 'success' if response.status_code == 200 else 'error'}
 
   async def show(self, model: str) -> Mapping[str, Any]:
-    response = await self._request('POST', '/api/show', json={'name': model})
+    response = await self._request('POST', 'api/show', json={'name': model})
     return response.json()
 
   async def ps(self) -> Mapping[str, Any]:
-    response = await self._request('GET', '/api/ps')
+    response = await self._request('GET', 'api/ps')
     return response.json()
 
 
@@ -965,88 +965,85 @@ def _as_bytesio(s: Any) -> Union[io.BytesIO, None]:
 def _parse_host(host: Optional[str]) -> str:
   """
   >>> _parse_host(None)
-  'http://127.0.0.1:11434'
+  'http://127.0.0.1:11434/'
   >>> _parse_host('')
-  'http://127.0.0.1:11434'
+  'http://127.0.0.1:11434/'
   >>> _parse_host('1.2.3.4')
-  'http://1.2.3.4:11434'
+  'http://1.2.3.4:11434/'
   >>> _parse_host(':56789')
-  'http://127.0.0.1:56789'
+  'http://127.0.0.1:56789/'
   >>> _parse_host('1.2.3.4:56789')
-  'http://1.2.3.4:56789'
+  'http://1.2.3.4:56789/'
   >>> _parse_host('http://1.2.3.4')
-  'http://1.2.3.4:80'
+  'http://1.2.3.4/'
+  >>> _parse_host('http://1.2.3.4:443')
+  'http://1.2.3.4:443/'
+  >>> _parse_host('https://1.2.3.4:443')
+  'https://1.2.3.4:443/'
   >>> _parse_host('https://1.2.3.4')
-  'https://1.2.3.4:443'
+  'https://1.2.3.4/'
   >>> _parse_host('https://1.2.3.4:56789')
-  'https://1.2.3.4:56789'
+  'https://1.2.3.4:56789/'
   >>> _parse_host('example.com')
-  'http://example.com:11434'
+  'http://example.com:11434/'
   >>> _parse_host('example.com:56789')
-  'http://example.com:56789'
+  'http://example.com:56789/'
   >>> _parse_host('http://example.com')
-  'http://example.com:80'
+  'http://example.com/'
   >>> _parse_host('https://example.com')
-  'https://example.com:443'
+  'https://example.com/'
   >>> _parse_host('https://example.com:56789')
-  'https://example.com:56789'
+  'https://example.com:56789/'
   >>> _parse_host('example.com/')
-  'http://example.com:11434'
+  'http://example.com:11434/'
   >>> _parse_host('example.com:56789/')
-  'http://example.com:56789'
+  'http://example.com:56789/'
   >>> _parse_host('example.com/path')
-  'http://example.com:11434/path'
+  'http://example.com:11434/path/'
   >>> _parse_host('example.com:56789/path')
-  'http://example.com:56789/path'
+  'http://example.com:56789/path/'
   >>> _parse_host('https://example.com:56789/path')
-  'https://example.com:56789/path'
+  'https://example.com:56789/path/'
   >>> _parse_host('example.com:56789/path/')
-  'http://example.com:56789/path'
+  'http://example.com:56789/path/'
   >>> _parse_host('[0001:002:003:0004::1]')
-  'http://[0001:002:003:0004::1]:11434'
+  'http://[0001:002:003:0004::1]:11434/'
   >>> _parse_host('[0001:002:003:0004::1]:56789')
-  'http://[0001:002:003:0004::1]:56789'
+  'http://[0001:002:003:0004::1]:56789/'
   >>> _parse_host('http://[0001:002:003:0004::1]')
-  'http://[0001:002:003:0004::1]:80'
+  'http://[0001:002:003:0004::1]/'
   >>> _parse_host('https://[0001:002:003:0004::1]')
-  'https://[0001:002:003:0004::1]:443'
+  'https://[0001:002:003:0004::1]/'
   >>> _parse_host('https://[0001:002:003:0004::1]:56789')
-  'https://[0001:002:003:0004::1]:56789'
+  'https://[0001:002:003:0004::1]:56789/'
   >>> _parse_host('[0001:002:003:0004::1]/')
-  'http://[0001:002:003:0004::1]:11434'
+  'http://[0001:002:003:0004::1]:11434/'
   >>> _parse_host('[0001:002:003:0004::1]:56789/')
-  'http://[0001:002:003:0004::1]:56789'
+  'http://[0001:002:003:0004::1]:56789/'
   >>> _parse_host('[0001:002:003:0004::1]/path')
-  'http://[0001:002:003:0004::1]:11434/path'
+  'http://[0001:002:003:0004::1]:11434/path/'
   >>> _parse_host('[0001:002:003:0004::1]:56789/path')
-  'http://[0001:002:003:0004::1]:56789/path'
+  'http://[0001:002:003:0004::1]:56789/path/'
   >>> _parse_host('https://[0001:002:003:0004::1]:56789/path')
-  'https://[0001:002:003:0004::1]:56789/path'
+  'https://[0001:002:003:0004::1]:56789/path/'
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
-  'http://[0001:002:003:0004::1]:56789/path'
+  'http://[0001:002:003:0004::1]:56789/path/'
+  >>> _parse_host('https://user:pass@example.com')
+  'https://user:pass@example.com/'
   """
 
-  host, port = host or '', 11434
-  scheme, _, hostport = host.partition('://')
-  if not hostport:
-    scheme, hostport = 'http', host
-  elif scheme == 'http':
-    port = 80
-  elif scheme == 'https':
-    port = 443
+  if not host:
+    return 'http://127.0.0.1:11434'
 
-  split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
-  host = split.hostname or '127.0.0.1'
-  port = split.port or port
+  if '//' not in host:
+    host = "//" + host
 
-  # Fix missing square brackets for IPv6 from urlsplit
-  try:
-    if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
-      host = f'[{host}]'
-  except ValueError:
-    ...
+  parts = urllib.parse.urlsplit(host)
 
-  if path := split.path.strip('/'):
-    return f'{scheme}://{host}:{port}/{path}'
-
-  return f'{scheme}://{host}:{port}'
+  return urllib.parse.urlunsplit((
+    parts.scheme or 'http',
+    parts.netloc or 'localhost',
+    (parts.path or "").rstrip("/") + "/",
+    parts.query,
+    parts.fragment,
+  ))
