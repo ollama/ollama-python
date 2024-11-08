@@ -528,14 +528,8 @@ class Client(BaseClient):
 
     digest = f'sha256:{sha256sum.hexdigest()}'
 
-    try:
-      self._request_raw('HEAD', f'/api/blobs/{digest}')
-    except ResponseError as e:
-      if e.status_code != 404:
-        raise
-
-      with open(path, 'rb') as r:
-        self._request_raw('POST', f'/api/blobs/{digest}', content=r)
+    with open(path, 'rb') as r:
+      self._request_raw('POST', f'/api/blobs/sha256:{digest}', content=r)
 
     return digest
 
@@ -1012,21 +1006,15 @@ class AsyncClient(BaseClient):
 
     digest = f'sha256:{sha256sum.hexdigest()}'
 
-    try:
-      await self._request_raw('HEAD', f'/api/blobs/{digest}')
-    except ResponseError as e:
-      if e.status_code != 404:
-        raise
+    async def upload_bytes():
+      with open(path, 'rb') as r:
+        while True:
+          chunk = r.read(32 * 1024)
+          if not chunk:
+            break
+          yield chunk
 
-      async def upload_bytes():
-        with open(path, 'rb') as r:
-          while True:
-            chunk = r.read(32 * 1024)
-            if not chunk:
-              break
-            yield chunk
-
-      await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
+    await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
