@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import (
   Any,
+  List,
   Literal,
   Mapping,
   Optional,
@@ -229,7 +230,7 @@ class Tool(SubscriptableBaseModel):
     description: str
 
     class Parameters(SubscriptableBaseModel):
-      type: str
+      type: Union[str, List[str]]
       required: Optional[Sequence[str]] = None
       properties: Optional[JsonSchemaValue] = None
 
