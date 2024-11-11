@@ -10,6 +10,7 @@ from hashlib import sha256
 
 from typing import (
   Any,
+  Callable,
   Literal,
   Mapping,
   Optional,
@@ -21,6 +22,9 @@ from typing import (
 )
 
 import sys
+
+
+from ollama._utils import process_tools
 
 if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
@@ -284,7 +288,7 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
     format: Optional[Literal['', 'json']] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
@@ -300,6 +304,7 @@ class Client(BaseClient):
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
 
+    tools = process_tools(tools)
     return self._request(
       ChatResponse,
       'POST',

@@ -1,3 +1,4 @@
+from types import UnionType
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union, get_args, get_origin
 from ollama._types import Tool
 
@@ -15,11 +16,9 @@ PYTHON_TO_JSON_TYPES = {
 
 
 def _get_json_type(python_type: Any) -> str | list[str]:
-  """Convert Python type to JSON schema type."""
   # Handle Optional types (Union[type, None] and type | None)
   origin = get_origin(python_type)
-  if origin is Union:
-    print('python_type', python_type)
+  if origin is UnionType or origin is Union:
     args = get_args(python_type)
     # Filter out None/NoneType from union args
     non_none_args = [arg for arg in args if arg not in (None, type(None))]
@@ -34,7 +33,6 @@ def _get_json_type(python_type: Any) -> str | list[str]:
 
   # Get basic type mapping
   if python_type in PYTHON_TO_JSON_TYPES:
-    print('python_type', python_type, PYTHON_TO_JSON_TYPES[python_type])
     return PYTHON_TO_JSON_TYPES[python_type]
 
   # Handle typing.List, typing.Dict etc.
@@ -46,9 +44,8 @@ def _get_json_type(python_type: Any) -> str | list[str]:
 
 
 def _is_optional_type(python_type: Any) -> bool:
-  """Check if a type is optional (can be None)."""
   origin = get_origin(python_type)
-  if origin is Union:
+  if origin is UnionType or origin is Union:
     args = get_args(python_type)
     return any(arg in (None, type(None)) for arg in args)
   return False
@@ -118,10 +115,6 @@ def convert_function_to_tool(func: Callable) -> Tool:
 
 
 def process_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Sequence[Tool]:
-  """
-  Process a sequence of tools that can be mappings, Tool objects, or callable functions.
-  Returns a sequence of validated Tool objects.
-  """
   if not tools:
     return []
 
