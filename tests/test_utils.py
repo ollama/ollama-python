@@ -98,7 +98,7 @@ def test_function_with_all_typing_types():
     d: Dict[str, int],
     s: Set[int],
     t: Tuple[int, str],
-    l: List[int],
+    l: List[int],  # noqa: E741
     o: Optional[int],
   ) -> Union[Mapping[str, int], str, None]:
     """
