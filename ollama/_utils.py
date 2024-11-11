@@ -1,4 +1,4 @@
-# from __future__ import annotations
+from __future__ import annotations
 
 from typing import Any, Callable, List, Mapping, Optional, Sequence, Union, get_args, get_origin
 from ollama._types import Tool
