@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from types import UnionType
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Union, get_args, get_origin
 from ollama._types import Tool
@@ -13,6 +15,14 @@ PYTHON_TO_JSON_TYPES = {
   Dict: 'object',
   None: 'null',
 }
+
+"""
+TODO:
+- Testing - varying cases for functions and parsing
+- Default to string if type is unknown - define behavior
+- Add future importing stuff
+
+"""
 
 
 def _get_json_type(python_type: Any) -> str | List[str]:
