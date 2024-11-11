@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Mapping, Optional, Sequence, Union, get_args, get_origin
+from typing import Any, Callable, List, Mapping, Optional, Union, get_args, get_origin
 from ollama._types import Tool
+from collections.abc import Sequence, Set
+from typing import Dict, Set as TypeSet
 
 # Map both the type and the type reference to the same JSON type
-PYTHON_TO_JSON_TYPES = {
+TYPE_MAP = {
+  # Basic types
   int: 'integer',
   'int': 'integer',
   str: 'string',
@@ -13,26 +16,35 @@ PYTHON_TO_JSON_TYPES = {
   'float': 'number',
   bool: 'boolean',
   'bool': 'boolean',
-  list: 'array',
-  'list': 'array',
-  dict: 'object',
-  'dict': 'object',
   type(None): 'null',
   'None': 'null',
+  # Collection types
+  list: 'array',
+  'list': 'array',
+  List: 'array',
+  'List': 'array',
+  Sequence: 'array',
+  'Sequence': 'array',
+  tuple: 'array',
+  'tuple': 'array',
+  set: 'array',
+  'set': 'array',
+  Set: 'array',
+  TypeSet: 'array',
+  'Set': 'array',
+  # Mapping types
+  dict: 'object',
+  'dict': 'object',
+  Dict: 'object',
+  'Dict': 'object',
+  Mapping: 'object',
+  'Mapping': 'object',
+  Any: 'string',
+  'Any': 'string',
 }
-
-"""
-TODO:
-- Testing - varying cases for functions and parsing
-- Default to string if type is unknown - define behavior
-- Add future importing stuff
-
-"""
 
 
 def _get_json_type(python_type: Any) -> str | List[str]:
-  # Print for debugging
-
   # Handle Optional types (Union[type, None] and type | None)
   origin = get_origin(python_type)
   if origin is type(int | str) or origin is Union:
@@ -42,23 +54,38 @@ def _get_json_type(python_type: Any) -> str | List[str]:
     if non_none_args:
       if len(non_none_args) == 1:
         return _get_json_type(non_none_args[0])
-      else:
-        return [_get_json_type(arg) for arg in non_none_args]
+      # For multiple types (e.g., int | str | None), return array of types
+      return [_get_json_type(arg) for arg in non_none_args]
     return 'null'
 
-  # Direct type check first (like int, str, etc.)
-  if python_type in PYTHON_TO_JSON_TYPES:
-    return PYTHON_TO_JSON_TYPES[python_type]
-
-  # Handle typing.List, typing.Dict etc.
+  # Handle generic types (List[int], Dict[str, int], etc.)
   if origin is not None:
-    return PYTHON_TO_JSON_TYPES.get(origin, 'string')
+    # Get the base type (List, Dict, etc.)
+    base_type = TYPE_MAP.get(origin, None)
+    if base_type:
+      return base_type
+    # If it's a subclass of known abstract base classes, map to appropriate type
+    if isinstance(origin, type):
+      if issubclass(origin, (list, Sequence, tuple, set, Set)):
+        return 'array'
+      if issubclass(origin, (dict, Mapping)):
+        return 'object'
 
-  # Default to string if type is unknown
-  raise ValueError(f'Unknown type: {python_type}')
+  # Handle both type objects and type references
+  type_key = python_type
+  if isinstance(python_type, type):
+    type_key = python_type
+  elif isinstance(python_type, str):
+    type_key = python_type.lower()
 
+  # If type not found in map, try to get the type name
+  if type_key not in TYPE_MAP and hasattr(python_type, '__name__'):
+    type_key = python_type.__name__.lower()
 
-#   return 'string'
+  if type_key in TYPE_MAP:
+    return TYPE_MAP[type_key]
+
+  raise ValueError(f'Could not map Python type {python_type} to a valid JSON type')
 
 
 def _is_optional_type(python_type: Any) -> bool:
@@ -126,8 +153,13 @@ def convert_function_to_tool(func: Callable) -> Tool:
       'name': func.__name__,
       'description': description,
       'parameters': parameters,
+      'return_type': None,
     },
   }
+
+  if 'return' in func.__annotations__ and func.__annotations__['return'] is not None:
+    tool_dict['function']['return_type'] = _get_json_type(func.__annotations__['return'])
+
   return Tool.model_validate(tool_dict)
 
 
@@ -140,7 +172,6 @@ def process_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callab
     if callable(tool):
       processed_tools.append(convert_function_to_tool(tool))
     else:
-      # Existing tool handling logic
       processed_tools.append(Tool.model_validate(tool))
 
   return processed_tools
