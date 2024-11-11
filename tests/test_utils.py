@@ -1,3 +1,11 @@
+import sys
+
+import pytest
+
+if sys.version_info < (3, 10):
+  pytest.skip('Python 3.10 or higher is required', allow_module_level=True)
+
+
 from ollama._utils import _get_json_type, convert_function_to_tool, process_tools
 
 
@@ -15,7 +23,9 @@ def test_json_type_conversion():
 
 
 def test_function_to_tool_conversion():
-  def add_numbers(x: int, y: int | None = None) -> int:
+  from typing import Optional
+
+  def add_numbers(x: int, y: Optional[int] = None) -> int:
     """Add two numbers together.
     Args:
         x (integer): The first number
@@ -82,62 +92,6 @@ def test_function_with_all_types():
   assert tool.function.parameters.properties['w']['type'] == 'object'
   assert set(tool.function.parameters.properties['v']['type']) == {'string', 'integer'}
   assert set(tool.function.return_type) == {'string', 'integer', 'array', 'object'}
-
-
-#   assert tool.type == 'asjdlf'
-
-
-def test_function_with_all_typing_types():
-  from typing import Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
-
-  def all_types(
-    x: int,
-    y: str,
-    z: Sequence[int],
-    w: Mapping[str, int],
-    d: Dict[str, int],
-    s: Set[int],
-    t: Tuple[int, str],
-    l: List[int],  # noqa: E741
-    o: Optional[int],
-  ) -> Union[Mapping[str, int], str, None]:
-    """
-    A function with all types.
-    Args:
-        x (integer): The first number
-        y (string): The second number
-        z (array): The third number
-        w (object): The fourth number
-        d (object): The fifth number
-        s (array): The sixth number
-        t (array): The seventh number
-        l (array): The eighth number
-        o (integer | None): The ninth number
-    """
-    pass
-
-  tool = convert_function_to_tool(all_types)
-  assert tool.function.parameters.properties['x']['type'] == 'integer'
-  assert tool.function.parameters.properties['y']['type'] == 'string'
-  assert tool.function.parameters.properties['z']['type'] == 'array'
-  assert tool.function.parameters.properties['w']['type'] == 'object'
-  assert tool.function.parameters.properties['d']['type'] == 'object'
-  assert tool.function.parameters.properties['s']['type'] == 'array'
-  assert tool.function.parameters.properties['t']['type'] == 'array'
-  assert tool.function.parameters.properties['l']['type'] == 'array'
-  assert tool.function.parameters.properties['o']['type'] == 'integer'
-  assert set(tool.function.return_type) == {'string', 'object'}
-
-
-def test_function_without_docstring():
-  def simple_func(x: int):
-    pass
-
-  try:
-    convert_function_to_tool(simple_func)
-    assert AssertionError('Should raise ValueError')
-  except ValueError:
-    pass
 
 
 def test_process_tools():

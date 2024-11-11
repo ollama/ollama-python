@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from types import UnionType
 from typing import Any, Callable, List, Mapping, Optional, Union, get_args, get_origin
 from ollama._types import Tool
 from collections.abc import Sequence, Set
@@ -47,7 +48,7 @@ TYPE_MAP = {
 def _get_json_type(python_type: Any) -> str | List[str]:
   # Handle Optional types (Union[type, None] and type | None)
   origin = get_origin(python_type)
-  if origin is type(int | str) or origin is Union:
+  if origin is UnionType or origin is Union:
     args = get_args(python_type)
     # Filter out None/NoneType from union args
     non_none_args = [arg for arg in args if arg not in (None, type(None))]
@@ -90,7 +91,7 @@ def _get_json_type(python_type: Any) -> str | List[str]:
 
 def _is_optional_type(python_type: Any) -> bool:
   origin = get_origin(python_type)
-  if origin is type(int | str) or origin is Union:
+  if origin is UnionType or origin is Union:
     args = get_args(python_type)
     return any(arg in (None, type(None)) for arg in args)
   return False
