@@ -15,7 +15,7 @@ PYTHON_TO_JSON_TYPES = {
 }
 
 
-def _get_json_type(python_type: Any) -> str | list[str]:
+def _get_json_type(python_type: Any) -> str | List[str]:
   # Handle Optional types (Union[type, None] and type | None)
   origin = get_origin(python_type)
   if origin is UnionType or origin is Union:
@@ -39,7 +39,7 @@ def _get_json_type(python_type: Any) -> str | list[str]:
   if origin in PYTHON_TO_JSON_TYPES:
     return PYTHON_TO_JSON_TYPES[origin]
 
-  # Default to string if type is unknown
+  # TODO: Default to string if type is unknown - define beahvior
   return 'string'
 
 
@@ -64,6 +64,7 @@ def convert_function_to_tool(func: Callable) -> Tool:
       break
     if line:
       description_lines.append(line)
+
   description = ' '.join(description_lines).strip()
 
   # Parse Args section
@@ -74,7 +75,6 @@ def convert_function_to_tool(func: Callable) -> Tool:
   if 'Returns:' in args_section:
     args_section = args_section.split('Returns:')[0]
 
-  # Build parameters from function annotations
   parameters = {'type': 'object', 'properties': {}, 'required': []}
 
   # Build parameters dict
@@ -82,7 +82,6 @@ def convert_function_to_tool(func: Callable) -> Tool:
     if param_name == 'return':
       continue
 
-    # Find param description in Args section
     param_desc = None
     for line in args_section.split('\n'):
       line = line.strip()
@@ -99,7 +98,7 @@ def convert_function_to_tool(func: Callable) -> Tool:
       'description': param_desc,
     }
 
-    # Only add to required if not optional
+    # Only add to required if not optional - could capture and map earlier to save this call
     if not _is_optional_type(param_type):
       parameters['required'].append(param_name)
 
