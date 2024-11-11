@@ -1,10 +1,22 @@
 from __future__ import annotations
 
-from types import UnionType
 from typing import Any, Callable, List, Mapping, Optional, Union, get_args, get_origin
 from ollama._types import Tool
 from collections.abc import Sequence, Set
 from typing import Dict, Set as TypeSet
+import sys
+
+# Type compatibility layer
+if sys.version_info >= (3, 10):
+  from types import UnionType
+
+  def is_union(tp: Any) -> bool:
+    return get_origin(tp) in (Union, UnionType)
+else:
+
+  def is_union(tp: Any) -> bool:
+    return get_origin(tp) is Union
+
 
 # Map both the type and the type reference to the same JSON type
 TYPE_MAP = {
@@ -47,8 +59,7 @@ TYPE_MAP = {
 
 def _get_json_type(python_type: Any) -> str | List[str]:
   # Handle Optional types (Union[type, None] and type | None)
-  origin = get_origin(python_type)
-  if origin is UnionType or origin is Union:
+  if is_union(python_type):
     args = get_args(python_type)
     # Filter out None/NoneType from union args
     non_none_args = [arg for arg in args if arg not in (None, type(None))]
@@ -60,16 +71,16 @@ def _get_json_type(python_type: Any) -> str | List[str]:
     return 'null'
 
   # Handle generic types (List[int], Dict[str, int], etc.)
-  if origin is not None:
+  if get_origin(python_type) is not None:
     # Get the base type (List, Dict, etc.)
-    base_type = TYPE_MAP.get(origin, None)
+    base_type = TYPE_MAP.get(get_origin(python_type), None)
     if base_type:
       return base_type
     # If it's a subclass of known abstract base classes, map to appropriate type
-    if isinstance(origin, type):
-      if issubclass(origin, (list, Sequence, tuple, set, Set)):
+    if isinstance(get_origin(python_type), type):
+      if issubclass(get_origin(python_type), (list, Sequence, tuple, set, Set)):
         return 'array'
-      if issubclass(origin, (dict, Mapping)):
+      if issubclass(get_origin(python_type), (dict, Mapping)):
         return 'object'
 
   # Handle both type objects and type references
@@ -90,8 +101,7 @@ def _get_json_type(python_type: Any) -> str | List[str]:
 
 
 def _is_optional_type(python_type: Any) -> bool:
-  origin = get_origin(python_type)
-  if origin is UnionType or origin is Union:
+  if is_union(python_type):
     args = get_args(python_type)
     return any(arg in (None, type(None)) for arg in args)
   return False

@@ -1,12 +1,4 @@
-from __future__ import annotations
-
-import sys
 from typing import Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
-
-import pytest
-
-if sys.version_info >= (3, 10):
-  pytest.skip('Python 3.9 or lower is required', allow_module_level=True)
 
 from ollama._utils import _get_json_type, convert_function_to_tool
 
