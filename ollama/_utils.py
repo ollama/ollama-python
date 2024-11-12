@@ -63,8 +63,7 @@ def _get_json_type(python_type: Any) -> str | List[str]:
   if is_union(python_type):
     args = get_args(python_type)
     # Filter out None/NoneType from union args
-    non_none_args = [arg for arg in args if arg not in (None, type(None))]
-    if non_none_args:
+    if non_none_args := [arg for arg in args if arg not in (None, type(None))]:
       if len(non_none_args) == 1:
         return _get_json_type(non_none_args[0])
       # For multiple types (e.g., int | str | None), return array of types
