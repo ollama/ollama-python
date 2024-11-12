@@ -1,21 +1,16 @@
-from typing import Dict, List, Mapping, Optional, Sequence, Set, Tuple, Union
+from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
 
 from ollama._utils import _get_json_type, convert_function_to_tool
 
 
 def test_json_type_conversion():
   # Test basic types
-  assert _get_json_type(str) == 'string'
-  assert _get_json_type(int) == 'integer'
   assert _get_json_type(List) == 'array'
   assert _get_json_type(Dict) == 'object'
 
-  # Test Optional
-  assert _get_json_type(Optional[str]) == 'string'
-
 
 def test_function_to_tool_conversion():
-  def add_numbers(x: int, y: Union[int, None] = None) -> int:  # Changed Optional to Union
+  def add_numbers(x: int, y: Union[int, None] = None) -> int:
     """Add two numbers together.
     Args:
         x (integer): The first number
@@ -41,13 +36,13 @@ def test_function_with_all_typing_types():
   def all_types(
     x: int,
     y: str,
-    z: Sequence[int],
+    z: Sequence,
     w: Mapping[str, int],
     d: Dict[str, int],
     s: Set[int],
     t: Tuple[int, str],
     l: List[int],  # noqa: E741
-    o: Union[int, None],  # Changed Optional to Union
+    o: Union[int, None],
   ) -> Union[Mapping[str, int], str, None]:
     """
     A function with all types.

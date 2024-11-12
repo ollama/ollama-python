@@ -98,14 +98,14 @@ def test_process_tools():
   def func1(x: int) -> str:
     """Simple function 1.
     Args:
-        x: A number
+        x (integer): A number
     """
     pass
 
   def func2(y: str) -> int:
     """Simple function 2.
     Args:
-        y: A string
+        y (string): A string
     """
     pass
 
@@ -126,3 +126,81 @@ def test_process_tools():
   assert len(tools) == 2
   assert tools[0].function.name == 'func1'
   assert tools[1].function.name == 'test'
+
+
+def test_advanced_json_type_conversion():
+  from typing import Optional, Union, List, Dict, Sequence, Mapping, Set, Tuple, Any
+
+  # Test nested collections
+  assert _get_json_type(List[List[int]]) == 'array'
+  assert _get_json_type(Dict[str, List[int]]) == 'object'
+
+  # Test multiple unions
+  assert set(_get_json_type(Union[int, str, float])) == {'integer', 'string', 'number'}
+
+  # Test collections.abc types
+  assert _get_json_type(Sequence[int]) == 'array'
+  assert _get_json_type(Mapping[str, int]) == 'object'
+  assert _get_json_type(Set[int]) == 'array'
+  assert _get_json_type(Tuple[int, str]) == 'array'
+
+  # Test nested optionals
+  assert _get_json_type(Optional[List[Optional[int]]]) == 'array'
+
+  # Test edge cases
+  assert _get_json_type(Any) == 'string'  # or however you want to handle Any
+  assert _get_json_type(None) == 'null'
+  assert _get_json_type(type(None)) == 'null'
+
+  # Test complex nested types
+  complex_type = Dict[str, Union[List[int], Optional[str], Dict[str, bool]]]
+  assert _get_json_type(complex_type) == 'object'
+
+
+def test_invalid_types():
+  # Test that invalid types raise appropriate errors
+  with pytest.raises(ValueError):
+    _get_json_type(lambda x: x)  # Function type
+
+  with pytest.raises(ValueError):
+    _get_json_type(type)  # metaclass
+
+
+def test_function_docstring_parsing():
+  from typing import List, Dict, Any
+
+  def func_with_complex_docs(x: int, y: List[str]) -> Dict[str, Any]:
+    """
+    Test function with complex docstring.
+
+    Args:
+        x (integer): A number
+            with multiple lines
+        y (array of string): A list
+            with multiple lines
+
+    Returns:
+        object: A dictionary
+            with multiple lines
+    """
+    pass
+
+  tool = convert_function_to_tool(func_with_complex_docs)
+  assert tool['function']['description'] == 'Test function with complex docstring.'
+  assert tool['function']['parameters']['properties']['x']['description'] == 'A number with multiple lines'
+  assert tool['function']['parameters']['properties']['y']['description'] == 'A list with multiple lines'
+
+
+def test_tool_validation():
+  # Test that malformed tool dictionaries are rejected
+  invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
+  with pytest.raises(ValueError):
+    process_tools([invalid_tool])
+
+  # Test missing required fields
+  incomplete_tool = {
+    'type': 'function',
+    'function': {'name': 'test'},  # missing description and parameters
+  }
+  with pytest.raises(ValueError):
+    process_tools([incomplete_tool])

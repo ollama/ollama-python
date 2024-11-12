@@ -6,7 +6,7 @@ from collections.abc import Sequence, Set
 from typing import Dict, Set as TypeSet
 import sys
 
-# Type compatibility layer
+# Type compatibility layer for Union and UnionType
 if sys.version_info >= (3, 10):
   from types import UnionType
 
@@ -30,6 +30,7 @@ TYPE_MAP = {
   bool: 'boolean',
   'bool': 'boolean',
   type(None): 'null',
+  None: 'null',
   'None': 'null',
   # Collection types
   list: 'array',
@@ -83,16 +84,16 @@ def _get_json_type(python_type: Any) -> str | List[str]:
       if issubclass(get_origin(python_type), (dict, Mapping)):
         return 'object'
 
-  # Handle both type objects and type references
+  # Handle both type objects and type references (older Python versions)
   type_key = python_type
   if isinstance(python_type, type):
     type_key = python_type
   elif isinstance(python_type, str):
-    type_key = python_type.lower()
+    type_key = python_type
 
   # If type not found in map, try to get the type name
   if type_key not in TYPE_MAP and hasattr(python_type, '__name__'):
-    type_key = python_type.__name__.lower()
+    type_key = python_type.__name__
 
   if type_key in TYPE_MAP:
     return TYPE_MAP[type_key]
@@ -138,23 +139,47 @@ def convert_function_to_tool(func: Callable) -> Tool:
     if param_name == 'return':
       continue
 
-    param_desc = None
+    param_desc_lines = []
+    found_param = False
+    indent_level = None
+
+    # Process docstring lines
     for line in args_section.split('\n'):
-      line = line.strip()
-      # Check for parameter name with or without colon, space, or parentheses to mitigate formatting issues
-      if line.startswith(param_name + ':') or line.startswith(param_name + ' ') or line.startswith(param_name + '('):
-        param_desc = line.split(':', 1)[1].strip()
+      stripped_line = line.strip()
+      if not stripped_line:
+        continue
+
+      # Check for parameter start
+      if stripped_line.startswith(f'{param_name}:') or stripped_line.startswith(f'{param_name} ') or stripped_line.startswith(f'{param_name}('):
+        found_param = True
+        # Get the description part after the parameter name
+        desc_part = stripped_line.split(':', 1)[1].strip() if ':' in stripped_line else ''
+        if desc_part:
+          param_desc_lines.append(desc_part)
+        # Get the indentation level for continuation lines
+        indent_level = len(line) - len(line.lstrip())
+        continue
+
+      # Handle continuation lines
+      if found_param and line.startswith(' ' * (indent_level + 4)):
+        # Add continuation line, stripped of extra indentation
+        param_desc_lines.append(stripped_line)
+      elif found_param and stripped_line:
+        # If we hit a line with different indentation, we're done with this parameter
         break
 
-    if not param_desc:
+    if not found_param:
       raise ValueError(f'Parameter {param_name} must have a description in the Args section')
+
+    # Join all lines with spaces
+    param_desc = ' '.join(param_desc_lines).strip()
 
     parameters['properties'][param_name] = {
       'type': _get_json_type(param_type),
       'description': param_desc,
     }
 
-    # Only add to required if not optional - could capture and map earlier to save this call
+    # Only add to required if not optional
     if not _is_optional_type(param_type):
       parameters['required'].append(param_name)
 
