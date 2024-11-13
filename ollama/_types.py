@@ -230,7 +230,7 @@ class Tool(SubscriptableBaseModel):
     description: str
 
     class Parameters(SubscriptableBaseModel):
-      type: Union[str, List[str]]
+      type: str
       required: Optional[Sequence[str]] = None
       properties: Optional[JsonSchemaValue] = None
 

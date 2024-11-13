@@ -66,8 +66,8 @@ def _get_json_type(python_type: Any) -> str | List[str]:
     if non_none_args := [arg for arg in args if arg not in (None, type(None))]:
       if len(non_none_args) == 1:
         return _get_json_type(non_none_args[0])
-      # For multiple types (e.g., int | str | None), return array of types
-      return [_get_json_type(arg) for arg in non_none_args]
+      # For multiple return types (e.g., int | str | None), return stringified array of types -> "['integer', 'string', 'null']"
+      return str([_get_json_type(arg) for arg in non_none_args]).replace(' ', '')
     return 'null'
 
   # Handle generic types (List[int], Dict[str, int], etc.)

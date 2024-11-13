@@ -69,4 +69,4 @@ def test_function_with_all_typing_types():
   assert tool.function.parameters.properties['t']['type'] == 'array'
   assert tool.function.parameters.properties['l']['type'] == 'array'
   assert tool.function.parameters.properties['o']['type'] == 'integer'
-  assert set(tool.function.return_type) == {'string', 'object'}
+  assert set(x.strip().strip("'") for x in tool.function.return_type[1:-1].split(',')) == {'string', 'object'}

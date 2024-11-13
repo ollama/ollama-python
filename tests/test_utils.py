@@ -90,8 +90,8 @@ def test_function_with_all_types():
   assert tool.function.parameters.properties['y']['type'] == 'string'
   assert tool.function.parameters.properties['z']['type'] == 'array'
   assert tool.function.parameters.properties['w']['type'] == 'object'
-  assert set(tool.function.parameters.properties['v']['type']) == {'string', 'integer'}
-  assert set(tool.function.return_type) == {'string', 'integer', 'array', 'object'}
+  assert set(x.strip().strip("'") for x in tool.function.parameters.properties['v']['type'].removeprefix('[').removesuffix(']').split(',')) == {'string', 'integer'}
+  assert set(x.strip().strip("'") for x in tool.function.return_type.removeprefix('[').removesuffix(']').split(',')) == {'string', 'integer', 'array', 'object'}
 
 
 def test_process_tools():
@@ -136,7 +136,7 @@ def test_advanced_json_type_conversion():
   assert _get_json_type(Dict[str, List[int]]) == 'object'
 
   # Test multiple unions
-  assert set(_get_json_type(Union[int, str, float])) == {'integer', 'string', 'number'}
+  assert set(x.strip().strip("'") for x in _get_json_type(Union[int, str, float]).removeprefix('[').removesuffix(']').split(',')) == {'integer', 'string', 'number'}
 
   # Test collections.abc types
   assert _get_json_type(Sequence[int]) == 'array'
