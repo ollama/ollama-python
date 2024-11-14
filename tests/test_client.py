@@ -1012,11 +1012,25 @@ def test_copy_tools():
   assert list(_copy_tools([])) == []
 
   # Test with mix of functions and tool dicts
-  tool_dict = {'type': 'function', 'function': {'name': 'test', 'description': 'Test function', 'parameters': {'type': 'object', 'properties': {'x': {'type': 'string', 'description': 'A string'}}, 'required': ['x']}}}
-  tools = list(_copy_tools([func1, tool_dict]))
-  assert len(tools) == 2
+  tool_dict = {
+    'type': 'function',
+    'function': {
+      'name': 'test',
+      'description': 'Test function',
+      'parameters': {
+        'type': 'object',
+        'properties': {'x': {'type': 'string', 'description': 'A string'}},
+        'required': ['x'],
+      },
+    },
+  }
+
+  tool_json = json.loads(json.dumps(tool_dict))
+  tools = list(_copy_tools([func1, tool_dict, tool_json]))
+  assert len(tools) == 3
   assert tools[0].function.name == 'func1'
   assert tools[1].function.name == 'test'
+  assert tools[2].function.name == 'test'
 
 
 def test_tool_validation():

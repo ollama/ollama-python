@@ -237,7 +237,7 @@ class Tool(SubscriptableBaseModel):
 
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
-        type: Union[type, UnionType, Optional[T]]
+        type: Union[type, UnionType, Optional[T], str]
         description: str
 
         @model_serializer
@@ -458,15 +458,20 @@ TYPE_MAP = {
   # Basic types
   int: 'integer',
   'int': 'integer',
+  'integer': 'integer',
   str: 'string',
   'str': 'string',
+  'string': 'string',
   float: 'number',
   'float': 'number',
+  'number': 'number',
   bool: 'boolean',
   'bool': 'boolean',
+  'boolean': 'boolean',
   type(None): 'null',
   None: 'null',
   'None': 'null',
+  'null': 'null',
   # Collection types
   list: 'array',
   'list': 'array',
@@ -481,6 +486,7 @@ TYPE_MAP = {
   Set: 'array',
   TypeSet: 'array',
   'Set': 'array',
+  'array': 'array',
   # Mapping types
   dict: 'object',
   'dict': 'object',
@@ -488,6 +494,7 @@ TYPE_MAP = {
   'Dict': 'object',
   Mapping: 'object',
   'Mapping': 'object',
+  'object': 'object',
   Any: 'string',
   'Any': 'string',
 }

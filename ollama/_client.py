@@ -754,7 +754,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
     format: Optional[Literal['', 'json']] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
