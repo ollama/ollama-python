@@ -225,7 +225,7 @@ class Tool(SubscriptableBaseModel):
     description: str
 
     class Parameters(SubscriptableBaseModel):
-      type: str
+      type: Literal['object'] = 'object'
       required: Optional[Sequence[str]] = None
 
       class Property(SubscriptableBaseModel):

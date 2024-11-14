@@ -6,8 +6,16 @@ from typing import Dict, Set as TypeSet, TypeVar
 T = TypeVar('T')
 if sys.version_info >= (3, 10):
   from types import UnionType
+
+  def is_union(tp: Any) -> bool:
+    return get_origin(tp) in (Union, UnionType)
+
 else:
   UnionType = Union[T]
+
+  def is_union(tp: Any) -> bool:
+    return get_origin(tp) is Union
+
 
 # Python doesn't have a type serializer, so we need to map types to JSON types
 TYPE_MAP = {
@@ -54,16 +62,6 @@ TYPE_MAP = {
   Any: 'string',
   'Any': 'string',
 }
-
-if sys.version_info >= (3, 10):
-  from types import UnionType
-
-  def is_union(tp: Any) -> bool:
-    return get_origin(tp) in (Union, UnionType)
-else:
-
-  def is_union(tp: Any) -> bool:
-    return get_origin(tp) is Union
 
 
 def _map_type(python_type: Any) -> str:
