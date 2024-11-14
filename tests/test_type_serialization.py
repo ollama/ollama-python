@@ -33,7 +33,10 @@ def test_advanced_json_type_conversion():
   assert _get_json_type(Dict[str, List[int]]) == 'object'
 
   # Test multiple unions
-  assert set(x.strip().strip("'") for x in _get_json_type(Union[int, str, float]).removeprefix('[').removesuffix(']').split(',')) == {'integer', 'string', 'number'}
+  result = _get_json_type(Union[int, str, float])
+  # Remove brackets from start/end
+  result = result[1:-1] if result.startswith('[') else result
+  assert set(x.strip().strip("'") for x in result.split(',')) == {'integer', 'string', 'number'}
 
   # Test collections.abc types
   assert _get_json_type(Sequence[int]) == 'array'

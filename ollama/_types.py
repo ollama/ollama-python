@@ -23,7 +23,7 @@ T = TypeVar('T')
 if sys.version_info >= (3, 10):
   from types import UnionType
 else:
-  UnionType = Union
+  UnionType = Union[T]
 
 
 class SubscriptableBaseModel(BaseModel):
@@ -535,7 +535,7 @@ def map_type(python_type: Any) -> str:
   raise ValueError(f'Could not map Python type {python_type} to a valid JSON type')
 
 
-def _get_json_type(python_type: Union[type, UnionType, Optional[T]]) -> str | List[str]:
+def _get_json_type(python_type: Union[type, UnionType, Optional[T]]) -> Union[str, List[str]]:
   # Handle Optional types (Union[type, None] and type | None)
   if is_union(python_type):
     args = get_args(python_type)
