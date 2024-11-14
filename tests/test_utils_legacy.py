@@ -1,12 +1,6 @@
 from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
-
-from ollama._utils import _get_json_type, convert_function_to_tool
-
-
-def test_json_type_conversion():
-  # Test basic types
-  assert _get_json_type(List) == 'array'
-  assert _get_json_type(Dict) == 'object'
+import json
+from ollama._utils import convert_function_to_tool
 
 
 def test_function_to_tool_conversion():
@@ -21,7 +15,8 @@ def test_function_to_tool_conversion():
     """
     return x + y
 
-  tool = convert_function_to_tool(add_numbers)
+  tool_json = convert_function_to_tool(add_numbers).model_dump_json()
+  tool = json.loads(tool_json)
 
   assert tool['type'] == 'function'
   assert tool['function']['name'] == 'add_numbers'
@@ -59,14 +54,13 @@ def test_function_with_all_typing_types():
     """
     pass
 
-  tool = convert_function_to_tool(all_types)
-  assert tool.function.parameters.properties['x']['type'] == 'integer'
-  assert tool.function.parameters.properties['y']['type'] == 'string'
-  assert tool.function.parameters.properties['z']['type'] == 'array'
-  assert tool.function.parameters.properties['w']['type'] == 'object'
-  assert tool.function.parameters.properties['d']['type'] == 'object'
-  assert tool.function.parameters.properties['s']['type'] == 'array'
-  assert tool.function.parameters.properties['t']['type'] == 'array'
-  assert tool.function.parameters.properties['l']['type'] == 'array'
-  assert tool.function.parameters.properties['o']['type'] == 'integer'
-  assert set(x.strip().strip("'") for x in tool.function.return_type[1:-1].split(',')) == {'string', 'object'}
+  tool = convert_function_to_tool(all_types).model_dump()
+  assert tool['function']['parameters']['properties']['x']['type'] == 'integer'
+  assert tool['function']['parameters']['properties']['y']['type'] == 'string'
+  assert tool['function']['parameters']['properties']['z']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['w']['type'] == 'object'
+  assert tool['function']['parameters']['properties']['d']['type'] == 'object'
+  assert tool['function']['parameters']['properties']['s']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['t']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['l']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['o']['type'] == 'integer'

@@ -24,7 +24,7 @@ from typing import (
 import sys
 
 
-from ollama._utils import _process_tools
+from ollama._utils import convert_function_to_tool
 
 if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
@@ -304,8 +304,7 @@ class Client(BaseClient):
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
 
-    tools = _process_tools(tools)
-    response = self._request(
+    return self._request(
       ChatResponse,
       'POST',
       '/api/chat',
@@ -320,8 +319,6 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
       stream=stream,
     )
-    print(response)
-    return response
 
   def embed(
     self,
@@ -1082,9 +1079,15 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]]) -> Iterator[Tool]:
-  for tool in tools or []:
-    yield Tool.model_validate(tool)
+def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+  if not tools:
+    return []
+
+  for unprocessed_tool in tools:
+    if callable(unprocessed_tool):
+      yield convert_function_to_tool(unprocessed_tool)
+    else:
+      yield Tool.model_validate(unprocessed_tool)
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:

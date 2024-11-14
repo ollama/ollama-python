@@ -225,7 +225,6 @@ class Message(SubscriptableBaseModel):
 
 
 class Tool(SubscriptableBaseModel):
-  model_config = ConfigDict(arbitrary_types_allowed=True)
   type: Literal['function'] = 'function'
 
   class Function(SubscriptableBaseModel):
@@ -233,7 +232,6 @@ class Tool(SubscriptableBaseModel):
     description: str
 
     class Parameters(SubscriptableBaseModel):
-      # model_config = ConfigDict(arbitrary_types_allowed=True)
       type: str
       required: Optional[Sequence[str]] = None
 
@@ -244,15 +242,11 @@ class Tool(SubscriptableBaseModel):
 
         @model_serializer
         def serialize_model(self) -> dict:
-          print('hi', self.type)
-          print(type(self.type))
           return {'type': _get_json_type(self.type), 'description': self.description}
 
       properties: Optional[Mapping[str, Property]] = None
 
     parameters: Parameters
-
-    return_type: Optional[Union[str, List[str]]] = None
 
   function: Function
 
@@ -459,6 +453,7 @@ class ResponseError(Exception):
     'HTTP status code of the response.'
 
 
+# Python doesn't have a type serializer, so we need to map types to JSON types
 TYPE_MAP = {
   # Basic types
   int: 'integer',
@@ -537,52 +532,24 @@ def map_type(python_type: Any) -> str:
   if type_key in TYPE_MAP:
     return TYPE_MAP[type_key]
 
-  return TYPE_MAP.get(origin, None)
+  raise ValueError(f'Could not map Python type {python_type} to a valid JSON type')
 
 
-def _get_json_type(python_type: type | UnionType | Optional[T]) -> str | List[str]:
+def _get_json_type(python_type: Union[type, UnionType, Optional[T]]) -> str | List[str]:
   # Handle Optional types (Union[type, None] and type | None)
   if is_union(python_type):
     args = get_args(python_type)
     # Filter out None/NoneType from union args
-    print('args in union', args)
     if non_none_args := [arg for arg in args if arg not in (None, type(None))]:
       if len(non_none_args) == 1:
-        # return _get_json_type(non_none_args[0])
-        print('hi hi', non_none_args[0])
         return map_type(non_none_args[0])
       # For multiple return types (e.g., int | str | None), return stringified array of types -> "['integer', 'string', 'null']"
       return str([map_type(arg) for arg in non_none_args]).replace(' ', '')
-    return 'null'
-  else:
-    return map_type(python_type)
+  return map_type(python_type)
 
-  # # Handle generic types (List[int], Dict[str, int], etc.)
-  # origin = get_origin(python_type)
-  # if origin is not None:
-  #   # Get the base type (List, Dict, etc.)
-  #   base_type = TYPE_MAP.get(origin, None)
-  #   if base_type:
-  #     return base_type
-  #   # If it's a subclass of known abstract base classes, map to appropriate type
-  #   if isinstance(origin, type):
-  #     if issubclass(origin, (list, Sequence, tuple, set, Set)):
-  #       return 'array'
-  #     if issubclass(origin, (dict, Mapping)):
-  #       return 'object'
 
-  # # Handle both type objects and type references (older Python versions)
-  # type_key = python_type
-  # if isinstance(python_type, type):
-  #   type_key = python_type
-  # elif isinstance(python_type, str):
-  #   type_key = python_type
-
-  # # If type not found in map, try to get the type name
-  # if type_key not in TYPE_MAP and hasattr(python_type, '__name__'):
-  #   type_key = python_type.__name__
-
-  # if type_key in TYPE_MAP:
-  #   return TYPE_MAP[type_key]
-
-  raise ValueError(f'Could not map Python type {python_type} to a valid JSON type')
+def _is_optional_type(python_type: Any) -> bool:
+  if is_union(python_type):
+    args = get_args(python_type)
+    return any(arg in (None, type(None)) for arg in args)
+  return False
