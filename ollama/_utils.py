@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Callable
-from ollama._types import Tool, _is_optional_type
+from typing import Any, Callable, get_args
+from ollama._json_type_map import is_union
+from ollama._types import Tool
 from typing import Dict
 
 
@@ -76,6 +77,13 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
   return description, param_descriptions
 
 
+def is_optional_type(python_type: Any) -> bool:
+  if is_union(python_type):
+    args = get_args(python_type)
+    return any(arg in (None, type(None)) for arg in args)
+  return False
+
+
 def convert_function_to_tool(func: Callable) -> Tool:
   doc_string = func.__doc__
   if not doc_string:
@@ -92,11 +100,14 @@ def convert_function_to_tool(func: Callable) -> Tool:
     parameters.properties[param_name] = Tool.Function.Parameters.Property(type=param_type, description=param_descriptions[param_name])
 
     # Only add to required if not optional
-    if not _is_optional_type(param_type):
+    if not is_optional_type(param_type):
       parameters.required.append(param_name)
 
-  function = Tool.Function(name=func.__name__, description=description, parameters=parameters, return_type=None)
-
-  tool = Tool(function=function)
-
-  return tool
+  return Tool(
+    function=Tool.Function(
+      name=func.__name__,
+      description=description,
+      parameters=parameters,
+      return_type=None,
+    )
+  )
