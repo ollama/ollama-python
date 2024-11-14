@@ -2,8 +2,8 @@ import json
 from base64 import b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import Any, List, Mapping, Optional, TypeVar, Union, get_args, get_origin
-from collections.abc import Sequence, Set
+from typing import Any, List, Mapping, Optional, TypeVar, Union, Sequence, get_args, get_origin
+from collections.abc import Set
 from typing import Dict, Set as TypeSet
 
 import sys
@@ -237,7 +237,7 @@ class Tool(SubscriptableBaseModel):
 
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
-        type: type | UnionType | Optional[T]
+        type: Union[type, UnionType, Optional[T]]
         description: str
 
         @model_serializer
