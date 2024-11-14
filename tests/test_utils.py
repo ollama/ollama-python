@@ -104,3 +104,24 @@ def test_function_docstring_parsing():
   assert tool['function']['description'] == 'Test function with complex docstring.'
   assert tool['function']['parameters']['properties']['x']['description'] == 'A number with multiple lines'
   assert tool['function']['parameters']['properties']['y']['description'] == 'A list with multiple lines'
+
+
+def test_skewed_docstring_parsing():
+  def add_two_numbers(x: int, y: int) -> int:
+    """
+    Add two numbers together.
+    Args:
+        x (integer):: The first number
+
+
+
+
+        y (integer ): The second number
+    Returns:
+        integer: The sum of x and y
+    """
+    pass
+
+  tool = convert_function_to_tool(add_two_numbers).model_dump()
+  assert tool['function']['parameters']['properties']['x']['description'] == ': The first number'
+  assert tool['function']['parameters']['properties']['y']['description'] == 'The second number'

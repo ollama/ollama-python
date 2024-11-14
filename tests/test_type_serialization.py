@@ -48,7 +48,7 @@ def test_advanced_json_type_conversion():
   assert get_json_type(Optional[List[Optional[int]]]) == 'array'
 
   # Test edge cases
-  assert get_json_type(Any) == 'string'  # or however you want to handle Any
+  assert get_json_type(Any) == 'string'
   assert get_json_type(None) == 'null'
   assert get_json_type(type(None)) == 'null'
 

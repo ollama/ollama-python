@@ -17,7 +17,6 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
 
   description = ' '.join(description_lines).strip()
 
-  # Parse Args section
   if 'Args:' not in doc_string:
     raise ValueError(f'Function {func.__name__} docstring must have an Args section in Google format')
 
@@ -25,7 +24,6 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
   if 'Returns:' in args_section:
     args_section = args_section.split('Returns:')[0]
 
-  # Parse parameter descriptions
   param_descriptions = {}
   current_param = None
   param_desc_lines = []
@@ -63,7 +61,6 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
         param_desc_lines = []
         current_param = None
 
-  # Save last parameter
   if current_param:
     param_descriptions[current_param] = ' '.join(param_desc_lines).strip()
 
@@ -99,7 +96,6 @@ def convert_function_to_tool(func: Callable) -> Tool:
 
     parameters.properties[param_name] = Tool.Function.Parameters.Property(type=param_type, description=param_descriptions[param_name])
 
-    # Only add to required if not optional
     if not is_optional_type(param_type):
       parameters.required.append(param_name)
 
