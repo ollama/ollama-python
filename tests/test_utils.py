@@ -6,7 +6,7 @@ if sys.version_info < (3, 10):
   pytest.skip('Python 3.10 or higher is required', allow_module_level=True)
 
 
-from ollama._utils import _get_json_type, convert_function_to_tool, process_tools
+from ollama._utils import _get_json_type, convert_function_to_tool, _process_tools
 
 
 def test_json_type_conversion():
@@ -110,19 +110,19 @@ def test_process_tools():
     pass
 
   # Test with list of functions
-  tools = process_tools([func1, func2])
+  tools = _process_tools([func1, func2])
   assert len(tools) == 2
   assert tools[0].function.name == 'func1'
   assert tools[1].function.name == 'func2'
 
   # Test with empty input
-  assert process_tools() == []
-  assert process_tools(None) == []
-  assert process_tools([]) == []
+  assert _process_tools() == []
+  assert _process_tools(None) == []
+  assert _process_tools([]) == []
 
   # Test with mix of functions and tool dicts
   tool_dict = {'type': 'function', 'function': {'name': 'test', 'description': 'Test function', 'parameters': {'type': 'object', 'properties': {'x': {'type': 'string', 'description': 'A string'}}, 'required': ['x']}}}
-  tools = process_tools([func1, tool_dict])
+  tools = _process_tools([func1, tool_dict])
   assert len(tools) == 2
   assert tools[0].function.name == 'func1'
   assert tools[1].function.name == 'test'
@@ -195,7 +195,7 @@ def test_tool_validation():
   # Test that malformed tool dictionaries are rejected
   invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
   with pytest.raises(ValueError):
-    process_tools([invalid_tool])
+    _process_tools([invalid_tool])
 
   # Test missing required fields
   incomplete_tool = {
@@ -203,4 +203,4 @@ def test_tool_validation():
     'function': {'name': 'test'},  # missing description and parameters
   }
   with pytest.raises(ValueError):
-    process_tools([incomplete_tool])
+    _process_tools([incomplete_tool])

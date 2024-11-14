@@ -24,7 +24,7 @@ from typing import (
 import sys
 
 
-from ollama._utils import process_tools
+from ollama._utils import _process_tools
 
 if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
@@ -304,8 +304,8 @@ class Client(BaseClient):
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
 
-    tools = process_tools(tools)
-    return self._request(
+    tools = _process_tools(tools)
+    response = self._request(
       ChatResponse,
       'POST',
       '/api/chat',
@@ -320,6 +320,8 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
       stream=stream,
     )
+    print(response)
+    return response
 
   def embed(
     self,
