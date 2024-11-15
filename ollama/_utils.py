@@ -1,12 +1,15 @@
 from __future__ import annotations
-from typing import Any, Callable, get_args
+from typing import Any, Callable, Union, get_args
 from ollama._json_type_map import is_union
 from ollama._types import Tool
 from typing import Dict
 
 
-def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, str]]:
+def _parse_docstring(func: Callable, doc_string: Union[str, None]) -> tuple[str, Dict[str, str]]:
   # Extract description from docstring - get all lines before Args:
+  if not doc_string:
+    return '', {}
+
   description_lines = []
   for line in doc_string.split('\n'):
     line = line.strip()
@@ -18,7 +21,7 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
   description = ' '.join(description_lines).strip()
 
   if 'Args:' not in doc_string:
-    raise ValueError(f'Function {func.__name__} docstring must have an Args section in Google format')
+    return description, {}
 
   args_section = doc_string.split('Args:')[1]
   if 'Returns:' in args_section:
@@ -69,7 +72,7 @@ def _parse_docstring(func: Callable, doc_string: str) -> tuple[str, Dict[str, st
     if param_name == 'return':
       continue
     if param_name not in param_descriptions:
-      raise ValueError(f'Parameter {param_name} must have a description in the Args section')
+      param_descriptions[param_name] = ''
 
   return description, param_descriptions
 
@@ -83,8 +86,6 @@ def is_optional_type(python_type: Any) -> bool:
 
 def convert_function_to_tool(func: Callable) -> Tool:
   doc_string = func.__doc__
-  if not doc_string:
-    raise ValueError(f'Function {func.__name__} must have a docstring in Google format. Example:\n' '"""Add two numbers.\n\n' 'Args:\n' '    a: First number\n' '    b: Second number\n\n' 'Returns:\n' '    int: Sum of the numbers\n' '"""')
 
   description, param_descriptions = _parse_docstring(func, doc_string)
 
@@ -94,7 +95,7 @@ def convert_function_to_tool(func: Callable) -> Tool:
     if param_name == 'return':
       continue
 
-    parameters.properties[param_name] = Tool.Function.Parameters.Property(type=param_type, description=param_descriptions[param_name])
+    parameters.properties[param_name] = Tool.Function.Parameters.Property(type=param_type, description=param_descriptions.get(param_name, ''))
 
     if not is_optional_type(param_type):
       parameters.required.append(param_name)

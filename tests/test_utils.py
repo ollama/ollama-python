@@ -125,3 +125,48 @@ def test_skewed_docstring_parsing():
   tool = convert_function_to_tool(add_two_numbers).model_dump()
   assert tool['function']['parameters']['properties']['x']['description'] == ': The first number'
   assert tool['function']['parameters']['properties']['y']['description'] == 'The second number'
+
+
+def test_function_with_no_docstring():
+  def no_docstring():
+    pass
+
+  def no_docstring_with_args(x: int, y: int):
+    pass
+
+  tool = convert_function_to_tool(no_docstring).model_dump()
+  assert tool['function']['description'] == ''
+
+  tool = convert_function_to_tool(no_docstring_with_args).model_dump()
+  assert tool['function']['description'] == ''
+  assert tool['function']['parameters']['properties']['x']['description'] == ''
+  assert tool['function']['parameters']['properties']['y']['description'] == ''
+
+
+def test_function_with_only_description():
+  def only_description():
+    """
+    A function with only a description.
+    """
+    pass
+
+  tool = convert_function_to_tool(only_description).model_dump()
+  assert tool['function']['description'] == 'A function with only a description.'
+  assert tool['function']['parameters'] == {'type': 'object', 'properties': {}, 'required': []}
+
+  def only_description_with_args(x: int, y: int):
+    """
+    A function with only a description.
+    """
+    pass
+
+  tool = convert_function_to_tool(only_description_with_args).model_dump()
+  assert tool['function']['description'] == 'A function with only a description.'
+  assert tool['function']['parameters'] == {
+    'type': 'object',
+    'properties': {
+      'x': {'type': 'integer', 'description': ''},
+      'y': {'type': 'integer', 'description': ''},
+    },
+    'required': ['x', 'y'],
+  }
