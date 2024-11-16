@@ -10,14 +10,36 @@ pip install ollama
 
 ## Usage
 
+### Text Model
 ```python
 import ollama
-response = ollama.chat(model='llama3.1', messages=[
+
+response = ollama.chat(
+  model='llama3.1', 
+  messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
   },
 ])
+
+print(response['message']['content'])
+```
+
+### Vision Model
+
+```python
+import ollama
+
+response = ollama.chat(
+    model='llama3.2-vision',
+    messages=[{
+        'role': 'user',
+        'content': 'What is in this image?',
+        'images': ['path/to/image.jpg']
+    }]
+)
+
 print(response['message']['content'])
 ```
 
