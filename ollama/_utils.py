@@ -25,6 +25,9 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
     # Return section can be captured and used
     args_section = args_section.split('returns:')[0]
 
+  if 'yields:' in lowered_doc_string:
+    args_section = args_section.split('yields:')[0]
+
   cur_var = None
   for line in args_section.split('\n'):
     line = line.strip()
@@ -92,6 +95,5 @@ def convert_function_to_tool(func: Callable) -> Tool:
       ),
     )
   )
-  print(tool.model_dump())
 
   return tool

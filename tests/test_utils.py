@@ -203,3 +203,23 @@ def test_function_with_only_description():
     },
     'required': ['x', 'y'],
   }
+
+
+def test_function_with_yields():
+  def function_with_yields(x: int, y: int):
+    """
+    A function with yields section.
+
+    Args:
+      x: the first number
+      y: the second number
+
+    Yields:
+      The sum of x and y
+    """
+    pass
+
+  tool = convert_function_to_tool(function_with_yields).model_dump()
+  assert tool['function']['description'] == 'a function with yields section.'
+  assert tool['function']['parameters']['properties']['x']['description'] == 'the first number'
+  assert tool['function']['parameters']['properties']['y']['description'] == 'the second number'
