@@ -100,4 +100,4 @@ def convert_function_to_tool(func: Callable) -> Tool:
     )
   )
 
-  return tool
+  return Tool.model_validate(tool)
