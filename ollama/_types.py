@@ -4,8 +4,6 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Mapping, Optional, Union, Sequence
 
-from ollama._json_type_map import get_json_type, T, UnionType
-
 from typing_extensions import Annotated, Literal
 
 from pydantic import (
@@ -230,12 +228,9 @@ class Tool(SubscriptableBaseModel):
 
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
-        type: Union[type, UnionType, Optional[T], str]
-        description: str
 
-        @model_serializer
-        def serialize_model(self) -> dict:
-          return {'type': get_json_type(self.type), 'description': self.description}
+        type: str
+        description: str
 
       properties: Optional[Mapping[str, Property]] = None
 

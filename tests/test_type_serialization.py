@@ -28,11 +28,11 @@ def test_tool_serialization():
         type='object',
         properties={
           'a': Tool.Function.Parameters.Property(
-            type=int,
+            type='integer',
             description='The first number',
           ),
           'b': Tool.Function.Parameters.Property(
-            type=int,
+            type='integer',
             description='The second number',
           ),
         },

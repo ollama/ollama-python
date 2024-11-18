@@ -1,110 +1,97 @@
 from __future__ import annotations
-from typing import Any, Callable, Union, get_args
-from ollama._json_type_map import is_union
+import inspect
+from typing import Callable, Union
+
+import pydantic
 from ollama._types import Tool
-from typing import Dict
 
 
-def _parse_docstring(func: Callable, doc_string: Union[str, None]) -> tuple[str, Dict[str, str]]:
-  # Extract description from docstring - get all lines before Args:
+def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
+  parsed_docstring = {'description': ''}
   if not doc_string:
-    return '', {}
+    return parsed_docstring
 
-  description_lines = []
-  for line in doc_string.split('\n'):
-    line = line.strip()
-    if line.startswith('Args:'):
-      break
-    if line:
-      description_lines.append(line)
+  lowered_doc_string = doc_string.lower()
 
-  description = ' '.join(description_lines).strip()
+  if 'args:' not in lowered_doc_string:
+    parsed_docstring['description'] = lowered_doc_string.strip()
+    return parsed_docstring
 
-  if 'Args:' not in doc_string:
-    return description, {}
+  else:
+    parsed_docstring['description'] = lowered_doc_string.split('args:')[0].strip()
+    args_section = lowered_doc_string.split('args:')[1]
 
-  args_section = doc_string.split('Args:')[1]
-  if 'Returns:' in args_section:
-    args_section = args_section.split('Returns:')[0]
+  if 'returns:' in lowered_doc_string:
+    # Return section can be captured and used
+    args_section = args_section.split('returns:')[0]
 
-  param_descriptions = {}
-  current_param = None
-  param_desc_lines = []
-  indent_level = None
-
+  cur_var = None
   for line in args_section.split('\n'):
-    stripped_line = line.strip()
-    if not stripped_line:
+    line = line.strip()
+    if not line:
+      continue
+    if ':' not in line:
+      # Continuation of the previous parameter's description
+      if cur_var:
+        parsed_docstring[cur_var] += f' {line}'
       continue
 
-    # Check for new parameter
-    for param_name in func.__annotations__:
-      if param_name == 'return':
-        continue
-      if stripped_line.startswith(f'{param_name}:') or stripped_line.startswith(f'{param_name} ') or stripped_line.startswith(f'{param_name}('):
-        # Save previous parameter if exists
-        if current_param:
-          param_descriptions[current_param] = ' '.join(param_desc_lines).strip()
-          param_desc_lines = []
+    # For the case with: `param_name (type)`: ...
+    if '(' in line:
+      param_name = line.split('(')[0]
+      param_desc = line.split('):')[1]
 
-        current_param = param_name
-        # Get description after parameter name
-        desc_part = stripped_line.split(':', 1)[1].strip() if ':' in stripped_line else ''
-        if desc_part:
-          param_desc_lines.append(desc_part)
-        indent_level = len(line) - len(line.lstrip())
-        break
+    # For the case with: `param_name: ...`
     else:
-      # Handle continuation lines
-      if current_param and line.startswith(' ' * (indent_level + 4 if indent_level else 0)):
-        param_desc_lines.append(stripped_line)
-      elif current_param and stripped_line:
-        # Different indentation means new parameter
-        param_descriptions[current_param] = ' '.join(param_desc_lines).strip()
-        param_desc_lines = []
-        current_param = None
+      param_name, param_desc = line.split(':', 1)
 
-  if current_param:
-    param_descriptions[current_param] = ' '.join(param_desc_lines).strip()
+    parsed_docstring[param_name.strip()] = param_desc.strip()
+    cur_var = param_name.strip()
 
-  # Verify all parameters have descriptions
-  for param_name in func.__annotations__:
-    if param_name == 'return':
-      continue
-    if param_name not in param_descriptions:
-      param_descriptions[param_name] = ''
-
-  return description, param_descriptions
-
-
-def is_optional_type(python_type: Any) -> bool:
-  if is_union(python_type):
-    args = get_args(python_type)
-    return any(arg in (None, type(None)) for arg in args)
-  return False
+  return parsed_docstring
 
 
 def convert_function_to_tool(func: Callable) -> Tool:
-  doc_string = func.__doc__
+  schema = type(
+    func.__name__,
+    (pydantic.BaseModel,),
+    {
+      '__annotations__': {k: v.annotation for k, v in inspect.signature(func).parameters.items()},
+      '__signature__': inspect.signature(func),
+      '__doc__': inspect.getdoc(func),
+    },
+  ).model_json_schema()
 
-  description, param_descriptions = _parse_docstring(func, doc_string)
+  properties = {}
+  required = []
+  parsed_docstring = _parse_docstring(schema.get('description'))
+  for k, v in schema.get('properties', {}).items():
+    properties[k] = {}
+    properties[k]['description'] = parsed_docstring.get(k, '')
+    if 'anyOf' in v:
+      anyof_list = v['anyOf']
+      properties[k]['type'] = [anyof_type.get('type', 'string') for anyof_type in anyof_list if anyof_type.get('type', 'string') != 'null']
+      if len(properties[k]['type']) == 1:
+        properties[k]['type'] = properties[k]['type'][0]
+      else:
+        properties[k]['type'] = str(properties[k]['type'])
+    else:
+      properties[k]['type'] = v.get('type', None)
+      required.append(k)
 
-  parameters = Tool.Function.Parameters(type='object', properties={}, required=[])
+  schema['properties'] = properties
 
-  for param_name, param_type in func.__annotations__.items():
-    if param_name == 'return':
-      continue
-
-    parameters.properties[param_name] = Tool.Function.Parameters.Property(type=param_type, description=param_descriptions.get(param_name, ''))
-
-    if not is_optional_type(param_type):
-      parameters.required.append(param_name)
-
-  return Tool(
+  tool = Tool(
     function=Tool.Function(
       name=func.__name__,
-      description=description,
-      parameters=parameters,
-      return_type=None,
+      description=parsed_docstring.get('description'),
+      parameters=Tool.Function.Parameters(
+        type='object',
+        properties=schema.get('properties', {}),
+        required=required,
+      ),
     )
   )
+  print(tool.model_dump())
+
+  return tool
