@@ -103,6 +103,8 @@ def test_function_with_all_types():
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
     assert tool['function']['parameters']['properties']['w']['type'] == 'object'
     assert set(x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')) == {'string', 'integer'}
+    assert tool['function']['parameters']['properties']['v']['type'] != 'null'
+    assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
   else:
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
     assert tool['function']['parameters']['properties']['w']['type'] == 'object'
@@ -110,8 +112,9 @@ def test_function_with_all_types():
     assert tool['function']['parameters']['properties']['s']['type'] == 'array'
     assert tool['function']['parameters']['properties']['t']['type'] == 'array'
     assert tool['function']['parameters']['properties']['l']['type'] == 'array'
-    print('hi')
     assert tool['function']['parameters']['properties']['o']['type'] == 'integer'
+    assert tool['function']['parameters']['properties']['o']['type'] != 'null'
+    assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w', 'd', 's', 't', 'l']
 
 
 def test_function_docstring_parsing():

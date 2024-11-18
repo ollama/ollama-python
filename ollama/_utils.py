@@ -69,18 +69,22 @@ def convert_function_to_tool(func: Callable) -> Tool:
   required = []
   parsed_docstring = _parse_docstring(schema.get('description'))
   for k, v in schema.get('properties', {}).items():
-    properties[k] = {}
-    properties[k]['description'] = parsed_docstring.get(k, '')
+    prop = {
+      'description': parsed_docstring.get(k, ''),
+      'type': v.get('type'),
+    }
+
     if 'anyOf' in v:
-      anyof_list = v['anyOf']
-      properties[k]['type'] = [anyof_type.get('type', 'string') for anyof_type in anyof_list if anyof_type.get('type', 'string') != 'null']
-      if len(properties[k]['type']) == 1:
-        properties[k]['type'] = properties[k]['type'][0]
-      else:
-        properties[k]['type'] = str(properties[k]['type'])
+      is_optional = any(t.get('type') == 'null' for t in v['anyOf'])
+      types = [t.get('type', 'string') for t in v['anyOf'] if t.get('type') != 'null']
+      prop['type'] = types[0] if len(types) == 1 else str(types)
+      if not is_optional:
+        required.append(k)
     else:
-      properties[k]['type'] = v.get('type', None)
-      required.append(k)
+      if prop['type'] != 'null':
+        required.append(k)
+
+    properties[k] = prop
 
   schema['properties'] = properties
 
