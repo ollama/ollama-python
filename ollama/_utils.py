@@ -12,14 +12,12 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   if not doc_string:
     return parsed_docstring
 
-  lowered_doc_string = doc_string.lower()
-
   key = hash(doc_string)
-  parsed_docstring[key] = ''
-  for line in lowered_doc_string.splitlines():
-    if line.startswith('args:'):
+  for line in doc_string.splitlines():
+    lowered_line = line.lower()
+    if lowered_line.startswith('args:'):
       key = 'args'
-    elif line.startswith('returns:') or line.startswith('yields:') or line.startswith('raises:'):
+    elif lowered_line.startswith('returns:') or lowered_line.startswith('yields:') or lowered_line.startswith('raises:'):
       key = '_'
 
     else:
@@ -29,7 +27,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   last_key = None
   for line in parsed_docstring['args'].splitlines():
     line = line.strip()
-    if ':' in line and not line.startswith('args'):
+    if ':' in line and not line.lower().startswith('args:'):
       # Split on first occurrence of '(' or ':' to separate arg name from description
       split_char = '(' if '(' in line else ':'
       arg_name, rest = line.split(split_char, 1)

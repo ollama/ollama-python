@@ -216,27 +216,27 @@ class Message(SubscriptableBaseModel):
 
 
 class Tool(SubscriptableBaseModel):
-  type: Literal['function'] = 'function'
+  type: Optional[Literal['function']] = 'function'
 
   class Function(SubscriptableBaseModel):
-    name: str
-    description: str
+    name: Optional[str] = None
+    description: Optional[str] = None
 
     class Parameters(SubscriptableBaseModel):
-      type: Literal['object'] = 'object'
+      type: Optional[Literal['object']] = 'object'
       required: Optional[Sequence[str]] = None
 
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
-        type: str
-        description: str
+        type: Optional[str] = None
+        description: Optional[str] = None
 
       properties: Optional[Mapping[str, Property]] = None
 
-    parameters: Parameters
+    parameters: Optional[Parameters] = None
 
-  function: Function
+  function: Optional[Function] = None
 
 
 class ChatRequest(BaseGenerateRequest):

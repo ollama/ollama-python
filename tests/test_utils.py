@@ -9,7 +9,7 @@ from ollama._utils import convert_function_to_tool
 def test_function_to_tool_conversion():
   def add_numbers(x: int, y: Union[int, None] = None) -> int:
     """Add two numbers together.
-    Args:
+    args:
         x (integer): The first number
         y (integer, optional): The second number
 
@@ -22,10 +22,10 @@ def test_function_to_tool_conversion():
 
   assert tool['type'] == 'function'
   assert tool['function']['name'] == 'add_numbers'
-  assert tool['function']['description'] == 'add two numbers together.'
+  assert tool['function']['description'] == 'Add two numbers together.'
   assert tool['function']['parameters']['type'] == 'object'
   assert tool['function']['parameters']['properties']['x']['type'] == 'integer'
-  assert tool['function']['parameters']['properties']['x']['description'] == 'the first number'
+  assert tool['function']['parameters']['properties']['x']['description'] == 'The first number'
   assert tool['function']['parameters']['required'] == ['x']
 
 
@@ -42,7 +42,7 @@ def test_function_with_no_args():
 
   tool = convert_function_to_tool(simple_func).model_dump()
   assert tool['function']['name'] == 'simple_func'
-  assert tool['function']['description'] == 'a simple function with no arguments.'
+  assert tool['function']['description'] == 'A simple function with no arguments.'
   assert tool['function']['parameters']['properties'] == {}
 
 
@@ -137,9 +137,9 @@ def test_function_docstring_parsing():
     pass
 
   tool = convert_function_to_tool(func_with_complex_docs).model_dump()
-  assert tool['function']['description'] == 'test function with complex docstring.'
-  assert tool['function']['parameters']['properties']['x']['description'] == 'a number with multiple lines'
-  assert tool['function']['parameters']['properties']['y']['description'] == 'a list with multiple lines'
+  assert tool['function']['description'] == 'Test function with complex docstring.'
+  assert tool['function']['parameters']['properties']['x']['description'] == 'A number with multiple lines'
+  assert tool['function']['parameters']['properties']['y']['description'] == 'A list with multiple lines'
 
 
 def test_skewed_docstring_parsing():
@@ -159,8 +159,8 @@ def test_skewed_docstring_parsing():
     pass
 
   tool = convert_function_to_tool(add_two_numbers).model_dump()
-  assert tool['function']['parameters']['properties']['x']['description'] == ': the first number'
-  assert tool['function']['parameters']['properties']['y']['description'] == 'the second number'
+  assert tool['function']['parameters']['properties']['x']['description'] == ': The first number'
+  assert tool['function']['parameters']['properties']['y']['description'] == 'The second number'
 
 
 def test_function_with_no_docstring():
@@ -187,7 +187,7 @@ def test_function_with_only_description():
     pass
 
   tool = convert_function_to_tool(only_description).model_dump()
-  assert tool['function']['description'] == 'a function with only a description.'
+  assert tool['function']['description'] == 'A function with only a description.'
   assert tool['function']['parameters'] == {'type': 'object', 'properties': {}, 'required': None}
 
   def only_description_with_args(x: int, y: int):
@@ -197,7 +197,7 @@ def test_function_with_only_description():
     pass
 
   tool = convert_function_to_tool(only_description_with_args).model_dump()
-  assert tool['function']['description'] == 'a function with only a description.'
+  assert tool['function']['description'] == 'A function with only a description.'
   assert tool['function']['parameters'] == {
     'type': 'object',
     'properties': {
@@ -223,7 +223,7 @@ def test_function_with_yields():
     pass
 
   tool = convert_function_to_tool(function_with_yields).model_dump()
-  assert tool['function']['description'] == 'a function with yields section.'
+  assert tool['function']['description'] == 'A function with yields section.'
   assert tool['function']['parameters']['properties']['x']['description'] == 'the first number'
   assert tool['function']['parameters']['properties']['y']['description'] == 'the second number'
 

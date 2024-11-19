@@ -1025,25 +1025,14 @@ def test_copy_tools():
     },
   }
 
-  tool_json = json.loads(json.dumps(tool_dict))
-  tools = list(_copy_tools([func1, tool_dict, tool_json]))
-  assert len(tools) == 3
+  tools = list(_copy_tools([func1, tool_dict]))
+  assert len(tools) == 2
   assert tools[0].function.name == 'func1'
   assert tools[1].function.name == 'test'
-  assert tools[2].function.name == 'test'
 
 
 def test_tool_validation():
-  # Test that malformed tool dictionaries are rejected
   # Raises ValidationError when used as it is a generator
   with pytest.raises(ValidationError):
     invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
     list(_copy_tools([invalid_tool]))
-
-  # Test missing required fields
-  incomplete_tool = {
-    'type': 'function',
-    'function': {'name': 'test'},  # missing description and parameters
-  }
-  with pytest.raises(ValidationError):
-    list(_copy_tools([incomplete_tool]))

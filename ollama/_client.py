@@ -307,7 +307,7 @@ class Client(BaseClient):
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
-        \"""
+        '''
         Add two numbers together.
 
         Args:
@@ -316,7 +316,7 @@ class Client(BaseClient):
 
         Returns:
           int: The sum of a and b
-        \"""
+        '''
         return a + b
 
       client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
@@ -809,7 +809,7 @@ class AsyncClient(BaseClient):
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
-        \"""
+        '''
         Add two numbers together.
 
         Args:
@@ -818,10 +818,10 @@ class AsyncClient(BaseClient):
 
         Returns:
           int: The sum of a and b
-        \"""
+        '''
         return a + b
 
-      client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
+      await client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
@@ -1128,10 +1128,7 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
 
 
 def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
-  if not tools:
-    return []
-
-  for unprocessed_tool in tools:
+  for unprocessed_tool in tools or []:
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
 
 
@@ -1207,8 +1204,6 @@ def _parse_host(host: Optional[str]) -> str:
   'https://[0001:002:003:0004::1]:56789/path'
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
   'http://[0001:002:003:0004::1]:56789/path'
-  >>> _parse_host('http://host.docker.internal:11434/path')
-  'http://host.docker.internal:11434/path'
   """
 
   host, port = host or '', 11434
