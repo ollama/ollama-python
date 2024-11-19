@@ -298,12 +298,28 @@ class Client(BaseClient):
     Create a chat response using the requested model.
 
     Args:
-      tools (Sequence[Union[Mapping[str, Any], Tool, Callable]]):
+      tools:
         A JSON schema as a dict, an Ollama Tool or a Python Function.
         Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
-        For more information, see: https://google.github.io/styleguide/pyguide.html#38-Docstrings
-      stream (bool): Whether to stream the response.
-      format (Optional[Literal['', 'json']]): The format of the response.
+        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+      stream: Whether to stream the response.
+      format: The format of the response.
+
+    Example:
+      def add_two_numbers(a: int, b: int) -> int:
+        \"""
+        Add two numbers together.
+
+        Args:
+          a: First number to add
+          b: Second number to add
+
+        Returns:
+          int: The sum of a and b
+        \"""
+        return a + b
+
+      client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
@@ -782,6 +798,30 @@ class AsyncClient(BaseClient):
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
+
+    Args:
+      tools:
+        A JSON schema as a dict, an Ollama Tool or a Python Function.
+        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+      stream: Whether to stream the response.
+      format: The format of the response.
+
+    Example:
+      def add_two_numbers(a: int, b: int) -> int:
+        \"""
+        Add two numbers together.
+
+        Args:
+          a: First number to add
+          b: Second number to add
+
+        Returns:
+          int: The sum of a and b
+        \"""
+        return a + b
+
+      client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
