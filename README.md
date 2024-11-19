@@ -4,8 +4,9 @@ The Ollama Python library provides the easiest way to integrate Python 3.8+ proj
 
 ## Prerequisites
 
-- Install [Ollama](https://ollama.com/download)
-- Pull a model: `ollama pull <model>` See [Ollama models](https://ollama.com/models)
+- [Ollama](https://ollama.com/download) should be installed and running
+- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull llama3.1`
+  - See [Ollama models](https://ollama.com/models) for more information on the models available.
 
 ## Install
 
@@ -16,24 +17,32 @@ pip install ollama
 ## Usage
 
 ```python
-import ollama
-response = ollama.chat(model='llama3.1', messages=[
+from ollama import chat
+from ollama._types import ChatResponse
+
+response: ChatResponse = chat(model='llama3.1', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
   },
 ])
 print(response['message']['content'])
+# or access fields directly from the response object
+print(response.message.content)
 ```
+
+See [_types.py](ollama/_types.py) for more information on the response types.
 
 ## Streaming responses
 
-Response streaming can be enabled by setting `stream=True`, modifying function calls to return a Python generator where each part is an object in the stream.
+Response streaming can be enabled by setting `stream=True`
+
+Streaming Tool/Function calling is not yet supported.
 
 ```python
-import ollama
+from ollama import chat
 
-stream = ollama.chat(
+stream = chat(
     model='llama3.1',
     messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
     stream=True,
@@ -41,6 +50,62 @@ stream = ollama.chat(
 
 for chunk in stream:
   print(chunk['message']['content'], end='', flush=True)
+```
+
+## Custom client
+
+A custom client can be created with the following fields:
+
+- `host`: The Ollama host (default: `http://localhost:11434`)
+- `timeout`: The timeout for requests (default: `None`)
+- `follow_redirects`: Whether to follow redirects (default: `True`)
+- `headers`: Additional headers to send with requests (default: `{}`)
+
+```python
+from ollama import Client
+client = Client()
+# or 
+client = Client(
+  host='http://localhost:11434',
+  timeout=None,
+  follow_redirects=True,
+  headers={'x-some-header': 'some-value'}
+)
+response = client.chat(model='llama3.1', messages=[
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+])
+```
+
+## Async client
+
+The `AsyncClient` class is used to make asynchronous requests. It can be configured with the same fields as the `Client` class.
+
+```python
+import asyncio
+from ollama import AsyncClient
+
+async def chat():
+  message = {'role': 'user', 'content': 'Why is the sky blue?'}
+  response = await AsyncClient().chat(model='llama3.1', messages=[message])
+
+asyncio.run(chat())
+```
+
+Setting `stream=True` modifies functions to return a Python asynchronous generator:
+
+```python
+import asyncio
+from ollama import AsyncClient
+
+async def chat():
+  message = {'role': 'user', 'content': 'Why is the sky blue?'}
+  async for part in await AsyncClient().chat(model='llama3.1', messages=[message], stream=True):
+    print(part['message']['content'], end='', flush=True)
+
+asyncio.run(chat())
 ```
 
 ## API
@@ -124,50 +189,6 @@ ollama.embed(model='llama3.1', input=['The sky is blue because of rayleigh scatt
 ollama.ps()
 ```
 
-## Custom client
-
-A custom client can be created with the following fields:
-
-- `host`: The Ollama host to connect to
-- `timeout`: The timeout for requests
-
-```python
-from ollama import Client
-client = Client(host='http://localhost:11434')
-response = client.chat(model='llama3.1', messages=[
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
-])
-```
-
-## Async client
-
-```python
-import asyncio
-from ollama import AsyncClient
-
-async def chat():
-  message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='llama3.1', messages=[message])
-
-asyncio.run(chat())
-```
-
-Setting `stream=True` modifies functions to return a Python asynchronous generator:
-
-```python
-import asyncio
-from ollama import AsyncClient
-
-async def chat():
-  message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='llama3.1', messages=[message], stream=True):
-    print(part['message']['content'], end='', flush=True)
-
-asyncio.run(chat())
-```
 
 ## Errors
 
