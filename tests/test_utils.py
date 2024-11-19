@@ -188,7 +188,7 @@ def test_function_with_only_description():
 
   tool = convert_function_to_tool(only_description).model_dump()
   assert tool['function']['description'] == 'a function with only a description.'
-  assert tool['function']['parameters'] == {'type': 'object', 'properties': {}, 'required': []}
+  assert tool['function']['parameters'] == {'type': 'object', 'properties': {}, 'required': None}
 
   def only_description_with_args(x: int, y: int):
     """
@@ -226,3 +226,15 @@ def test_function_with_yields():
   assert tool['function']['description'] == 'a function with yields section.'
   assert tool['function']['parameters']['properties']['x']['description'] == 'the first number'
   assert tool['function']['parameters']['properties']['y']['description'] == 'the second number'
+
+
+def test_function_with_no_types():
+  def no_types(a, b):
+    """
+    A function with no types.
+    """
+    pass
+
+  tool = convert_function_to_tool(no_types).model_dump()
+  assert tool['function']['parameters']['properties']['a']['type'] == 'string'
+  assert tool['function']['parameters']['properties']['b']['type'] == 'string'

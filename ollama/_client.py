@@ -297,6 +297,14 @@ class Client(BaseClient):
     """
     Create a chat response using the requested model.
 
+    Args:
+      tools (Sequence[Union[Mapping[str, Any], Tool, Callable]]):
+        A JSON schema as a dict, an Ollama Tool or a Python Function.
+        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        For more information, see: https://google.github.io/styleguide/pyguide.html#38-Docstrings
+      stream (bool): Whether to stream the response.
+      format (Optional[Literal['', 'json']]): The format of the response.
+
     Raises `RequestError` if a model is not provided.
 
     Raises `ResponseError` if the request could not be fulfilled.
@@ -1084,10 +1092,7 @@ def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable
     return []
 
   for unprocessed_tool in tools:
-    if callable(unprocessed_tool):
-      yield convert_function_to_tool(unprocessed_tool)
-    else:
-      yield Tool.model_validate(unprocessed_tool)
+    yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
@@ -1162,6 +1167,8 @@ def _parse_host(host: Optional[str]) -> str:
   'https://[0001:002:003:0004::1]:56789/path'
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
   'http://[0001:002:003:0004::1]:56789/path'
+  >>> _parse_host('http://host.docker.internal:11434/path')
+  'http://host.docker.internal:11434/path'
   """
 
   host, port = host or '', 11434
