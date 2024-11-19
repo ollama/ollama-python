@@ -9,53 +9,47 @@ cd examples/
 python3 <example>.py
 ```
 
-### Chat
-- [chat.py](chat.py) - Basic chat with model
-- [chat-stream.py](chat-stream.py) - Stream chat with model
-- [async-chat.py](async-chat.py) - Async chat with model
+### Chat - Chat with a model
+- [chat.py](chat.py)
+- [async-chat.py](async-chat.py)
+- [chat-stream.py](chat-stream.py) - Streamed outputs
 
-### Generate
-- [generate.py](generate.py) - Generate text with model
-- [generate-stream.py](generate-stream.py) - Stream generate text with model
-- [async-generate.py](async-generate.py) - Async generate text with model
+### Generate - Generate text with a model
+- [generate.py](generate.py)
+- [async-generate.py](async-generate.py)
+- [generate-stream.py](generate-stream.py) - Streamed outputs
 
-### List
-- [list.py](list.py) - List all downloaded models and their properties
-- [async-list.py](async-list.py) - Async list all downloaded models and their properties
+### Tools/Function Calling - Call a function with a model
+- [tools.py](tools.py) - Simple example of Tools/Function Calling
+- [async-tools.py](async-tools.py)
 
-### Fill in the middle
-- [fill-in-middle.py](fill-in-middle.py) - Fill in the middle with model
+### Multimodal - Chat with a multimodal model
+- [multimodal_chat.py](multimodal_chat.py)
+- [multimodal_generate.py](multimodal_generate.py)
 
 
-### Multimodal
-- [multimodal.py](multimodal.py) - Multimodal chat with model
 
-### Pull Progress
+### Ollama List - List all downloaded models and their properties
+- [list.py](list.py)
+- [async-list.py](async-list.py)
+
+### Ollama Pull - Pull a model from Ollama
 Requirement: `pip install tqdm`
 
-- [pull-progress.py](pull-progress.py) - Pull progress with model
+- [pull.py](pull.py) 
 
-### Ollama create (create a model)
-- [create.py](create.py) - Create a model
-
-### Ollama ps (show model status - cpu/gpu usage)
-- [ollama-ps.py](ollama-ps.py) - Ollama ps
-
-### Tools/Function Calling
-- [tools.py](tools.py) - Simple example of Tools/Function Calling
-- [async-tools.py](async-tools.py) - Async example of Tools/Function Calling
-
-## Configuring Clients
-Custom parameters can be passed to the client when initializing:
+### Ollama Create - Create a model from a Modelfile
 ```python
-import ollama
-client = ollama.Client(
-  host='http://localhost:11434',
-  timeout=10.0, # Default: None
-  follow_redirects=True, # Default: True
-  headers={'x-some-header': 'some-value'}
-)
+python create.py <model> <modelfile>
 ```
+- [create.py](create.py) 
 
-Similarly, the `AsyncClient` class can be configured with the same parameters.
+See [ollama/docs/modelfile.md](https://github.com/ollama/ollama/blob/main/docs/modelfile.md) for more information on the Modelfile format.
+
+### Fill in the middle
+- [fill-in-middle.py](fill-in-middle.py) - Given a prefix and suffix, fill in the middle
+
+### Ollama ps - Show model status with CPU/GPU usage
+- [ps.py](ps.py)
+
 
