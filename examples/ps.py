@@ -1,6 +1,6 @@
 from ollama import ps, pull, chat
 
-response = pull('mistral', stream=True)
+response = pull('llama3.1', stream=True)
 progress_states = set()
 for progress in response:
   if progress.get('status') in progress_states:
@@ -10,7 +10,7 @@ for progress in response:
 
 print('\n')
 
-response = chat('mistral', messages=[{'role': 'user', 'content': 'Hello!'}])
+response = chat('llama3.1', messages=[{'role': 'user', 'content': 'Hello!'}])
 print(response['message']['content'])
 
 print('\n')

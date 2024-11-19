@@ -2,6 +2,11 @@
 
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
 
+## Prerequisites
+
+- Install [Ollama](https://ollama.com/download)
+- Pull a model: `ollama pull <model>` See [Ollama models](https://ollama.com/models)
+
 ## Install
 
 ```sh

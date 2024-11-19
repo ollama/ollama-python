@@ -6,6 +6,16 @@ import asyncio
 # Simulates an API call to get flight times
 # In a real application, this would fetch data from a live database or API
 def get_flight_times(departure: str, arrival: str) -> str:
+  """
+  Get the flight times between two cities
+
+  Args:
+    departure (str): The departure city (airport code)
+    arrival (str): The arrival city (airport code)
+
+  Returns:
+    str: The flight times between the two cities
+  """
   flights = {
     'NYC-LAX': {'departure': '08:00 AM', 'arrival': '11:30 AM', 'duration': '5h 30m'},
     'LAX-NYC': {'departure': '02:00 PM', 'arrival': '10:30 PM', 'duration': '5h 30m'},
@@ -28,29 +38,7 @@ async def run(model: str):
   response = await client.chat(
     model=model,
     messages=messages,
-    tools=[
-      {
-        'type': 'function',
-        'function': {
-          'name': 'get_flight_times',
-          'description': 'Get the flight times between two cities',
-          'parameters': {
-            'type': 'object',
-            'properties': {
-              'departure': {
-                'type': 'string',
-                'description': 'The departure city (airport code)',
-              },
-              'arrival': {
-                'type': 'string',
-                'description': 'The arrival city (airport code)',
-              },
-            },
-            'required': ['departure', 'arrival'],
-          },
-        },
-      },
-    ],
+    tools=[get_flight_times],
   )
 
   # Add the model's response to the conversation history
@@ -80,8 +68,8 @@ async def run(model: str):
 
   # Second API call: Get final response from the model
   final_response = await client.chat(model=model, messages=messages)
-  print(final_response['message']['content'])
+  print(final_response.message.content)
 
 
 # Run the async function
-asyncio.run(run('mistral'))
+asyncio.run(run('llama3.1'))
