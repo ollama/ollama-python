@@ -4,7 +4,7 @@ from base64 import b64encode
 from ollama._types import Image
 
 
-def test_image_serialization(tmp_path):
+def test_image_serialization():
   # Test bytes serialization
   image_bytes = b'test image bytes'
   img = Image(value=image_bytes)
