@@ -33,7 +33,6 @@ python3 <example>.py
 
 ### Ollama List - List all downloaded models and their properties
 - [list.py](list.py)
-- [async-list.py](async-list.py)
 
 
 ### Ollama ps - Show model status with CPU/GPU usage
