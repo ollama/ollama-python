@@ -1,14 +1,20 @@
-from ollama import Client
+from ollama import chat
+# from pathlib import Path
 
-client = Client()
-path = ''
-# Passing in wrong path for image error sucks
-response = client.chat(
+# Pass in the path to the image
+path = input('Please enter the path to the image: ')
+
+# You can also pass in base64 encoded image data
+# img = base64.b64encode(Path(path).read_bytes()).decode()
+# or the raw bytes
+# img = Path(path).read_bytes()
+
+response = chat(
   model='llama3.2-vision',
   messages=[
     {
       'role': 'user',
-      'content': 'What is in this image? Be concise. Respond with the structure {"focal": "...", "subject": "...", "background": "..."}',
+      'content': 'What is in this image? Be concise.',
       'images': [path],
     }
   ],
