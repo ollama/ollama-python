@@ -95,12 +95,14 @@ class Image(BaseModel):
       return b64encode(self.value.read_bytes() if isinstance(self.value, Path) else self.value).decode()
 
     if isinstance(self.value, str):
+      if Path(self.value).exists():
+        return b64encode(Path(self.value).read_bytes()).decode()
       try:
         # Try to decode to check if it's already base64
         b64decode(self.value)
         return self.value
       except Exception:
-        return b64encode(Path(self.value).read_bytes()).decode() if Path(self.value).exists() else self.value
+        return self.value
 
 
 class GenerateRequest(BaseGenerateRequest):
