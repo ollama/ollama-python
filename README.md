@@ -63,8 +63,9 @@ A custom client can be created with the following fields:
 
 ```python
 from ollama import Client
+# default client
 client = Client()
-# or 
+# or custom client
 client = Client(
   host='http://localhost:11434',
   timeout=None,
