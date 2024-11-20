@@ -1,5 +1,5 @@
 import json
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
 from typing import Any, Mapping, Optional, Union, Sequence
@@ -11,8 +11,6 @@ from pydantic import (
   ByteSize,
   ConfigDict,
   Field,
-  FilePath,
-  Base64Str,
   model_serializer,
 )
 
@@ -89,16 +87,26 @@ class BaseGenerateRequest(BaseStreamableRequest):
 
 
 class Image(BaseModel):
-  value: Union[FilePath, Base64Str, bytes]
+  value: Union[str, bytes, Path]
 
-  # This overloads the `model_dump` method and returns values depending on the type of the `value` field
   @model_serializer
   def serialize_model(self):
-    if isinstance(self.value, Path):
-      return b64encode(self.value.read_bytes()).decode()
-    elif isinstance(self.value, bytes):
-      return b64encode(self.value).decode()
-    return self.value
+    if isinstance(self.value, (Path, bytes)):
+      return b64encode(self.value.read_bytes() if isinstance(self.value, Path) else self.value).decode()
+
+    if isinstance(self.value, str):
+      if Path(self.value).exists():
+        return b64encode(Path(self.value).read_bytes()).decode()
+
+      if self.value.split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp'):
+        raise ValueError(f'File {self.value} does not exist')
+
+      try:
+        # Try to decode to check if it's already base64
+        b64decode(self.value)
+        return self.value
+      except Exception:
+        raise ValueError('Invalid image data, expected base64 string or path to image file') from Exception
 
 
 class GenerateRequest(BaseGenerateRequest):
