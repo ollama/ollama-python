@@ -2,6 +2,7 @@ from __future__ import annotations
 from collections import defaultdict
 import inspect
 from typing import Callable, Union
+import re
 
 import pydantic
 from ollama._types import Tool
@@ -14,7 +15,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
   key = hash(doc_string)
   for line in doc_string.splitlines():
-    lowered_line = line.lower()
+    lowered_line = line.lower().strip()
     if lowered_line.startswith('args:'):
       key = 'args'
     elif lowered_line.startswith('returns:') or lowered_line.startswith('yields:') or lowered_line.startswith('raises:'):
@@ -27,14 +28,21 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   last_key = None
   for line in parsed_docstring['args'].splitlines():
     line = line.strip()
-    if ':' in line and not line.lower().startswith('args:'):
-      # Split on first occurrence of '(' or ':' to separate arg name from description
-      split_char = '(' if '(' in line else ':'
-      arg_name, rest = line.split(split_char, 1)
+    if ':' in line:
+      # Split the line on either:
+      # 1. A parenthetical expression like (integer) - captured in group 1
+      # 2. A colon :
+      # Followed by optional whitespace. Only split on first occurrence.
+      parts = re.split(r'(?:\(([^)]*)\)|:)\s*', line, maxsplit=1)
 
-      last_key = arg_name.strip()
-      # Get description after the colon
-      arg_description = rest.split(':', 1)[1].strip() if split_char == '(' else rest.strip()
+      arg_name = parts[0].strip()
+      last_key = arg_name
+
+      # Get the description - will be in parts[1] if parenthetical or parts[-1] if after colon
+      arg_description = parts[-1].strip()
+      if len(parts) > 2 and parts[1]:  # Has parenthetical content
+        arg_description = parts[-1].split(':', 1)[-1].strip()
+
       parsed_docstring[last_key] = arg_description
 
     elif last_key and line:

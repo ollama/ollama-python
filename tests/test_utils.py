@@ -147,7 +147,7 @@ def test_skewed_docstring_parsing():
     """
     Add two numbers together.
     Args:
-        x (integer):: The first number
+        x (integer): : The first number
 
 
 
@@ -238,3 +238,33 @@ def test_function_with_no_types():
   tool = convert_function_to_tool(no_types).model_dump()
   assert tool['function']['parameters']['properties']['a']['type'] == 'string'
   assert tool['function']['parameters']['properties']['b']['type'] == 'string'
+
+
+def test_function_with_parentheses():
+  def func_with_parentheses(a: int, b: int) -> int:
+    """
+    A function with parentheses.
+    Args:
+        a: First (:thing) number to add
+        b: Second number to add
+    Returns:
+        int: The sum of a and b
+    """
+    pass
+
+  def func_with_parentheses_and_args(a: int, b: int):
+    """
+    A function with parentheses and args.
+    Args:
+        a(integer) : First (:thing) number to add
+        b(integer) :Second number to add
+    """
+    pass
+
+  tool = convert_function_to_tool(func_with_parentheses).model_dump()
+  assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
+  assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+  tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
+  assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
+  assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
