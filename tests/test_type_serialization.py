@@ -40,5 +40,9 @@ def test_image_serialization_string_path():
     assert img.model_dump() == b64encode(b'test file content').decode()
 
   with pytest.raises(ValueError):
-    img = Image(value='Error')
+    img = Image(value='some_path/that/does/not/exist.png')
+    img.model_dump()
+
+  with pytest.raises(ValueError):
+    img = Image(value='not an image')
     img.model_dump()

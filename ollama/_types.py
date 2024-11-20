@@ -97,6 +97,10 @@ class Image(BaseModel):
     if isinstance(self.value, str):
       if Path(self.value).exists():
         return b64encode(Path(self.value).read_bytes()).decode()
+
+      if self.value.split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp'):
+        raise ValueError(f'File {self.value} does not exist')
+
       try:
         # Try to decode to check if it's already base64
         b64decode(self.value)
