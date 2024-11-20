@@ -4,6 +4,7 @@ import httpx
 
 from ollama import generate
 
+
 latest = httpx.get('https://xkcd.com/info.0.json')
 latest.raise_for_status()
 

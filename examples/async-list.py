@@ -6,31 +6,15 @@ async def main():
   client = ollama.AsyncClient()
 
   response = await client.list()
-  models = response['models']
-  models_data = []
-  for model in models:
-    if model.get('details'):  # Check if details exist
-      models_data.append(
-        (
-          model.get('name', 'N/A'),
-          model.get('size', 0) / 1024 / 1024,  # Convert to MB
-          model.get('details', {}).get('format', 'N/A'),
-          model.get('details', {}).get('family', 'N/A'),
-          model.get('details', {}).get('parameter_size', 'N/A'),
-          model.get('details', {}).get('quantization_level', 'N/A'),
-        )
-      )
-
-  print(f'\n{len(models)} models found!')
-  print('\nDetailed model information:')
-  for model in models_data:
-    print(f'Name: {model[0]}')
-    print(f'Size (MB): {model[1]:.2f}')
-    print(f'Format: {model[2]}')
-    print(f'Family: {model[3]}')
-    print(f'Parameter Size: {model[4]}')
-    print(f'Quantization Level: {model[5]}')
-    print('-' * 50)
+  for model in response.models:
+    if model.details:
+      print(f'Name: {model.model}')
+      print(f'Size (MB): {(model.size.real / 1024 / 1024):.2f}')
+      print(f'Format: {model.details.format}')
+      print(f'Family: {model.details.family}')
+      print(f'Parameter Size: {model.details.parameter_size}')
+      print(f'Quantization Level: {model.details.quantization_level}')
+      print('-' * 50)
 
 
 if __name__ == '__main__':
