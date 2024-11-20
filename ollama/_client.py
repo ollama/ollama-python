@@ -10,6 +10,7 @@ from hashlib import sha256
 
 from typing import (
   Any,
+  Callable,
   Literal,
   Mapping,
   Optional,
@@ -21,6 +22,9 @@ from typing import (
 )
 
 import sys
+
+
+from ollama._utils import convert_function_to_tool
 
 if sys.version_info < (3, 9):
   from typing import Iterator, AsyncIterator
@@ -284,7 +288,7 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
     format: Optional[Literal['', 'json']] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
@@ -292,6 +296,30 @@ class Client(BaseClient):
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
+
+    Args:
+      tools:
+        A JSON schema as a dict, an Ollama Tool or a Python Function.
+        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+      stream: Whether to stream the response.
+      format: The format of the response.
+
+    Example:
+      def add_two_numbers(a: int, b: int) -> int:
+        '''
+        Add two numbers together.
+
+        Args:
+          a: First number to add
+          b: Second number to add
+
+        Returns:
+          int: The sum of a and b
+        '''
+        return a + b
+
+      client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
@@ -750,7 +778,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
     format: Optional[Literal['', 'json']] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
@@ -770,6 +798,30 @@ class AsyncClient(BaseClient):
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
+
+    Args:
+      tools:
+        A JSON schema as a dict, an Ollama Tool or a Python Function.
+        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+      stream: Whether to stream the response.
+      format: The format of the response.
+
+    Example:
+      def add_two_numbers(a: int, b: int) -> int:
+        '''
+        Add two numbers together.
+
+        Args:
+          a: First number to add
+          b: Second number to add
+
+        Returns:
+          int: The sum of a and b
+        '''
+        return a + b
+
+      await client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
@@ -1075,9 +1127,9 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool]]]) -> Iterator[Tool]:
-  for tool in tools or []:
-    yield Tool.model_validate(tool)
+def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+  for unprocessed_tool in tools or []:
+    yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:

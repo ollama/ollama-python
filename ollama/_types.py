@@ -1,26 +1,18 @@
 import json
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import (
-  Any,
-  Literal,
-  Mapping,
-  Optional,
-  Sequence,
-  Union,
-)
-from typing_extensions import Annotated
+from typing import Any, Mapping, Optional, Union, Sequence
+
+from typing_extensions import Annotated, Literal
 
 from pydantic import (
   BaseModel,
   ByteSize,
+  ConfigDict,
   Field,
-  FilePath,
-  Base64Str,
   model_serializer,
 )
-from pydantic.json_schema import JsonSchemaValue
 
 
 class SubscriptableBaseModel(BaseModel):
@@ -95,16 +87,26 @@ class BaseGenerateRequest(BaseStreamableRequest):
 
 
 class Image(BaseModel):
-  value: Union[FilePath, Base64Str, bytes]
+  value: Union[str, bytes, Path]
 
-  # This overloads the `model_dump` method and returns values depending on the type of the `value` field
   @model_serializer
   def serialize_model(self):
-    if isinstance(self.value, Path):
-      return b64encode(self.value.read_bytes()).decode()
-    elif isinstance(self.value, bytes):
-      return b64encode(self.value).decode()
-    return self.value
+    if isinstance(self.value, (Path, bytes)):
+      return b64encode(self.value.read_bytes() if isinstance(self.value, Path) else self.value).decode()
+
+    if isinstance(self.value, str):
+      if Path(self.value).exists():
+        return b64encode(Path(self.value).read_bytes()).decode()
+
+      if self.value.split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp'):
+        raise ValueError(f'File {self.value} does not exist')
+
+      try:
+        # Try to decode to check if it's already base64
+        b64decode(self.value)
+        return self.value
+      except Exception:
+        raise ValueError('Invalid image data, expected base64 string or path to image file') from Exception
 
 
 class GenerateRequest(BaseGenerateRequest):
@@ -222,20 +224,27 @@ class Message(SubscriptableBaseModel):
 
 
 class Tool(SubscriptableBaseModel):
-  type: Literal['function'] = 'function'
+  type: Optional[Literal['function']] = 'function'
 
   class Function(SubscriptableBaseModel):
-    name: str
-    description: str
+    name: Optional[str] = None
+    description: Optional[str] = None
 
     class Parameters(SubscriptableBaseModel):
-      type: str
+      type: Optional[Literal['object']] = 'object'
       required: Optional[Sequence[str]] = None
-      properties: Optional[JsonSchemaValue] = None
 
-    parameters: Parameters
+      class Property(SubscriptableBaseModel):
+        model_config = ConfigDict(arbitrary_types_allowed=True)
 
-  function: Function
+        type: Optional[str] = None
+        description: Optional[str] = None
+
+      properties: Optional[Mapping[str, Property]] = None
+
+    parameters: Optional[Parameters] = None
+
+  function: Optional[Function] = None
 
 
 class ChatRequest(BaseGenerateRequest):
@@ -335,6 +344,7 @@ class ModelDetails(SubscriptableBaseModel):
 
 class ListResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
+    model: Optional[str] = None
     modified_at: Optional[datetime] = None
     digest: Optional[str] = None
     size: Optional[ByteSize] = None
