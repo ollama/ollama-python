@@ -180,6 +180,9 @@ def test_client_generate_stream(httpserver: HTTPServer):
 
 
 def test_client_generate_images(httpserver: HTTPServer):
+  with tempfile.NamedTemporaryFile() as temp:
+    Image.new('RGB', (1, 1)).save(temp, 'PNG')
+
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -187,7 +190,7 @@ def test_client_generate_images(httpserver: HTTPServer):
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
       'stream': False,
-      'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
+      'images': [temp.name],
     },
   ).respond_with_json(
     {
@@ -198,11 +201,9 @@ def test_client_generate_images(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as temp:
-    Image.new('RGB', (1, 1)).save(temp, 'PNG')
-    response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-    assert response['model'] == 'dummy'
-    assert response['response'] == 'Because it is.'
+  response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
 
 
 def test_client_pull(httpserver: HTTPServer):
@@ -655,6 +656,9 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
 
 @pytest.mark.asyncio
 async def test_async_client_generate_images(httpserver: HTTPServer):
+  with tempfile.NamedTemporaryFile() as temp:
+    Image.new('RGB', (1, 1)).save(temp, 'PNG')
+
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -662,7 +666,7 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
       'model': 'dummy',
       'prompt': 'Why is the sky blue?',
       'stream': False,
-      'images': ['iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'],
+      'images': [temp.name],
     },
   ).respond_with_json(
     {
@@ -673,11 +677,9 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as temp:
-    Image.new('RGB', (1, 1)).save(temp, 'PNG')
-    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-    assert response['model'] == 'dummy'
-    assert response['response'] == 'Because it is.'
+  response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
 
 
 @pytest.mark.asyncio
