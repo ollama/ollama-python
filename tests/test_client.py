@@ -180,30 +180,31 @@ def test_client_generate_stream(httpserver: HTTPServer):
 
 
 def test_client_generate_images(httpserver: HTTPServer):
-  with tempfile.NamedTemporaryFile() as temp:
-    Image.new('RGB', (1, 1)).save(temp, 'PNG')
+  with tempfile.NamedTemporaryFile() as temp_file:
+    temp_file.write(b'test file content')
+    temp_file.flush()
 
-  httpserver.expect_ordered_request(
-    '/api/generate',
-    method='POST',
-    json={
-      'model': 'dummy',
-      'prompt': 'Why is the sky blue?',
-      'stream': False,
-      'images': [temp.name],
-    },
-  ).respond_with_json(
-    {
-      'model': 'dummy',
-      'response': 'Because it is.',
-    }
-  )
+    httpserver.expect_ordered_request(
+      '/api/generate',
+      method='POST',
+      json={
+        'model': 'dummy',
+        'prompt': 'Why is the sky blue?',
+        'stream': False,
+        'images': ['dGVzdCBmaWxlIGNvbnRlbnQ='],
+      },
+    ).respond_with_json(
+      {
+        'model': 'dummy',
+        'response': 'Because it is.',
+      }
+    )
 
-  client = Client(httpserver.url_for('/'))
+    client = Client(httpserver.url_for('/'))
 
-  response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-  assert response['model'] == 'dummy'
-  assert response['response'] == 'Because it is.'
+    response = client.generate('dummy', 'Why is the sky blue?', images=[temp_file.name])
+    assert response['model'] == 'dummy'
+    assert response['response'] == 'Because it is.'
 
 
 def test_client_pull(httpserver: HTTPServer):
@@ -656,30 +657,31 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
 
 @pytest.mark.asyncio
 async def test_async_client_generate_images(httpserver: HTTPServer):
-  with tempfile.NamedTemporaryFile() as temp:
-    Image.new('RGB', (1, 1)).save(temp, 'PNG')
+  with tempfile.NamedTemporaryFile() as temp_file:
+    temp_file.write(b'test file content')
+    temp_file.flush()
 
-  httpserver.expect_ordered_request(
-    '/api/generate',
-    method='POST',
-    json={
-      'model': 'dummy',
-      'prompt': 'Why is the sky blue?',
-      'stream': False,
-      'images': [temp.name],
-    },
-  ).respond_with_json(
-    {
-      'model': 'dummy',
-      'response': 'Because it is.',
-    }
-  )
+    httpserver.expect_ordered_request(
+      '/api/generate',
+      method='POST',
+      json={
+        'model': 'dummy',
+        'prompt': 'Why is the sky blue?',
+        'stream': False,
+        'images': ['dGVzdCBmaWxlIGNvbnRlbnQ='],
+      },
+    ).respond_with_json(
+      {
+        'model': 'dummy',
+        'response': 'Because it is.',
+      }
+    )
 
-  client = AsyncClient(httpserver.url_for('/'))
+    client = AsyncClient(httpserver.url_for('/'))
 
-  response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-  assert response['model'] == 'dummy'
-  assert response['response'] == 'Because it is.'
+    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp_file.name])
+    assert response['model'] == 'dummy'
+    assert response['response'] == 'Because it is.'
 
 
 @pytest.mark.asyncio

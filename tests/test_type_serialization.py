@@ -1,5 +1,7 @@
 from base64 import b64encode
 from pathlib import Path
+
+import pytest
 from ollama._types import Image
 import tempfile
 
@@ -36,3 +38,7 @@ def test_image_serialization_string_path():
     temp_file.flush()
     img = Image(value=temp_file.name)
     assert img.model_dump() == b64encode(b'test file content').decode()
+
+  with pytest.raises(ValueError):
+    img = Image(value='Error')
+    img.model_dump()

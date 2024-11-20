@@ -102,7 +102,7 @@ class Image(BaseModel):
         b64decode(self.value)
         return self.value
       except Exception:
-        return self.value
+        raise ValueError('Invalid image data, expected base64 string or path to image file') from Exception
 
 
 class GenerateRequest(BaseGenerateRequest):
