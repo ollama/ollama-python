@@ -4,22 +4,17 @@ from base64 import b64encode
 from ollama._types import Image
 
 
-def test_image_serialization():
+def test_image_serialization(tmp_path):
   # Test bytes serialization
   image_bytes = b'test image bytes'
   img = Image(value=image_bytes)
   assert img.model_dump() == b64encode(image_bytes).decode()
 
   # Test Path serialization
-  from pathlib import Path
-  import tempfile
-
-  with tempfile.NamedTemporaryFile() as f:
-    f.write(b'test file content')
-    f.flush()
-    path = Path(f.name)
-    img = Image(value=path)
-    assert img.model_dump() == b64encode(path.read_bytes()).decode()
+  test_file = tmp_path / 'test.txt'
+  test_file.write_bytes(b'test file content')
+  img = Image(value=test_file)
+  assert img.model_dump() == b64encode(test_file.read_bytes()).decode()
 
   # Test base64 string serialization
   b64_str = 'dGVzdCBiYXNlNjQgc3RyaW5n'
@@ -27,11 +22,10 @@ def test_image_serialization():
   assert img.model_dump() == b64_str  # Should return as-is if valid base64
 
   # Test regular string path serialization
-  with tempfile.NamedTemporaryFile() as f:
-    f.write(b'test file content')
-    f.flush()
-    img = Image(value=f.name)
-    assert img.model_dump() == b64encode(Path(f.name).read_bytes()).decode()
+  test_file2 = tmp_path / 'test2.txt'
+  test_file2.write_bytes(b'test file content')
+  img = Image(value=str(test_file2))
+  assert img.model_dump() == b64encode(test_file2.read_bytes()).decode()
 
   # Test regular string that's not a path
   img = Image(value='not a path or base64')
