@@ -13,6 +13,7 @@ python3 <example>.py
 - [chat.py](chat.py)
 - [async-chat.py](async-chat.py)
 - [chat-stream.py](chat-stream.py) - Streamed outputs
+- [chat-with-history.py](chat-with-history.py) - Chat with model and maintain history of the conversation
 
 
 ### Generate - Generate text with a model
