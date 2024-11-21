@@ -37,7 +37,8 @@ See [_types.py](ollama/_types.py) for more information on the response types.
 
 Response streaming can be enabled by setting `stream=True`.
 
-Streaming Tool/Function calling is not yet supported.
+> [!NOTE]
+> Streaming Tool/Function calling is not yet supported.
 
 ```python
 from ollama import chat
