@@ -319,7 +319,7 @@ class Client(BaseClient):
         '''
         return a + b
 
-      client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
+      client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 
@@ -821,7 +821,7 @@ class AsyncClient(BaseClient):
         '''
         return a + b
 
-      await client.chat(model='llama3.1:8b', tools=[add_two_numbers], messages=[...])
+      await client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
 
     Raises `RequestError` if a model is not provided.
 

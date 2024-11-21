@@ -1,6 +1,5 @@
 from ollama import chat
 
-
 messages = [
   {
     'role': 'user',
@@ -8,5 +7,5 @@ messages = [
   },
 ]
 
-response = chat('mistral', messages=messages)
+response = chat('llama3.2', messages=messages)
 print(response['message']['content'])
