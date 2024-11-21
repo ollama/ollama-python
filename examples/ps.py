@@ -1,4 +1,4 @@
-from ollama import ps, pull
+from ollama import ps, pull, chat
 from ollama import ProcessResponse
 
 # Ensure at least one model is loaded
@@ -12,14 +12,16 @@ for progress in response:
 
 print('\n')
 
+print('Waiting for model to load... \n')
+chat(model='llama3.2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+
 
 response: ProcessResponse = ps()
 for model in response.models:
-  print(f'Model: {model.model}')
-  print(f'Digest: {model.digest}')
-  print(f'Expires at: {model.expires_at}')
-  print(f'Size: {model.size}')
-  print(f'Size vram: {model.size_vram}')
-  print(f'Details: {model.details}')
-
-  print('---' * 10)
+  print('Model: ', model.model)
+  print('  Digest: ', model.digest)
+  print('  Expires at: ', model.expires_at)
+  print('  Size: ', model.size)
+  print('  Size vram: ', model.size_vram)
+  print('  Details: ', model.details)
+  print('\n')

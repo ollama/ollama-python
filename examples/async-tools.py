@@ -44,8 +44,14 @@ subtract_two_numbers_tool = {
 
 async def main():
   client = ollama.AsyncClient()
+
   prompt = 'What is three plus one?'
-  print(f'Prompt: {prompt}')
+  print('Prompt:', prompt)
+
+  available_functions = {
+    'add_two_numbers': add_two_numbers,
+    'subtract_two_numbers': subtract_two_numbers,
+  }
 
   response: ChatResponse = await client.chat(
     'llama3.1',
@@ -53,22 +59,16 @@ async def main():
     tools=[add_two_numbers, subtract_two_numbers_tool],
   )
 
-  available_functions = {
-    'add_two_numbers': add_two_numbers,
-    'subtract_two_numbers': subtract_two_numbers,
-  }
-
   if response.message.tool_calls:
     # There may be multiple tool calls in the response
     for tool in response.message.tool_calls:
       # Ensure the function is available, and then call it
-      if tool.function.name in available_functions:
-        print(f'Calling function {tool.function.name}')
-        print(f'Arguments: {tool.function.arguments}')
-        function_to_call = available_functions[tool.function.name]
-        print(f'Function output: {function_to_call(**tool.function.arguments)}')
+      if function_to_call := available_functions.get(tool.function.name):
+        print('Calling function:', tool.function.name)
+        print('Arguments:', tool.function.arguments)
+        print('Function output:', function_to_call(**tool.function.arguments))
       else:
-        print(f'Function {tool.function.name} not found')
+        print('Function', tool.function.name, 'not found')
 
 
 if __name__ == '__main__':

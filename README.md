@@ -54,9 +54,10 @@ for chunk in stream:
 ```
 
 ## Custom client
-A custom client can be created with the fields from the [httpx client](https://www.python-httpx.org/api/#client).
+A custom client can be created by instantiating `Client` or `AsyncClient` from `ollama`.
 
 All kwargs are passed into the httpx client.
+See accepted parameters for the [httpx client](https://www.python-httpx.org/api/#client) for more information.
 
 ```python
 from ollama import Client
