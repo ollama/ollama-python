@@ -26,7 +26,7 @@ python3 <example>.py
 - [async-tools.py](async-tools.py)
 
 
-### Multimodal with Image - Chat with a multimodal (image chat) model
+### Multimodal with Images - Chat with a multimodal (image chat) model
 - [multimodal_chat.py](multimodal_chat.py)
 - [multimodal_generate.py](multimodal_generate.py)
 
