@@ -1,75 +1,78 @@
-import json
-import ollama
 import asyncio
+from ollama import ChatResponse
+import ollama
 
 
-# Simulates an API call to get flight times
-# In a real application, this would fetch data from a live database or API
-def get_flight_times(departure: str, arrival: str) -> str:
+def add_two_numbers(a: int, b: int) -> int:
   """
-  Get the flight times between two cities
+  Add two numbers
 
   Args:
-    departure (str): The departure city (airport code)
-    arrival (str): The arrival city (airport code)
+    a (int): The first number
+    b (int): The second number
 
   Returns:
-    str: The flight times between the two cities
+    int: The sum of the two numbers
   """
-  flights = {
-    'NYC-LAX': {'departure': '08:00 AM', 'arrival': '11:30 AM', 'duration': '5h 30m'},
-    'LAX-NYC': {'departure': '02:00 PM', 'arrival': '10:30 PM', 'duration': '5h 30m'},
-    'LHR-JFK': {'departure': '10:00 AM', 'arrival': '01:00 PM', 'duration': '8h 00m'},
-    'JFK-LHR': {'departure': '09:00 PM', 'arrival': '09:00 AM', 'duration': '7h 00m'},
-    'CDG-DXB': {'departure': '11:00 AM', 'arrival': '08:00 PM', 'duration': '6h 00m'},
-    'DXB-CDG': {'departure': '03:00 AM', 'arrival': '07:30 AM', 'duration': '7h 30m'},
-  }
-
-  key = f'{departure}-{arrival}'.upper()
-  return json.dumps(flights.get(key, {'error': 'Flight not found'}))
+  return a + b
 
 
-async def run(model: str):
+def subtract_two_numbers(a: int, b: int) -> int:
+  """
+  Subtract two numbers
+  """
+  return a - b
+
+
+# Tools can still be manually defined and passed into chat
+subtract_two_numbers_tool = {
+  'type': 'function',
+  'function': {
+    'name': 'subtract_two_numbers',
+    'description': 'Subtract two numbers',
+    'parameters': {
+      'type': 'object',
+      'required': ['a', 'b'],
+      'properties': {
+        'a': {'type': 'integer', 'description': 'The first number'},
+        'b': {'type': 'integer', 'description': 'The second number'},
+      },
+    },
+  },
+}
+
+
+async def main():
   client = ollama.AsyncClient()
-  # Initialize conversation with a user query
-  messages = [{'role': 'user', 'content': 'What is the flight time from New York (NYC) to Los Angeles (LAX)?'}]
+  prompt = 'What is three plus one?'
+  print(f'Prompt: {prompt}')
 
-  # First API call: Send the query and function description to the model
-  response = await client.chat(
-    model=model,
-    messages=messages,
-    tools=[get_flight_times],
+  response: ChatResponse = await client.chat(
+    'llama3.1',
+    messages=[{'role': 'user', 'content': prompt}],
+    tools=[add_two_numbers, subtract_two_numbers_tool],
   )
 
-  # Add the model's response to the conversation history
-  messages.append(response['message'])
+  available_functions = {
+    'add_two_numbers': add_two_numbers,
+    'subtract_two_numbers': subtract_two_numbers,
+  }
 
-  # Check if the model decided to use the provided function
-  if not response['message'].get('tool_calls'):
-    print("The model didn't use the function. Its response was:")
-    print(response['message']['content'])
-    return
-
-  # Process function calls made by the model
-  if response['message'].get('tool_calls'):
-    available_functions = {
-      'get_flight_times': get_flight_times,
-    }
-    for tool in response['message']['tool_calls']:
-      function_to_call = available_functions[tool['function']['name']]
-      function_response = function_to_call(tool['function']['arguments']['departure'], tool['function']['arguments']['arrival'])
-      # Add function response to the conversation
-      messages.append(
-        {
-          'role': 'tool',
-          'content': function_response,
-        }
-      )
-
-  # Second API call: Get final response from the model
-  final_response = await client.chat(model=model, messages=messages)
-  print(final_response.message.content)
+  if response.message.tool_calls:
+    # There may be multiple tool calls in the response
+    for tool in response.message.tool_calls:
+      # Ensure the function is available, and then call it
+      if tool.function.name in available_functions:
+        print(f'Calling function {tool.function.name}')
+        print(f'Arguments: {tool.function.arguments}')
+        function_to_call = available_functions[tool.function.name]
+        print(f'Function output: {function_to_call(**tool.function.arguments)}')
+      else:
+        print(f'Function {tool.function.name} not found')
 
 
-# Run the async function
-asyncio.run(run('llama3.1'))
+if __name__ == '__main__':
+  try:
+    asyncio.run(main())
+  except KeyboardInterrupt:
+    print('\nGoodbye!')

@@ -2,11 +2,8 @@
 
 Run the examples in this directory with:
 ```sh
-# Ensure you are in the examples directory
-cd examples/
-
 # Run example
-python3 <example>.py
+python3 examples/<example>.py
 ```
 
 ### Chat - Chat with a model
@@ -20,6 +17,7 @@ python3 <example>.py
 - [generate.py](generate.py)
 - [async-generate.py](async-generate.py)
 - [generate-stream.py](generate-stream.py) - Streamed outputs
+- [fill-in-middle.py](fill-in-middle.py) - Given a prefix and suffix, fill in the middle
 
 
 ### Tools/Function Calling - Call a function with a model
@@ -57,5 +55,3 @@ See [ollama/docs/modelfile.md](https://github.com/ollama/ollama/blob/main/docs/m
 ### Ollama Embed - Generate embeddings with a model
 - [embed.py](embed.py)
 
-### Fill in the middle
-- [fill-in-middle.py](fill-in-middle.py) - Given a prefix and suffix, fill in the middle

@@ -1,5 +1,5 @@
 from ollama import chat
-from ollama._types import ChatResponse
+from ollama import ChatResponse
 
 
 def add_two_numbers(a: int, b: int) -> int:
@@ -40,7 +40,7 @@ subtract_two_numbers_tool = {
   },
 }
 
-prompt = 'What is three minus one?'
+prompt = 'What is three plus one?'
 print(f'Prompt: {prompt}')
 
 response: ChatResponse = chat(

@@ -5,8 +5,8 @@ The Ollama Python library provides the easiest way to integrate Python 3.8+ proj
 ## Prerequisites
 
 - [Ollama](https://ollama.com/download) should be installed and running
-- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull llama3.1`
-  - See [Ollama models](https://ollama.com/models) for more information on the models available.
+- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull llama3.2`
+  - See [Ollama.com](https://ollama.com/search) for more information on the models available.
 
 ## Install
 
@@ -18,9 +18,9 @@ pip install ollama
 
 ```python
 from ollama import chat
-from ollama._types import ChatResponse
+from ollama import ChatResponse
 
-response: ChatResponse = chat(model='llama3.1', messages=[
+response: ChatResponse = chat(model='llama3.2', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -43,7 +43,7 @@ Streaming Tool/Function calling is not yet supported.
 from ollama import chat
 
 stream = chat(
-    model='llama3.1',
+    model='llama3.2',
     messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
     stream=True,
 )
@@ -53,26 +53,19 @@ for chunk in stream:
 ```
 
 ## Custom client
+A custom client can be created with the fields from the [httpx client](https://www.python-httpx.org/api/#client).
 
-A custom client can be created with the following fields:
-
-- `host`: The Ollama host (default: `http://localhost:11434`)
-- `timeout`: The timeout for requests (default: `None`)
-- `follow_redirects`: Whether to follow redirects (default: `True`)
-- `headers`: Additional headers to send with requests (default: `{}`)
+All kwargs are passed into the httpx client.
 
 ```python
 from ollama import Client
-# default client
-client = Client()
-# or custom client
 client = Client(
   host='http://localhost:11434',
   timeout=None,
   follow_redirects=True,
   headers={'x-some-header': 'some-value'}
 )
-response = client.chat(model='llama3.1', messages=[
+response = client.chat(model='llama3.2', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -90,7 +83,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='llama3.1', messages=[message])
+  response = await AsyncClient().chat(model='llama3.2', messages=[message])
 
 asyncio.run(chat())
 ```
@@ -103,7 +96,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='llama3.1', messages=[message], stream=True):
+  async for part in await AsyncClient().chat(model='llama3.2', messages=[message], stream=True):
     print(part['message']['content'], end='', flush=True)
 
 asyncio.run(chat())
@@ -116,13 +109,13 @@ The Ollama Python library's API is designed around the [Ollama REST API](https:/
 ### Chat
 
 ```python
-ollama.chat(model='llama3.1', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 ```
 
 ### Generate
 
 ```python
-ollama.generate(model='llama3.1', prompt='Why is the sky blue?')
+ollama.generate(model='llama3.2', prompt='Why is the sky blue?')
 ```
 
 ### List
@@ -134,14 +127,14 @@ ollama.list()
 ### Show
 
 ```python
-ollama.show('llama3.1')
+ollama.show('llama3.2')
 ```
 
 ### Create
 
 ```python
 modelfile='''
-FROM llama3.1
+FROM llama3.2
 SYSTEM You are mario from super mario bros.
 '''
 
@@ -151,37 +144,37 @@ ollama.create(model='example', modelfile=modelfile)
 ### Copy
 
 ```python
-ollama.copy('llama3.1', 'user/llama3.1')
+ollama.copy('llama3.2', 'user/llama3.2')
 ```
 
 ### Delete
 
 ```python
-ollama.delete('llama3.1')
+ollama.delete('llama3.2')
 ```
 
 ### Pull
 
 ```python
-ollama.pull('llama3.1')
+ollama.pull('llama3.2')
 ```
 
 ### Push
 
 ```python
-ollama.push('user/llama3.1')
+ollama.push('user/llama3.2')
 ```
 
 ### Embed
 
 ```python
-ollama.embed(model='llama3.1', input='The sky is blue because of rayleigh scattering')
+ollama.embed(model='llama3.2', input='The sky is blue because of rayleigh scattering')
 ```
 
 ### Embed (batch)
 
 ```python
-ollama.embed(model='llama3.1', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
+ollama.embed(model='llama3.2', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
 ```
 
 ### Ps

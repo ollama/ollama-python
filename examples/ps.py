@@ -1,8 +1,8 @@
 from ollama import ps, pull
-from ollama._types import ProcessResponse
+from ollama import ProcessResponse
 
 # Ensure at least one model is loaded
-response = pull('llama3.1', stream=True)
+response = pull('llama3.2', stream=True)
 progress_states = set()
 for progress in response:
   if progress.get('status') in progress_states:

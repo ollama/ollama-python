@@ -23,7 +23,7 @@ messages = [
 while True:
   user_input = input('Chat with history: ')
   response = chat(
-    'llama3.1',
+    'llama3.2',
     messages=messages
     + [
       {'role': 'user', 'content': user_input},

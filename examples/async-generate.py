@@ -4,7 +4,7 @@ import ollama
 
 async def main():
   client = ollama.AsyncClient()
-  response = await client.generate('llama3.1', 'Why is the sky blue?')
+  response = await client.generate('llama3.2', 'Why is the sky blue?')
   print(response['response'])
 
 
