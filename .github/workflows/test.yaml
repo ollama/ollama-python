@@ -2,7 +2,7 @@ name: test
 
 on:
   pull_request:
-    paths:
+    paths-ignore:
       - 'examples/**'
       - '**/README.md'
 
