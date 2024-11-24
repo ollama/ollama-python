@@ -45,8 +45,17 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg['tool_calls'] = [Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))]
     >>> 'tool_calls' in msg
     True
+    >>> tool = Tool()
+    >>> 'type' in tool
+    True
     """
-    return key in self.model_fields_set
+    if key in self.model_fields_set:
+      return True
+
+    if key in self.model_fields:
+      return self.model_fields[key].default is not None
+
+    return False
 
   def get(self, key: str, default: Any = None) -> Any:
     return getattr(self, key, default)
