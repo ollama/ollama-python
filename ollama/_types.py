@@ -23,7 +23,30 @@ class SubscriptableBaseModel(BaseModel):
     setattr(self, key, value)
 
   def __contains__(self, key: str) -> bool:
-    return hasattr(self, key)
+    """
+    >>> msg = Message(role='user')
+    >>> 'nonexistent' in msg
+    False
+    >>> 'role' in msg
+    True
+    >>> 'content' in msg
+    False
+    >>> msg.content = 'hello!'
+    >>> 'content' in msg
+    True
+    >>> msg = Message(role='user', content='hello!')
+    >>> 'content' in msg
+    True
+    >>> 'tool_calls' in msg
+    False
+    >>> msg['tool_calls'] = []
+    >>> 'tool_calls' in msg
+    True
+    >>> msg['tool_calls'] = [Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))]
+    >>> 'tool_calls' in msg
+    True
+    """
+    return key in self.model_fields_set
 
   def get(self, key: str, default: Any = None) -> Any:
     return getattr(self, key, default)
