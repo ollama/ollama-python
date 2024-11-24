@@ -45,6 +45,9 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg['tool_calls'] = [Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))]
     >>> 'tool_calls' in msg
     True
+    >>> msg['tool_calls'] = None
+    >>> 'tool_calls' in msg
+    True
     >>> tool = Tool()
     >>> 'type' in tool
     True
