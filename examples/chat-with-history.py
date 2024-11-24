@@ -31,8 +31,8 @@ while True:
   )
 
   # Add the response to the messages to maintain the history
-  messages.append(
-    {'role': 'user', 'content': user_input},
-    {'role': 'assistant', 'content': response.message.content},
+  messages.extend(
+        [{'role': 'user', 'content': user_input},
+         {'role': 'assistant', 'content': response.message.content}]
   )
   print(response.message.content + '\n')
