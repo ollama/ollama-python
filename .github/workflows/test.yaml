@@ -2,9 +2,6 @@ name: test
 
 on:
   pull_request:
-    paths:
-      - 'examples/**'
-      - '**/README.md'
 
 jobs:
   test:
