@@ -93,6 +93,9 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg = Message(role='user')
     >>> msg.get('nonexistent', 'default')
     'default'
+    >>> msg = Message(role='user', tool_calls=[ Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))])
+    >>> msg.get('tool_calls')[0]['function']['name']
+    'foo'
     """
     return self[key] if key in self else default
 
