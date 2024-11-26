@@ -17,9 +17,32 @@ from pydantic import (
 
 class SubscriptableBaseModel(BaseModel):
   def __getitem__(self, key: str) -> Any:
-    return getattr(self, key)
+    """
+    >>> msg = Message(role='user')
+    >>> msg['role']
+    'user'
+    >>> msg = Message(role='user')
+    >>> msg['nonexistent']
+    Traceback (most recent call last):
+    KeyError: 'nonexistent'
+    """
+    if key in self:
+      return getattr(self, key)
+
+    raise KeyError(key)
 
   def __setitem__(self, key: str, value: Any) -> None:
+    """
+    >>> msg = Message(role='user')
+    >>> msg['role'] = 'assistant'
+    >>> msg['role']
+    'assistant'
+    >>> tool_call = Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))
+    >>> msg = Message(role='user', content='hello')
+    >>> msg['tool_calls'] = [tool_call]
+    >>> msg['tool_calls'][0]['function']['name']
+    'foo'
+    """
     setattr(self, key, value)
 
   def __contains__(self, key: str) -> bool:
@@ -61,7 +84,20 @@ class SubscriptableBaseModel(BaseModel):
     return False
 
   def get(self, key: str, default: Any = None) -> Any:
-    return getattr(self, key, default)
+    """
+    >>> msg = Message(role='user')
+    >>> msg.get('role')
+    'user'
+    >>> msg = Message(role='user')
+    >>> msg.get('nonexistent')
+    >>> msg = Message(role='user')
+    >>> msg.get('nonexistent', 'default')
+    'default'
+    >>> msg = Message(role='user', tool_calls=[ Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))])
+    >>> msg.get('tool_calls')[0]['function']['name']
+    'foo'
+    """
+    return self[key] if key in self else default
 
 
 class Options(SubscriptableBaseModel):
