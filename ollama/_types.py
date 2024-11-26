@@ -40,6 +40,11 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg['role'] = 'assistant'
     >>> msg['role']
     'assistant'
+    >>> tool_call = Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))
+    >>> msg = Message(role='user', content='hello')
+    >>> msg['tool_calls'] = [tool_call]
+    >>> msg['tool_calls'][0]['function']['name']
+    'foo'
     """
     setattr(self, key, value)
 
