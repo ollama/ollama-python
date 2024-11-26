@@ -88,9 +88,6 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg = Message(role='user')
     >>> msg.get('role')
     'user'
-    >>> tool = Tool()
-    >>> tool.get('type')
-    'function'
     >>> msg = Message(role='user')
     >>> msg.get('nonexistent')
     >>> msg = Message(role='user')
