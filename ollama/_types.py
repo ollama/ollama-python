@@ -21,9 +21,6 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg = Message(role='user')
     >>> msg['role']
     'user'
-    >>> tool = Tool()
-    >>> tool['type']
-    'function'
     >>> msg = Message(role='user')
     >>> msg['nonexistent']
     Traceback (most recent call last):
