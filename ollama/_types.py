@@ -166,9 +166,14 @@ class Image(BaseModel):
       return b64encode(self.value.read_bytes() if isinstance(self.value, Path) else self.value).decode()
 
     if isinstance(self.value, str):
-      if Path(self.value).exists():
-        return b64encode(Path(self.value).read_bytes()).decode()
+      try:
+        if Path(self.value).exists():
+          return b64encode(Path(self.value).read_bytes()).decode()
+      except Exception:
+        # Long base64 string can't be wrapped in Path, so try to treat as base64 string
+        pass
 
+      # String might be a file path, but might not exist
       if self.value.split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp'):
         raise ValueError(f'File {self.value} does not exist')
 
