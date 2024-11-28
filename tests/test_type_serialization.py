@@ -19,6 +19,12 @@ def test_image_serialization_base64_string():
   assert img.model_dump() == b64_str  # Should return as-is if valid base64
 
 
+def test_image_serialization_long_base64_string():
+  b64_str = 'dGVzdCBiYXNlNjQgc3RyaW5n' * 1000
+  img = Image(value=b64_str)
+  assert img.model_dump() == b64_str  # Should return as-is if valid base64
+
+
 def test_image_serialization_plain_string():
   img = Image(value='not a path or base64')
   assert img.model_dump() == 'not a path or base64'  # Should return as-is
