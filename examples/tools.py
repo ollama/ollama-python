@@ -40,8 +40,8 @@ subtract_two_numbers_tool = {
   },
 }
 
-prompt = 'What is three plus one?'
-print('Prompt:', prompt)
+messages = [{'role': 'user', 'content': 'What is three plus one?'}]
+print('Prompt:', messages[0]['content'])
 
 available_functions = {
   'add_two_numbers': add_two_numbers,
@@ -50,7 +50,7 @@ available_functions = {
 
 response: ChatResponse = chat(
   'llama3.1',
-  messages=[{'role': 'user', 'content': prompt}],
+  messages=messages,
   tools=[add_two_numbers, subtract_two_numbers_tool],
 )
 
@@ -61,6 +61,20 @@ if response.message.tool_calls:
     if function_to_call := available_functions.get(tool.function.name):
       print('Calling function:', tool.function.name)
       print('Arguments:', tool.function.arguments)
-      print('Function output:', function_to_call(**tool.function.arguments))
+      output = function_to_call(**tool.function.arguments)
+      print('Function output:', output)
     else:
       print('Function', tool.function.name, 'not found')
+
+# Only needed to chat with the model using the tool call results
+if response.message.tool_calls:
+  # Add the function response to messages for the model to use
+  messages.append(response.message)
+  messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
+
+  # Get final response from model with function outputs
+  final_response = chat('llama3.1', messages=messages)
+  print('Final response:', final_response.message.content)
+
+else:
+  print('No tool calls returned from model')
