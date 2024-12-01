@@ -23,6 +23,8 @@ from typing import (
 
 import sys
 
+from pydantic import BaseModel
+
 
 from ollama._utils import convert_function_to_tool
 
@@ -265,7 +267,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -278,7 +280,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Iterator[ChatResponse]: ...
@@ -290,7 +292,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
@@ -327,8 +329,8 @@ class Client(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
-
-    return self._request(
+    is_base_model = isinstance(format, Type) and issubclass(format, BaseModel)
+    response = self._request(
       ChatResponse,
       'POST',
       '/api/chat',
@@ -337,12 +339,15 @@ class Client(BaseClient):
         messages=[message for message in _copy_messages(messages)],
         tools=[tool for tool in _copy_tools(tools)],
         stream=stream,
-        format=format,
+        format=format.model_json_schema() if is_base_model else format,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
+    if is_base_model and not stream:
+      response.message.model = format.model_validate_json(response.message.content)
+    return response
 
   def embed(
     self,
@@ -767,7 +772,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -780,7 +785,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[ChatResponse]: ...
@@ -792,7 +797,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
@@ -839,7 +844,7 @@ class AsyncClient(BaseClient):
         messages=[message for message in _copy_messages(messages)],
         tools=[tool for tool in _copy_tools(tools)],
         stream=stream,
-        format=format,
+        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
