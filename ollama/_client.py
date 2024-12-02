@@ -329,8 +329,7 @@ class Client(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
-    is_base_model = isinstance(format, Type) and issubclass(format, BaseModel)
-    response = self._request(
+    return self._request(
       ChatResponse,
       'POST',
       '/api/chat',
@@ -339,15 +338,12 @@ class Client(BaseClient):
         messages=[message for message in _copy_messages(messages)],
         tools=[tool for tool in _copy_tools(tools)],
         stream=stream,
-        format=format.model_json_schema() if is_base_model else format,
+        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
-    if is_base_model and not stream:
-      response.message.model = format.model_validate_json(response.message.content)
-    return response
 
   def embed(
     self,
