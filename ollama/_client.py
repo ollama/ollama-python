@@ -23,6 +23,8 @@ from typing import (
 
 import sys
 
+from pydantic.json_schema import JsonSchemaValue
+
 
 from ollama._utils import convert_function_to_tool
 
@@ -186,7 +188,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -204,7 +206,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -221,7 +223,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: Optional[bool] = None,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -265,7 +267,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -278,7 +280,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Iterator[ChatResponse]: ...
@@ -290,7 +292,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
@@ -327,7 +329,6 @@ class Client(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
-
     return self._request(
       ChatResponse,
       'POST',
@@ -689,7 +690,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -707,7 +708,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -724,7 +725,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: Optional[bool] = None,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -767,7 +768,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -780,7 +781,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[ChatResponse]: ...
@@ -792,7 +793,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Literal['', 'json']] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
