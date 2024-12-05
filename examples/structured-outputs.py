@@ -26,4 +26,4 @@ response = chat(
 
 # Use Pydantic to validate the response
 friends_response = FriendList.model_validate_json(response.message.content)
-print('\n', friends_response, '\n')
+print(friends_response)
