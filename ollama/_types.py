@@ -2,7 +2,7 @@ import json
 from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Mapping, Optional, Type, Union, Sequence
+from typing import Any, Mapping, Optional, Union, Sequence
 
 from typing_extensions import Annotated, Literal
 
@@ -273,8 +273,6 @@ class Message(SubscriptableBaseModel):
 
   Valid image formats depend on the model. See the model card for more information.
   """
-  model: Optional[Type[BaseModel]] = None
-  'Pydantic model used to validate the response.'
 
   class ToolCall(SubscriptableBaseModel):
     """

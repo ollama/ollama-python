@@ -327,6 +327,108 @@ def test_client_generate_images(httpserver: HTTPServer):
     assert response['response'] == 'Because it is.'
 
 
+def test_client_generate_format_json(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'format': 'json',
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '{"answer": "Because of Rayleigh scattering"}',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Why is the sky blue?', format='json')
+  assert response['model'] == 'dummy'
+  assert response['response'] == '{"answer": "Because of Rayleigh scattering"}'
+
+
+def test_client_generate_format_pydantic(httpserver: HTTPServer):
+  class ResponseFormat(BaseModel):
+    answer: str
+    confidence: float
+
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'format': {'title': 'ResponseFormat', 'type': 'object', 'properties': {'answer': {'title': 'Answer', 'type': 'string'}, 'confidence': {'title': 'Confidence', 'type': 'number'}}, 'required': ['answer', 'confidence']},
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat)
+  assert response['model'] == 'dummy'
+  assert response['response'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
+
+
+@pytest.mark.asyncio
+async def test_async_client_generate_format_json(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'format': 'json',
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '{"answer": "Because of Rayleigh scattering"}',
+    }
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.generate('dummy', 'Why is the sky blue?', format='json')
+  assert response['model'] == 'dummy'
+  assert response['response'] == '{"answer": "Because of Rayleigh scattering"}'
+
+
+@pytest.mark.asyncio
+async def test_async_client_generate_format_pydantic(httpserver: HTTPServer):
+  class ResponseFormat(BaseModel):
+    answer: str
+    confidence: float
+
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'format': {'title': 'ResponseFormat', 'type': 'object', 'properties': {'answer': {'title': 'Answer', 'type': 'string'}, 'confidence': {'title': 'Confidence', 'type': 'number'}}, 'required': ['answer', 'confidence']},
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}',
+    }
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat)
+  assert response['model'] == 'dummy'
+  assert response['response'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
+
+
 def test_client_pull(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/pull',
