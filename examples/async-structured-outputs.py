@@ -3,8 +3,7 @@ from ollama import AsyncClient
 import asyncio
 
 
-# Using Pydantic
-## Define the schema for the response
+# Define the schema for the response
 class FriendInfo(BaseModel):
   name: str
   age: int
@@ -24,8 +23,8 @@ async def main():
     options={'temperature': 0},  # Make responses more deterministic
   )
 
-  ## Use Pydantic to validate the response
-  friends_response = FriendList.model_validate_json(response['message']['content'])
+  # Use Pydantic to validate the response
+  friends_response = FriendList.model_validate_json(response.message.content)
   print(friends_response)
 
 
