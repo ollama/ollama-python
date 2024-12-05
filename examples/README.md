@@ -32,6 +32,7 @@ python3 examples/<example>.py
 
 ### Structured Outputs - Generate structured outputs with a model
 - [structured-outputs.py](structured-outputs.py)
+- [async-structured-outputs.py](async-structured-outputs.py)
 - [structured-outputs-image.py](structured-outputs-image.py)
 
 

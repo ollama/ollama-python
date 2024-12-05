@@ -23,7 +23,7 @@ from typing import (
 
 import sys
 
-from pydantic import BaseModel
+from pydantic.json_schema import JsonSchemaValue
 
 
 from ollama._utils import convert_function_to_tool
@@ -188,7 +188,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -206,7 +206,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -223,7 +223,7 @@ class Client(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -251,7 +251,7 @@ class Client(BaseClient):
         context=context,
         stream=stream,
         raw=raw,
-        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
+        format=format,
         images=[Image(value=image) for image in images] if images else None,
         options=options,
         keep_alive=keep_alive,
@@ -267,7 +267,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -280,7 +280,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Iterator[ChatResponse]: ...
@@ -292,7 +292,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
@@ -338,7 +338,7 @@ class Client(BaseClient):
         messages=[message for message in _copy_messages(messages)],
         tools=[tool for tool in _copy_tools(tools)],
         stream=stream,
-        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
+        format=format,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -690,7 +690,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -708,7 +708,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -725,7 +725,7 @@ class AsyncClient(BaseClient):
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
     raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -752,7 +752,7 @@ class AsyncClient(BaseClient):
         context=context,
         stream=stream,
         raw=raw,
-        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
+        format=format,
         images=[Image(value=image) for image in images] if images else None,
         options=options,
         keep_alive=keep_alive,
@@ -768,7 +768,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -781,7 +781,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[ChatResponse]: ...
@@ -793,7 +793,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    format: Optional[Union[Literal['', 'json'], Type[BaseModel]]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
@@ -840,7 +840,7 @@ class AsyncClient(BaseClient):
         messages=[message for message in _copy_messages(messages)],
         tools=[tool for tool in _copy_tools(tools)],
         stream=stream,
-        format=format.model_json_schema() if isinstance(format, Type) and issubclass(format, BaseModel) else format,
+        format=format,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),

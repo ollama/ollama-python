@@ -4,6 +4,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import Any, Mapping, Optional, Union, Sequence
 
+from pydantic.json_schema import JsonSchemaValue
 from typing_extensions import Annotated, Literal
 
 from pydantic import (
@@ -150,7 +151,7 @@ class BaseGenerateRequest(BaseStreamableRequest):
   options: Optional[Union[Mapping[str, Any], Options]] = None
   'Options to use for the request.'
 
-  format: Optional[Union[Literal['', 'json'], dict]] = None
+  format: Optional[Union[Literal['json'], JsonSchemaValue]] = None
   'Format of the response.'
 
   keep_alive: Optional[Union[float, str]] = None

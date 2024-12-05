@@ -33,7 +33,7 @@ if not path.exists():
 # Set up chat as usual
 response = chat(
   model='llama3.2-vision',
-  format=ImageDescription,  # Pass in the schema for the response
+  format=ImageDescription.model_json_schema(),  # Pass in the schema for the response
   messages=[
     {
       'role': 'user',

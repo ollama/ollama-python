@@ -176,7 +176,7 @@ def test_client_chat_format_pydantic(httpserver: HTTPServer):
   )
 
   client = Client(httpserver.url_for('/'))
-  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], format=ResponseFormat)
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], format=ResponseFormat.model_json_schema())
   assert response['model'] == 'dummy'
   assert response['message']['role'] == 'assistant'
   assert response['message']['content'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
@@ -238,7 +238,7 @@ async def test_async_client_chat_format_pydantic(httpserver: HTTPServer):
   )
 
   client = AsyncClient(httpserver.url_for('/'))
-  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], format=ResponseFormat)
+  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], format=ResponseFormat.model_json_schema())
   assert response['model'] == 'dummy'
   assert response['message']['role'] == 'assistant'
   assert response['message']['content'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
@@ -372,7 +372,7 @@ def test_client_generate_format_pydantic(httpserver: HTTPServer):
   )
 
   client = Client(httpserver.url_for('/'))
-  response = client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat)
+  response = client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat.model_json_schema())
   assert response['model'] == 'dummy'
   assert response['response'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
 
@@ -424,7 +424,7 @@ async def test_async_client_generate_format_pydantic(httpserver: HTTPServer):
   )
 
   client = AsyncClient(httpserver.url_for('/'))
-  response = await client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat)
+  response = await client.generate('dummy', 'Why is the sky blue?', format=ResponseFormat.model_json_schema())
   assert response['model'] == 'dummy'
   assert response['response'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
 
