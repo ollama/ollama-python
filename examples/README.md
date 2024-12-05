@@ -30,6 +30,11 @@ python3 examples/<example>.py
 - [multimodal_generate.py](multimodal_generate.py)
 
 
+### Structured Outputs - Generate structured outputs with a model
+- [structured-outputs.py](structured-outputs.py)
+- [structured-outputs-image.py](structured-outputs-image.py)
+
+
 ### Ollama List - List all downloaded models and their properties
 - [list.py](list.py)
 
