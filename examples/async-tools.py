@@ -41,33 +41,39 @@ subtract_two_numbers_tool = {
   },
 }
 
-messages = [{'role': 'user', 'content': 'What is three plus one?'}]
-print('Prompt:', messages[0]['content'])
-
 available_functions = {
   'add_two_numbers': add_two_numbers,
   'subtract_two_numbers': subtract_two_numbers,
 }
 
+messages = [{'role': 'user', 'content': 'What is three plus one minus two ?'}]
+print('Prompt:', messages[0]['content'])
+
 
 async def main():
+  model_name = 'llama3.2'
   client = ollama.AsyncClient()
 
   response: ChatResponse = await client.chat(
-    'llama3.1',
+    model_name,
     messages=messages,
     tools=[add_two_numbers, subtract_two_numbers_tool],
   )
 
   if response.message.tool_calls:
     # There may be multiple tool calls in the response
+    calls = []
     for tool in response.message.tool_calls:
       # Ensure the function is available, and then call it
       if function_to_call := available_functions.get(tool.function.name):
         print('Calling function:', tool.function.name)
         print('Arguments:', tool.function.arguments)
-        output = function_to_call(**tool.function.arguments)
-        print('Function output:', output)
+        call = {
+            'function': tool.function.name,
+            'output': function_to_call(**tool.function.arguments)
+        }
+        print('Function called:', call)
+        calls.append(call)
       else:
         print('Function', tool.function.name, 'not found')
 
@@ -75,10 +81,11 @@ async def main():
   if response.message.tool_calls:
     # Add the function response to messages for the model to use
     messages.append(response.message)
-    messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
+    for call in calls:
+        messages.append({'role': 'tool', 'content': str(call['output']), 'name': call['function']})
 
     # Get final response from model with function outputs
-    final_response = await client.chat('llama3.1', messages=messages)
+    final_response = await client.chat(model_name, messages=messages)
     print('Final response:', final_response.message.content)
 
   else:
