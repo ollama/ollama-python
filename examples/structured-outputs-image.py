@@ -2,14 +2,13 @@ from pathlib import Path
 from pydantic import BaseModel
 from typing import List, Optional, Literal
 from ollama import chat
-from rich import print
 
 
 # Define the schema for image objects
 class Object(BaseModel):
   name: str
   confidence: float
-  attributes: Optional[dict] = None
+  attributes: str
 
 
 class ImageDescription(BaseModel):
