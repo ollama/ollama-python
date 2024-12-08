@@ -151,7 +151,7 @@ class BaseGenerateRequest(BaseStreamableRequest):
   options: Optional[Union[Mapping[str, Any], Options]] = None
   'Options to use for the request.'
 
-  format: Optional[Union[Literal['','json'], JsonSchemaValue]] = None
+  format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None
   'Format of the response.'
 
   keep_alive: Optional[Union[float, str]] = None
