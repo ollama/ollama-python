@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from ollama import AsyncClient
+from typing import List
 import asyncio
 
 
@@ -11,7 +12,7 @@ class FriendInfo(BaseModel):
 
 
 class FriendList(BaseModel):
-  friends: list[FriendInfo]
+  friends: List[FriendInfo]
 
 
 async def main():
