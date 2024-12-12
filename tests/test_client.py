@@ -1179,7 +1179,7 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
 
 @pytest.mark.asyncio
 async def test_async_client_delete(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
+  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='POST').respond_with_response(Response(status=200))
   client = AsyncClient(httpserver.url_for('/api/delete'))
   response = await client.delete('dummy')
   assert response['status'] == 'success'
