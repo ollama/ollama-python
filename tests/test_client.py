@@ -700,7 +700,7 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
 
 
 def test_client_delete(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
+  httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='POST').respond_with_response(Response(status=200))
   client = Client(httpserver.url_for('/api/delete'))
   response = client.delete('dummy')
   assert response['status'] == 'success'

@@ -571,7 +571,7 @@ class Client(BaseClient):
 
   def delete(self, model: str) -> StatusResponse:
     r = self._request_raw(
-      'DELETE',
+      'POST',
       '/api/delete',
       json=DeleteRequest(
         model=model,
