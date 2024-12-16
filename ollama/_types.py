@@ -494,6 +494,24 @@ class ProcessResponse(SubscriptableBaseModel):
   models: Sequence[Model]
 
 
+class TokenizeRequest(BaseRequest):
+  model: str
+  text: str
+
+
+class TokenizeResponse(BaseGenerateResponse):
+  tokens: Sequence[int]
+
+
+class DetokenizeRequest(BaseRequest):
+  model: str
+  tokens: Sequence[int]
+
+
+class DetokenizeResponse(BaseGenerateResponse):
+  text: str
+
+
 class RequestError(Exception):
   """
   Common class for request errors.
