@@ -34,3 +34,24 @@ jobs:
           name: pytest-results-${{ matrix.python-version }}
           path: junit/test-results-${{ matrix.python-version }}.xml
         if: ${{ always() }}
+
+  test-live:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - run: pipx install poetry
+      - uses: actions/setup-python@v5
+        with:
+          python-version: 3.12
+          cache: poetry
+
+      - run: poetry install --with=dev
+
+      - uses: pydantic/ollama-action@v3
+        with:
+          model: qwen2:0.5b
+
+      - run: poetry run pytest tests/test_live.py -v --durations=100
+        env:
+          OLLAMA_TEST_LIVE: "1"
