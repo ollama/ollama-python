@@ -1,6 +1,7 @@
 import asyncio
-from ollama import ChatResponse
+
 import ollama
+from ollama import ChatResponse
 
 
 def add_two_numbers(a: int, b: int) -> int:

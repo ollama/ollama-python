@@ -1,6 +1,8 @@
 from pathlib import Path
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+
 from ollama import chat
 
 

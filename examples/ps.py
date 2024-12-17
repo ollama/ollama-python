@@ -1,5 +1,4 @@
-from ollama import ps, pull, chat
-from ollama import ProcessResponse
+from ollama import ProcessResponse, chat, ps, pull
 
 # Ensure at least one model is loaded
 response = pull('llama3.2', stream=True)

@@ -1,5 +1,6 @@
-from ollama import chat
 from pydantic import BaseModel
+
+from ollama import chat
 
 
 # Define the schema for the response
