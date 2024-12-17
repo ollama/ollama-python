@@ -36,6 +36,10 @@ python3 examples/<example>.py
 - [structured-outputs-image.py](structured-outputs-image.py)
 
 
+### Tokenization - Tokenize and detokenize text with a model
+- [tokenization.py](tokenization.py)
+
+
 ### Ollama List - List all downloaded models and their properties
 - [list.py](list.py)
 

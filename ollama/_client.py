@@ -48,6 +48,8 @@ from ollama._types import (
   CreateRequest,
   CopyRequest,
   DeleteRequest,
+  DetokenizeRequest,
+  DetokenizeResponse,
   EmbedRequest,
   EmbedResponse,
   EmbeddingsRequest,
@@ -67,6 +69,8 @@ from ollama._types import (
   ShowRequest,
   ShowResponse,
   StatusResponse,
+  TokenizeRequest,
+  TokenizeResponse,
   Tool,
 )
 
@@ -611,6 +615,28 @@ class Client(BaseClient):
       '/api/ps',
     )
 
+  def tokenize(self, model: str, text: str) -> TokenizeResponse:
+    return self._request(
+      TokenizeResponse,
+      'POST',
+      '/api/tokenize',
+      json=TokenizeRequest(
+        model=model,
+        text=text,
+      ).model_dump(exclude_none=True),
+    )
+
+  def detokenize(self, model: str, tokens: Sequence[int]) -> DetokenizeResponse:
+    return self._request(
+      DetokenizeResponse,
+      'POST',
+      '/api/detokenize',
+      json=DetokenizeRequest(
+        model=model,
+        tokens=tokens,
+      ).model_dump(exclude_none=True),
+    )
+
 
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
@@ -1118,6 +1144,28 @@ class AsyncClient(BaseClient):
       ProcessResponse,
       'GET',
       '/api/ps',
+    )
+
+  async def tokenize(self, model: str, text: str) -> TokenizeResponse:
+    return await self._request(
+      TokenizeResponse,
+      'POST',
+      '/api/tokenize',
+      json=TokenizeRequest(
+        model=model,
+        text=text,
+      ).model_dump(exclude_none=True),
+    )
+
+  async def detokenize(self, model: str, tokens: Sequence[int]) -> DetokenizeResponse:
+    return await self._request(
+      DetokenizeResponse,
+      'POST',
+      '/api/detokenize',
+      json=DetokenizeRequest(
+        model=model,
+        tokens=tokens,
+      ).model_dump(exclude_none=True),
     )
 
 
