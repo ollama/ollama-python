@@ -2,7 +2,7 @@ import asyncio
 
 from pydantic import BaseModel
 
-from ollama import AsyncClient
+import ollama
 
 
 # Define the schema for the response
@@ -17,7 +17,7 @@ class FriendList(BaseModel):
 
 
 async def main():
-  client = AsyncClient()
+  client = ollama.AsyncClient()
   response = await client.chat(
     model='llama3.1:8b',
     messages=[{'role': 'user', 'content': 'I have two friends. The first is Ollama 22 years old busy saving the world, and the second is Alonso 23 years old and wants to hang out. Return a list of friends in JSON format'}],

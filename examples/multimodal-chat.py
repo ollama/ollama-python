@@ -1,4 +1,4 @@
-from ollama import chat
+import ollama
 
 # from pathlib import Path
 
@@ -10,7 +10,7 @@ path = input('Please enter the path to the image: ')
 # or the raw bytes
 # img = Path(path).read_bytes()
 
-response = chat(
+response = ollama.chat(
   model='llama3.2-vision',
   messages=[
     {

@@ -1,7 +1,6 @@
 import asyncio
 
 import ollama
-from ollama import ChatResponse
 
 
 def add_two_numbers(a: int, b: int) -> int:
@@ -54,7 +53,7 @@ available_functions = {
 async def main():
   client = ollama.AsyncClient()
 
-  response: ChatResponse = await client.chat(
+  response: ollama.ChatResponse = await client.chat(
     'llama3.1',
     messages=messages,
     tools=[add_two_numbers, subtract_two_numbers_tool],
