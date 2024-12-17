@@ -88,7 +88,11 @@ def test_client_chat_stream(httpserver: HTTPServer):
     assert part['message']['content'] == next(it)
 
 
-def test_client_chat_images(httpserver: HTTPServer):
+@pytest.mark.parametrize('messages_style', ('dict', 'model'))
+@pytest.mark.parametrize('file_style', ('path', 'bytes'))
+def test_client_chat_images(httpserver: HTTPServer, messages_style: str, file_style: str, tmp_path):
+  from ollama._types import Message, Image
+
   httpserver.expect_ordered_request(
     '/api/chat',
     method='POST',
@@ -116,10 +120,19 @@ def test_client_chat_images(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
 
-  response = client.chat(
-    'dummy',
-    messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': [PNG_BYTES]}],
-  )
+  if file_style == 'bytes':
+    image_content = PNG_BYTES
+  elif file_style == 'path':
+    image_path = tmp_path / 'transparent.png'
+    image_path.write_bytes(PNG_BYTES)
+    image_content = str(image_path)
+
+  if messages_style:
+    messages = [Message(role='user', content='Why is the sky blue?', images=[Image(value=image_content)])]
+  else:
+    messages = [{'role': 'user', 'content': 'Why is the sky blue?', 'images': [image_content]}]
+
+  response = client.chat('dummy', messages=messages)
   assert response['model'] == 'dummy'
   assert response['message']['role'] == 'assistant'
   assert response['message']['content'] == "I don't know."

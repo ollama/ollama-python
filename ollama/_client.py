@@ -12,6 +12,7 @@ from typing import (
   Any,
   Callable,
   Literal,
+  List,
   Mapping,
   Optional,
   Sequence,
@@ -1121,10 +1122,14 @@ class AsyncClient(BaseClient):
     )
 
 
+def _massage_images(imagelikes: Sequence[Union[Image, Any]]) -> List[Image]:
+  return [image if isinstance(image, Image) else Image(value=image) for image in imagelikes]
+
+
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: [Image(value=image) for image in v] if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: _massage_images(v) if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
