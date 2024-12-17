@@ -1,4 +1,5 @@
 from ollama import chat
+
 # from pathlib import Path
 
 # Pass in the path to the image

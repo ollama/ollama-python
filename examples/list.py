@@ -1,5 +1,4 @@
-from ollama import list
-from ollama import ListResponse
+from ollama import ListResponse, list
 
 response: ListResponse = list()
 

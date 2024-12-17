@@ -2,7 +2,6 @@ import sys
 
 from ollama import create
 
-
 args = sys.argv[1:]
 if len(args) == 2:
   # create from local file

@@ -1,6 +1,6 @@
 from tqdm import tqdm
-from ollama import pull
 
+from ollama import pull
 
 current_digest, bars = '', {}
 for progress in pull('llama3.2', stream=True):
