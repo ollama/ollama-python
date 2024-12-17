@@ -1,4 +1,4 @@
-from ollama import chat
+import ollama
 
 messages = [
   {
@@ -7,7 +7,7 @@ messages = [
   },
 ]
 
-for part in chat('llama3.2', messages=messages, stream=True):
+for part in ollama.chat('llama3.2', messages=messages, stream=True):
   print(part['message']['content'], end='', flush=True)
 
 print()
