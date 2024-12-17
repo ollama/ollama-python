@@ -2,6 +2,7 @@ from ollama._client import Client, AsyncClient
 from ollama._types import (
   Options,
   Message,
+  Image,
   Tool,
   GenerateResponse,
   ChatResponse,
@@ -21,6 +22,7 @@ __all__ = [
   'AsyncClient',
   'Options',
   'Message',
+  'Image',
   'Tool',
   'GenerateResponse',
   'ChatResponse',
