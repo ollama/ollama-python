@@ -40,10 +40,10 @@ select = [
   "E", # pycodestyle errors
   "F", # pyflakes
   "B", # bugbear (likely bugs)
+  "I", # sort imports
+  "RUF022", # sort __all__
 ]
 ignore = [
-  "E111", # indentation not a multiple of four
-  "E114", # indentation not a multiple of four
   "E501", # line too long
 ]
 

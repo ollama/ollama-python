@@ -1,5 +1,4 @@
-from ollama import chat
-from ollama import ChatResponse
+from ollama import ChatResponse, chat
 
 
 def add_two_numbers(a: int, b: int) -> int:

@@ -2,7 +2,6 @@ import json
 import sys
 from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
 
-
 from ollama._utils import convert_function_to_tool
 
 
@@ -118,7 +117,7 @@ def test_function_with_all_types():
 
 
 def test_function_docstring_parsing():
-  from typing import List, Dict, Any
+  from typing import Any, Dict, List
 
   def func_with_complex_docs(x: int, y: List[str]) -> Dict[str, Any]:
     """

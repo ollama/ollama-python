@@ -1,14 +1,15 @@
 import base64
-import os
 import json
-from pydantic import ValidationError, BaseModel
-import pytest
+import os
 import tempfile
 from pathlib import Path
+
+import pytest
+from pydantic import BaseModel, ValidationError
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
-from ollama._client import Client, AsyncClient, _copy_tools
+from ollama._client import AsyncClient, Client, _copy_tools
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -91,7 +92,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
 @pytest.mark.parametrize('message_format', ('dict', 'pydantic_model'))
 @pytest.mark.parametrize('file_style', ('path', 'bytes'))
 def test_client_chat_images(httpserver: HTTPServer, message_format: str, file_style: str, tmp_path):
-  from ollama._types import Message, Image
+  from ollama._types import Image, Message
 
   httpserver.expect_ordered_request(
     '/api/chat',
