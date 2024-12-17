@@ -1,9 +1,9 @@
-import sys
 import random
+import sys
+
 import httpx
 
-from ollama import generate
-
+import ollama
 
 latest = httpx.get('https://xkcd.com/info.0.json')
 latest.raise_for_status()
@@ -23,7 +23,7 @@ print('---')
 raw = httpx.get(comic.json().get('img'))
 raw.raise_for_status()
 
-for response in generate('llava', 'explain this comic:', images=[raw.content], stream=True):
+for response in ollama.generate('llava', 'explain this comic:', images=[raw.content], stream=True):
   print(response['response'], end='', flush=True)
 
 print()

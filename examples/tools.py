@@ -1,5 +1,4 @@
-from ollama import chat
-from ollama import ChatResponse
+import ollama
 
 
 def add_two_numbers(a: int, b: int) -> int:
@@ -48,7 +47,7 @@ available_functions = {
   'subtract_two_numbers': subtract_two_numbers,
 }
 
-response: ChatResponse = chat(
+response: ollama.ChatResponse = ollama.chat(
   'llama3.1',
   messages=messages,
   tools=[add_two_numbers, subtract_two_numbers_tool],
@@ -73,7 +72,7 @@ if response.message.tool_calls:
   messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
 
   # Get final response from model with function outputs
-  final_response = chat('llama3.1', messages=messages)
+  final_response = ollama.chat('llama3.1', messages=messages)
   print('Final response:', final_response.message.content)
 
 else:

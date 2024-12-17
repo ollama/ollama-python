@@ -1,7 +1,9 @@
 from pathlib import Path
+from typing import List, Literal, Optional
+
 from pydantic import BaseModel
-from typing import List, Optional, Literal
-from ollama import chat
+
+import ollama
 
 
 # Define the schema for image objects
@@ -30,7 +32,7 @@ if not path.exists():
   raise FileNotFoundError(f'Image not found at: {path}')
 
 # Set up chat as usual
-response = chat(
+response = ollama.chat(
   model='llama3.2-vision',
   format=ImageDescription.model_json_schema(),  # Pass in the schema for the response
   messages=[

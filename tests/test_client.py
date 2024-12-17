@@ -1,15 +1,16 @@
-import os
 import io
 import json
-from pydantic import ValidationError, BaseModel
-import pytest
+import os
 import tempfile
 from pathlib import Path
+
+import pytest
+from PIL import Image
+from pydantic import BaseModel, ValidationError
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
-from PIL import Image
 
-from ollama._client import Client, AsyncClient, _copy_tools
+from ollama._client import AsyncClient, Client, _copy_tools
 
 
 class PrefixPattern(URIPattern):

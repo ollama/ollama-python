@@ -17,10 +17,9 @@ pip install ollama
 ## Usage
 
 ```python
-from ollama import chat
-from ollama import ChatResponse
+import ollama
 
-response: ChatResponse = chat(model='llama3.2', messages=[
+response: ollama.ChatResponse = ollama.chat(model='llama3.2', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -38,12 +37,12 @@ See [_types.py](ollama/_types.py) for more information on the response types.
 Response streaming can be enabled by setting `stream=True`.
 
 ```python
-from ollama import chat
+import ollama
 
-stream = chat(
-    model='llama3.2',
-    messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
-    stream=True,
+stream = ollama.chat(
+  model='llama3.2',
+  messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
+  stream=True,
 )
 
 for chunk in stream:
@@ -56,8 +55,9 @@ A custom client can be created by instantiating `Client` or `AsyncClient` from `
 All extra keyword arguments are passed into the [`httpx.Client`](https://www.python-httpx.org/api/#client).
 
 ```python
-from ollama import Client
-client = Client(
+import ollama
+
+client = ollama.Client(
   host='http://localhost:11434',
   headers={'x-some-header': 'some-value'}
 )
@@ -75,11 +75,12 @@ The `AsyncClient` class is used to make asynchronous requests. It can be configu
 
 ```python
 import asyncio
-from ollama import AsyncClient
+import ollama
+
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='llama3.2', messages=[message])
+  response = await ollama.AsyncClient().chat(model='llama3.2', messages=[message])
 
 asyncio.run(chat())
 ```
@@ -88,11 +89,11 @@ Setting `stream=True` modifies functions to return a Python asynchronous generat
 
 ```python
 import asyncio
-from ollama import AsyncClient
+import ollama
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='llama3.2', messages=[message], stream=True):
+  async for part in await ollama.AsyncClient().chat(model='llama3.2', messages=[message], stream=True):
     print(part['message']['content'], end='', flush=True)
 
 asyncio.run(chat())
