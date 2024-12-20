@@ -1260,3 +1260,27 @@ def test_tool_validation():
   with pytest.raises(ValidationError):
     invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
     list(_copy_tools([invalid_tool]))
+
+
+def test_client_tokenize(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/tokenize',
+    method='POST',
+    json={'model': 'dummy', 'text': 'Hello world!'},
+  ).respond_with_json({'tokens': [1, 2, 3]})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.tokenize('dummy', 'Hello world!')
+  assert response.tokens == [1, 2, 3]
+
+
+def test_client_detokenize(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/detokenize',
+    method='POST',
+    json={'model': 'dummy', 'tokens': [1, 2, 3]},
+  ).respond_with_json({'text': 'Hello world!'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.detokenize('dummy', [1, 2, 3])
+  assert response.text == 'Hello world!'
