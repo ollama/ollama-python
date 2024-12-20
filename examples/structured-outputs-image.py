@@ -1,6 +1,6 @@
 from pathlib import Path
 from pydantic import BaseModel
-from typing import List, Optional, Literal
+from typing import Optional, Literal
 from ollama import chat
 
 
@@ -13,9 +13,9 @@ class Object(BaseModel):
 
 class ImageDescription(BaseModel):
   summary: str
-  objects: List[Object]
+  objects: list[Object]
   scene: str
-  colors: List[str]
+  colors: list[str]
   time_of_day: Literal['Morning', 'Afternoon', 'Evening', 'Night']
   setting: Literal['Indoor', 'Outdoor', 'Unknown']
   text_content: Optional[str] = None
