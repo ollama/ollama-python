@@ -1,6 +1,6 @@
 from pathlib import Path
 from pydantic import BaseModel
-from typing import Optional, Literal
+from typing import Literal
 from ollama import chat
 
 
@@ -18,7 +18,7 @@ class ImageDescription(BaseModel):
   colors: list[str]
   time_of_day: Literal['Morning', 'Afternoon', 'Evening', 'Night']
   setting: Literal['Indoor', 'Outdoor', 'Unknown']
-  text_content: Optional[str] = None
+  text_content: str | None = None
 
 
 # Get path from user input
