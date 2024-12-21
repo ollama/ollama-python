@@ -190,7 +190,7 @@ class Client(BaseClient):
     stream: Literal[False] = False,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> GenerateResponse: ...
@@ -225,7 +225,7 @@ class Client(BaseClient):
     stream: bool = False,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
@@ -253,7 +253,7 @@ class Client(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[Image(value=image) for image in images] if images else None,
+        images=[image for image in _copy_images(images)] if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -692,7 +692,7 @@ class AsyncClient(BaseClient):
     stream: Literal[False] = False,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> GenerateResponse: ...
@@ -710,7 +710,7 @@ class AsyncClient(BaseClient):
     stream: Literal[True] = True,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[GenerateResponse]: ...
@@ -727,7 +727,7 @@ class AsyncClient(BaseClient):
     stream: bool = False,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
@@ -754,7 +754,7 @@ class AsyncClient(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[Image(value=image) for image in images] if images else None,
+        images=[image for image in _copy_images(images)] if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -1122,14 +1122,15 @@ class AsyncClient(BaseClient):
     )
 
 
-def _massage_images(imagelikes: Sequence[Union[Image, Any]]) -> List[Image]:
-  return [image if isinstance(image, Image) else Image(value=image) for image in imagelikes]
+def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
+  for image in images or []:
+    yield image if isinstance(image, Image) else Image(value=image)
 
 
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: _massage_images(v) if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: [image for image in _copy_images(v)] if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
