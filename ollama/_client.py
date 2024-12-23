@@ -189,7 +189,7 @@ class Client(BaseClient):
     stream: Literal[False] = False,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> GenerateResponse: ...
@@ -224,7 +224,7 @@ class Client(BaseClient):
     stream: bool = False,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
@@ -691,7 +691,7 @@ class AsyncClient(BaseClient):
     stream: Literal[False] = False,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> GenerateResponse: ...
@@ -709,7 +709,7 @@ class AsyncClient(BaseClient):
     stream: Literal[True] = True,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[GenerateResponse]: ...
@@ -726,7 +726,7 @@ class AsyncClient(BaseClient):
     stream: bool = False,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+    images: Optional[Sequence[Union[str, bytes]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
