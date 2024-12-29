@@ -122,7 +122,7 @@ class Client(BaseClient):
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
     except httpx.ConnectError:
-      raise ResponseError('Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download', 503) from None
+      raise ConnectionError('Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download') from None
 
   @overload
   def _request(
@@ -626,7 +626,7 @@ class AsyncClient(BaseClient):
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
     except httpx.ConnectError:
-      raise ResponseError('Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download', 503) from None
+      raise ConnectionError('Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download') from None
 
   @overload
   async def _request(
