@@ -535,3 +535,6 @@ class ResponseError(Exception):
 
     self.status_code = status_code
     'HTTP status code of the response.'
+
+  def __str__(self) -> str:
+    return f'{self.error} (status code: {self.status_code})'
