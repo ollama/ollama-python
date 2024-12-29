@@ -252,7 +252,7 @@ class Client(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[Image(value=image) for image in images] if images else None,
+        images=[image for image in _copy_images(images)] if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -753,7 +753,7 @@ class AsyncClient(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[Image(value=image) for image in images] if images else None,
+        images=[image for image in _copy_images(images)] if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -1121,10 +1121,15 @@ class AsyncClient(BaseClient):
     )
 
 
+def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
+  for image in images or []:
+    yield image if isinstance(image, Image) else Image(value=image)
+
+
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: [Image(value=image) for image in v] if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: [image for image in _copy_images(v)] if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
