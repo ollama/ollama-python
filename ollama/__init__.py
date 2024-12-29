@@ -13,6 +13,8 @@ from ollama._types import (
   ListResponse,
   ShowResponse,
   ProcessResponse,
+  TokenizeResponse,
+  DetokenizeResponse,
   RequestError,
   ResponseError,
 )
@@ -33,6 +35,8 @@ __all__ = [
   'ListResponse',
   'ShowResponse',
   'ProcessResponse',
+  'TokenizeResponse',
+  'DetokenizeResponse',
   'RequestError',
   'ResponseError',
 ]
@@ -51,3 +55,5 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+tokenize = _client.tokenize
+detokenize = _client.detokenize
