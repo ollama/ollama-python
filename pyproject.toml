@@ -36,8 +36,16 @@ quote-style = "single"
 indent-style = "space"
 
 [tool.ruff.lint]
-select = ["E", "F", "B"]
-ignore = ["E501"]
+select = [
+  "E", # pycodestyle errors
+  "F", # pyflakes
+  "B", # bugbear (likely bugs)
+]
+ignore = [
+  "E111", # indentation not a multiple of four
+  "E114", # indentation not a multiple of four
+  "E501", # line too long
+]
 
 [tool.pytest.ini_options]
 addopts = '--doctest-modules --ignore examples'
