@@ -74,48 +74,54 @@ from ollama._types import (
 T = TypeVar('T')
 
 
-class BaseClient:
+class Client:
+  @overload
   def __init__(
     self,
-    client,
     host: Optional[str] = None,
-    follow_redirects: bool = True,
+    *,
+    follow_redirects: Optional[bool] = None,
     timeout: Any = None,
     headers: Optional[Mapping[str, str]] = None,
-    **kwargs,
+    **httpx_kwargs: Any,
+  ) -> None: ...
+
+  @overload
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    *,
+    client: httpx.Client,
+    headers: Optional[Mapping[str, str]] = None,
+  ) -> None: ...
+
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    *,
+    client: Optional[httpx.Client] = None,
+    follow_redirects: Optional[bool] = None,
+    timeout: Any = None,
+    headers: Optional[Mapping[str, str]] = None,
+    **httpx_kwargs: Any,
   ) -> None:
-    """
-    Creates a httpx client. Default parameters are the same as those defined in httpx
-    except for the following:
-    - `follow_redirects`: True
-    - `timeout`: None
-    `kwargs` are passed to the httpx client.
-    """
+    self._host = _parse_host(host or os.getenv('OLLAMA_HOST'))
+    self._request_headers = _get_headers(headers)
+    if client:
+      assert follow_redirects is None, 'Cannot provide both `client` and `follow_redirects`'
+      assert timeout is None, 'Cannot provide both `client` and `timeout`'
+      assert not httpx_kwargs, 'Cannot provide both `client` and `httpx_kwargs`'
+      self._client = client
+    else:
+      self._client = httpx.Client(
+        follow_redirects=True if follow_redirects is None else follow_redirects,
+        timeout=timeout,
+        **httpx_kwargs,
+      )
 
-    self._client = client(
-      base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
-      follow_redirects=follow_redirects,
-      timeout=timeout,
-      # Lowercase all headers to ensure override
-      headers={
-        k.lower(): v
-        for k, v in {
-          **(headers or {}),
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
-        }.items()
-      },
-      **kwargs,
-    )
-
-
-class Client(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.Client, host, **kwargs)
-
-  def _request_raw(self, *args, **kwargs):
-    r = self._client.request(*args, **kwargs)
+  def _request_raw(self, method: str, path: str, **kwargs):
+    assert path.startswith('/'), 'path must start with "/"'
+    r = self._client.request(method, self._host + path, headers=self._request_headers, **kwargs)
     try:
       r.raise_for_status()
     except httpx.HTTPStatusError as e:
@@ -126,7 +132,9 @@ class Client(BaseClient):
   def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
+    *,
     stream: Literal[False] = False,
     **kwargs,
   ) -> T: ...
@@ -135,7 +143,9 @@ class Client(BaseClient):
   def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
+    *,
     stream: Literal[True] = True,
     **kwargs,
   ) -> Iterator[T]: ...
@@ -144,7 +154,9 @@ class Client(BaseClient):
   def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
+    *,
     stream: bool = False,
     **kwargs,
   ) -> Union[T, Iterator[T]]: ...
@@ -152,14 +164,16 @@ class Client(BaseClient):
   def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
     stream: bool = False,
     **kwargs,
   ) -> Union[T, Iterator[T]]:
     if stream:
 
       def inner():
-        with self._client.stream(*args, **kwargs) as r:
+        assert path.startswith('/'), 'path must start with "/"'
+        with self._client.stream(method, self._host + path, headers=self._request_headers, **kwargs) as r:
           try:
             r.raise_for_status()
           except httpx.HTTPStatusError as e:
@@ -174,7 +188,7 @@ class Client(BaseClient):
 
       return inner()
 
-    return cls(**self._request_raw(*args, **kwargs).json())
+    return cls(**self._request_raw(method, path, **kwargs).json())
 
   @overload
   def generate(
@@ -612,12 +626,54 @@ class Client(BaseClient):
     )
 
 
-class AsyncClient(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.AsyncClient, host, **kwargs)
+class AsyncClient:
+  @overload
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    *,
+    follow_redirects: Optional[bool] = None,
+    timeout: Any = None,
+    headers: Optional[Mapping[str, str]] = None,
+    **httpx_kwargs: Any,
+  ) -> None: ...
 
-  async def _request_raw(self, *args, **kwargs):
-    r = await self._client.request(*args, **kwargs)
+  @overload
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    *,
+    client: httpx.AsyncClient,
+    headers: Optional[Mapping[str, str]] = None,
+  ) -> None: ...
+
+  def __init__(
+    self,
+    host: Optional[str] = None,
+    *,
+    client: Optional[httpx.AsyncClient] = None,
+    follow_redirects: Optional[bool] = None,
+    timeout: Any = None,
+    headers: Optional[Mapping[str, str]] = None,
+    **httpx_kwargs: Any,
+  ) -> None:
+    self._host = _parse_host(host or os.getenv('OLLAMA_HOST'))
+    self._request_headers = _get_headers(headers)
+    if client:
+      assert follow_redirects is None, 'Cannot provide both `client` and `follow_redirects`'
+      assert timeout is None, 'Cannot provide both `client` and `timeout`'
+      assert not httpx_kwargs, 'Cannot provide both `client` and `httpx_kwargs`'
+      self._client = client
+    else:
+      self._client = httpx.AsyncClient(
+        follow_redirects=True if follow_redirects is None else follow_redirects,
+        timeout=timeout,
+        **httpx_kwargs,
+      )
+
+  async def _request_raw(self, method: str, path: str, **kwargs):
+    assert path.startswith('/'), 'path must start with "/"'
+    r = await self._client.request(method, self._host + path, headers=self._request_headers, **kwargs)
     try:
       r.raise_for_status()
     except httpx.HTTPStatusError as e:
@@ -628,7 +684,8 @@ class AsyncClient(BaseClient):
   async def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
     stream: Literal[False] = False,
     **kwargs,
   ) -> T: ...
@@ -637,7 +694,8 @@ class AsyncClient(BaseClient):
   async def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
     stream: Literal[True] = True,
     **kwargs,
   ) -> AsyncIterator[T]: ...
@@ -646,7 +704,8 @@ class AsyncClient(BaseClient):
   async def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
     stream: bool = False,
     **kwargs,
   ) -> Union[T, AsyncIterator[T]]: ...
@@ -654,14 +713,16 @@ class AsyncClient(BaseClient):
   async def _request(
     self,
     cls: Type[T],
-    *args,
+    method: str,
+    path: str,
     stream: bool = False,
     **kwargs,
   ) -> Union[T, AsyncIterator[T]]:
     if stream:
 
       async def inner():
-        async with self._client.stream(*args, **kwargs) as r:
+        assert path.startswith('/'), 'path must start with "/"'
+        async with self._client.stream(method, self._host + path, headers=self._request_headers, **kwargs) as r:
           try:
             r.raise_for_status()
           except httpx.HTTPStatusError as e:
@@ -676,7 +737,7 @@ class AsyncClient(BaseClient):
 
       return inner()
 
-    return cls(**(await self._request_raw(*args, **kwargs)).json())
+    return cls(**(await self._request_raw(method, path, **kwargs)).json())
 
   @overload
   async def generate(
@@ -1236,3 +1297,16 @@ def _parse_host(host: Optional[str]) -> str:
     return f'{scheme}://{host}:{port}/{path}'
 
   return f'{scheme}://{host}:{port}'
+
+
+def _get_headers(extra_headers: Optional[Mapping[str, str]] = None) -> Mapping[str, str]:
+  # Lowercase all headers to ensure override
+  return {
+    k.lower(): v
+    for k, v in {
+      **(extra_headers or {}),
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+    }.items()
+  }

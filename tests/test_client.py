@@ -1,6 +1,8 @@
 import base64
 import os
 import json
+from typing import Optional
+
 from pydantic import ValidationError, BaseModel
 import pytest
 import tempfile
@@ -1211,20 +1213,75 @@ async def test_async_client_copy(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-def test_headers():
-  client = Client()
-  assert client._client.headers['content-type'] == 'application/json'
-  assert client._client.headers['accept'] == 'application/json'
-  assert client._client.headers['user-agent'].startswith('ollama-python/')
+def custom_header_matcher(header_name: str, actual: Optional[str], expected: str) -> bool:
+  if header_name == 'User-Agent':
+    return actual.startswith(expected)
+  else:
+    return actual == expected
+
+
+def test_headers(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
+      'stream': False,
+    },
+    header_value_matcher=custom_header_matcher,
+    headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'User-Agent': 'ollama-python/'},
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+  assert response['model'] == 'dummy'
+  assert response['message']['role'] == 'assistant'
+  assert response['message']['content'] == "I don't know."
+
+
+def test_custom_headers(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
+      'stream': False,
+    },
+    header_value_matcher=custom_header_matcher,
+    headers={'Content-Type': 'application/json', 'Accept': 'application/json', 'User-Agent': 'ollama-python/', 'X-Custom': 'value'},
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
 
   client = Client(
+    httpserver.url_for('/'),
     headers={
       'X-Custom': 'value',
       'Content-Type': 'text/plain',
-    }
+    },
   )
-  assert client._client.headers['x-custom'] == 'value'
-  assert client._client.headers['content-type'] == 'application/json'
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+  assert response['model'] == 'dummy'
+  assert response['message']['role'] == 'assistant'
+  assert response['message']['content'] == "I don't know."
 
 
 def test_copy_tools():
