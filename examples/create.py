@@ -1,7 +1,6 @@
 import sys
 
-from ollama import create
-
+import ollama
 
 args = sys.argv[1:]
 if len(args) == 2:
@@ -26,5 +25,5 @@ PARAMETER num_ctx 4096
 SYSTEM You are Mario from super mario bros, acting as an assistant.
 """
 
-for response in create(model=args[0], modelfile=modelfile, stream=True):
+for response in ollama.create(model=args[0], modelfile=modelfile, stream=True):
   print(response['status'])

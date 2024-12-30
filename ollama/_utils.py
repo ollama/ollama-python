@@ -1,10 +1,12 @@
 from __future__ import annotations
-from collections import defaultdict
+
 import inspect
-from typing import Callable, Union
 import re
+from collections import defaultdict
+from typing import Callable, Union
 
 import pydantic
+
 from ollama._types import Tool
 
 

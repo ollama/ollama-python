@@ -1,13 +1,13 @@
-import os
 import io
-import json
-import platform
 import ipaddress
+import json
+import os
+import platform
+import sys
 import urllib.parse
+from hashlib import sha256
 from os import PathLike
 from pathlib import Path
-from hashlib import sha256
-
 from typing import (
   Any,
   Callable,
@@ -21,17 +21,14 @@ from typing import (
   overload,
 )
 
-import sys
-
 from pydantic.json_schema import JsonSchemaValue
-
 
 from ollama._utils import convert_function_to_tool
 
 if sys.version_info < (3, 9):
-  from typing import Iterator, AsyncIterator
+  from typing import AsyncIterator, Iterator
 else:
-  from collections.abc import Iterator, AsyncIterator
+  from collections.abc import AsyncIterator, Iterator
 
 from importlib import metadata
 
@@ -45,13 +42,13 @@ import httpx
 from ollama._types import (
   ChatRequest,
   ChatResponse,
-  CreateRequest,
   CopyRequest,
+  CreateRequest,
   DeleteRequest,
-  EmbedRequest,
-  EmbedResponse,
   EmbeddingsRequest,
   EmbeddingsResponse,
+  EmbedRequest,
+  EmbedResponse,
   GenerateRequest,
   GenerateResponse,
   Image,
@@ -69,7 +66,6 @@ from ollama._types import (
   StatusResponse,
   Tool,
 )
-
 
 T = TypeVar('T')
 

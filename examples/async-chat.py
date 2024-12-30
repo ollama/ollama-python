@@ -1,5 +1,6 @@
 import asyncio
-from ollama import AsyncClient
+
+import ollama
 
 
 async def main():
@@ -10,7 +11,7 @@ async def main():
     },
   ]
 
-  client = AsyncClient()
+  client = ollama.AsyncClient()
   response = await client.chat('llama3.2', messages=messages)
   print(response['message']['content'])
 

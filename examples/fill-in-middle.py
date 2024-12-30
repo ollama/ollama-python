@@ -1,4 +1,4 @@
-from ollama import generate
+import ollama
 
 prompt = '''def remove_non_ascii(s: str) -> str:
     """ '''
@@ -7,7 +7,7 @@ suffix = """
     return result
 """
 
-response = generate(
+response = ollama.generate(
   model='codellama:7b-code',
   prompt=prompt,
   suffix=suffix,

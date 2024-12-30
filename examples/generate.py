@@ -1,5 +1,4 @@
-from ollama import generate
+import ollama
 
-
-response = generate('llama3.2', 'Why is the sky blue?')
+response = ollama.generate('llama3.2', 'Why is the sky blue?')
 print(response['response'])

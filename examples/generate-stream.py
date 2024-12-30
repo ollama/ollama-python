@@ -1,5 +1,4 @@
-from ollama import generate
+import ollama
 
-
-for part in generate('llama3.2', 'Why is the sky blue?', stream=True):
+for part in ollama.generate('llama3.2', 'Why is the sky blue?', stream=True):
   print(part['response'], end='', flush=True)

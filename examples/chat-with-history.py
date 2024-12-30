@@ -1,5 +1,4 @@
-from ollama import chat
-
+import ollama
 
 messages = [
   {
@@ -22,7 +21,7 @@ messages = [
 
 while True:
   user_input = input('Chat with history: ')
-  response = chat(
+  response = ollama.chat(
     'llama3.2',
     messages=messages
     + [
