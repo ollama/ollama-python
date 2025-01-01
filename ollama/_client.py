@@ -558,7 +558,7 @@ class Client(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     with open(path, 'rb') as r:
-      self._request_raw('POST', f'/api/blobs/sha256:{digest}', content=r)
+      self._request_raw('POST', f'/api/blobs/{digest}', content=r)
 
     return digest
 
