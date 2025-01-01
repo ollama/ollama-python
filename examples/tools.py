@@ -1,5 +1,4 @@
-from ollama import chat
-from ollama import ChatResponse
+from ollama import ChatResponse, chat
 
 
 def add_two_numbers(a: int, b: int) -> int:
@@ -47,11 +46,12 @@ available_functions = {
   'add_two_numbers': add_two_numbers,
   'subtract_two_numbers': subtract_two_numbers,
 }
+model = 'llama3.2'
 
 response: ChatResponse = chat(
-  'llama3.1',
+  model=model,
   messages=messages,
-  tools=[add_two_numbers, subtract_two_numbers_tool],
+  tools=[add_two_numbers, subtract_two_numbers],
 )
 
 if response.message.tool_calls:
@@ -63,18 +63,14 @@ if response.message.tool_calls:
       print('Arguments:', tool.function.arguments)
       output = function_to_call(**tool.function.arguments)
       print('Function output:', output)
+      messages.append(response.message.model_dump())
+      messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
     else:
       print('Function', tool.function.name, 'not found')
 
-# Only needed to chat with the model using the tool call results
-if response.message.tool_calls:
-  # Add the function response to messages for the model to use
-  messages.append(response.message)
-  messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
-
   # Get final response from model with function outputs
-  final_response = chat('llama3.1', messages=messages)
+  final_response = chat(model=model, messages=messages)
   print('Final response:', final_response.message.content)
 
 else:
-  print('No tool calls returned from model')
+  print('Response:', response.message.content)
