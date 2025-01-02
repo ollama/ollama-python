@@ -204,6 +204,9 @@ class GenerateRequest(BaseGenerateRequest):
 
   raw: Optional[bool] = None
 
+  prepend_images_to_raw_prompt: Optional[bool] = None
+  'Whether to automatically add properly formatted and necessary image placeholders to top of raw prompt'
+
   images: Optional[Sequence[Image]] = None
   'Image data for multimodal models.'
 
