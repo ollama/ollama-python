@@ -1112,3 +1112,30 @@ def test_tool_validation():
   with pytest.raises(ValidationError):
     invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
     list(_copy_tools([invalid_tool]))
+
+
+def test_client_connection_error():
+  client = Client('http://localhost:1234')
+  with pytest.raises(ConnectionError) as exc_info:
+    client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+  with pytest.raises(ConnectionError) as exc_info:
+    client.generate('model', 'prompt')
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+  with pytest.raises(ConnectionError) as exc_info:
+    client.show('model')
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+
+@pytest.mark.asyncio
+async def test_async_client_connection_error():
+  client = AsyncClient('http://localhost:1234')
+  with pytest.raises(ConnectionError) as exc_info:
+    await client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+  with pytest.raises(ConnectionError) as exc_info:
+    await client.generate('model', 'prompt')
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+  with pytest.raises(ConnectionError) as exc_info:
+    await client.show('model')
+  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
