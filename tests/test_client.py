@@ -2,6 +2,7 @@ import base64
 import os
 import json
 from pydantic import ValidationError, BaseModel
+from ollama._types import Image
 import pytest
 import tempfile
 from pathlib import Path
@@ -282,6 +283,46 @@ def test_client_generate(httpserver: HTTPServer):
   response = client.generate('dummy', 'Why is the sky blue?')
   assert response['model'] == 'dummy'
   assert response['response'] == 'Because it is.'
+
+
+def test_client_generate_with_image_type(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'What is in this image?',
+      'stream': False,
+      'images': [PNG_BASE64],
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'A blue sky.',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'What is in this image?', images=[Image(value=PNG_BASE64)])
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'A blue sky.'
+
+
+def test_client_generate_with_invalid_image(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'What is in this image?',
+      'stream': False,
+      'images': ['invalid_base64'],
+    },
+  ).respond_with_json({'error': 'Invalid image data'}, status=400)
+
+  client = Client(httpserver.url_for('/'))
+  with pytest.raises(ValueError):
+    client.generate('dummy', 'What is in this image?', images=[Image(value='invalid_base64')])
 
 
 def test_client_generate_stream(httpserver: HTTPServer):
