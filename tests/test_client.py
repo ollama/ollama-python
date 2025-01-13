@@ -536,51 +536,6 @@ def test_client_push_stream(httpserver: HTTPServer):
     assert part['status'] == next(it)
 
 
-def test_client_create_path(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
-  httpserver.expect_ordered_request(
-    '/api/create',
-    method='POST',
-    json={
-      'model': 'dummy',
-      'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
-      'stream': False,
-    },
-  ).respond_with_json({'status': 'success'})
-
-  client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as modelfile:
-    with tempfile.NamedTemporaryFile() as blob:
-      modelfile.write(f'FROM {blob.name}'.encode('utf-8'))
-      modelfile.flush()
-
-      response = client.create('dummy', path=modelfile.name)
-      assert response['status'] == 'success'
-
-
-def test_client_create_path_relative(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
-  httpserver.expect_ordered_request(
-    '/api/create',
-    method='POST',
-    json={
-      'model': 'dummy',
-      'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
-      'stream': False,
-    },
-  ).respond_with_json({'status': 'success'})
-
-  client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as modelfile:
-    with tempfile.NamedTemporaryFile(dir=Path(modelfile.name).parent) as blob:
-      modelfile.write(f'FROM {Path(blob.name).name}'.encode('utf-8'))
-      modelfile.flush()
-
-      response = client.create('dummy', path=modelfile.name)
-      assert response['status'] == 'success'
-
 
 @pytest.fixture
 def userhomedir():
@@ -591,37 +546,13 @@ def userhomedir():
     os.environ['HOME'] = home
 
 
-def test_client_create_path_user_home(httpserver: HTTPServer, userhomedir):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
+def test_client_create_with_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
     json={
       'model': 'dummy',
-      'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
-      'stream': False,
-    },
-  ).respond_with_json({'status': 'success'})
-
-  client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as modelfile:
-    with tempfile.NamedTemporaryFile(dir=userhomedir) as blob:
-      modelfile.write(f'FROM ~/{Path(blob.name).name}'.encode('utf-8'))
-      modelfile.flush()
-
-      response = client.create('dummy', path=modelfile.name)
-      assert response['status'] == 'success'
-
-
-def test_client_create_modelfile(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
-  httpserver.expect_ordered_request(
-    '/api/create',
-    method='POST',
-    json={
-      'model': 'dummy',
-      'modelfile': 'FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855\n',
+      'files': {'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'},
       'stream': False,
     },
   ).respond_with_json({'status': 'success'})
@@ -629,29 +560,24 @@ def test_client_create_modelfile(httpserver: HTTPServer):
   client = Client(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
-    response = client.create('dummy', modelfile=f'FROM {blob.name}')
+    response = client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
     assert response['status'] == 'success'
 
 
-def test_client_create_modelfile_roundtrip(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
+def test_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
     json={
       'model': 'dummy',
-      'modelfile': '''FROM @sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
-TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>
-{{.Prompt}} [/INST]"""
-SYSTEM """
-Use
-multiline
-strings.
-"""
-PARAMETER stop [INST]
-PARAMETER stop [/INST]
-PARAMETER stop <<SYS>>
-PARAMETER stop <</SYS>>''',
+      'quantize': 'q4_k_m',
+      'from': 'mymodel',
+      'adapters': {'someadapter.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'},
+      'template': '[INST] <<SYS>>{{.System}}<</SYS>>\n{{.Prompt}} [/INST]',
+      'license': 'this is my license',
+      'system': '\nUse\nmultiline\nstrings.\n',
+      'parameters': {'stop': ['[INST]', '[/INST]', '<<SYS>>', '<</SYS>>'], 'pi': 3.14159},
+      'messages': [{'role': 'user', 'content': 'Hello there!'}, {'role': 'assistant', 'content': 'Hello there yourself!'}],
       'stream': False,
     },
   ).respond_with_json({'status': 'success'})
@@ -661,22 +587,15 @@ PARAMETER stop <</SYS>>''',
   with tempfile.NamedTemporaryFile() as blob:
     response = client.create(
       'dummy',
-      modelfile='\n'.join(
-        [
-          f'FROM {blob.name}',
-          'TEMPLATE """[INST] <<SYS>>{{.System}}<</SYS>>',
-          '{{.Prompt}} [/INST]"""',
-          'SYSTEM """',
-          'Use',
-          'multiline',
-          'strings.',
-          '"""',
-          'PARAMETER stop [INST]',
-          'PARAMETER stop [/INST]',
-          'PARAMETER stop <<SYS>>',
-          'PARAMETER stop <</SYS>>',
-        ]
-      ),
+      quantize='q4_k_m',
+      from_='mymodel',
+      adapters={'someadapter.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'},
+      template='[INST] <<SYS>>{{.System}}<</SYS>>\n{{.Prompt}} [/INST]',
+      license='this is my license',
+      system='\nUse\nmultiline\nstrings.\n',
+      parameters={'stop': ['[INST]', '[/INST]', '<<SYS>>', '<</SYS>>'], 'pi': 3.14159},
+      messages=[{'role': 'user', 'content': 'Hello there!'}, {'role': 'assistant', 'content': 'Hello there yourself!'}],
+      stream=False,
     )
     assert response['status'] == 'success'
 
@@ -687,14 +606,14 @@ def test_client_create_from_library(httpserver: HTTPServer):
     method='POST',
     json={
       'model': 'dummy',
-      'modelfile': 'FROM llama2',
+      'from': 'llama2',
       'stream': False,
     },
   ).respond_with_json({'status': 'success'})
 
   client = Client(httpserver.url_for('/'))
 
-  response = client.create('dummy', modelfile='FROM llama2')
+  response = client.create('dummy', from_='llama2')
   assert response['status'] == 'success'
 
 

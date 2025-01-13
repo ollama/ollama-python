@@ -526,9 +526,6 @@ class Client(BaseClient):
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    #if from_ == None and files == None:
-    #  raise RequestError('neither ''from'' or ''files'' was specified')
-
     return self._request(
       ProgressResponse,
       'POST',
@@ -541,6 +538,7 @@ class Client(BaseClient):
         files=files,
         adapters=adapters,
         license=license,
+        template=template,
         system=system,
         parameters=parameters,
         messages=messages,

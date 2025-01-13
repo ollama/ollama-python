@@ -68,10 +68,10 @@ def test_create_request_serialization():
         system="test system",
         parameters={"param1": "value1"}
     )
-    
+
     serialized = request.model_dump()
-    assert serialized["from"] == "base-model" 
-    assert "from_" not in serialized 
+    assert serialized["from"] == "base-model"
+    assert "from_" not in serialized
     assert serialized["quantize"] == "q4_0"
     assert serialized["files"] == {"file1": "content1"}
     assert serialized["adapters"] == {"adapter1": "content1"}
@@ -89,7 +89,7 @@ def test_create_request_serialization_exclude_none_true():
         quantize=None
     )
     serialized = request.model_dump(exclude_none=True)
-    assert serialized == {"model": "test-model"} 
+    assert serialized == {"model": "test-model"}
     assert "from" not in serialized
     assert "from_" not in serialized
     assert "quantize" not in serialized
