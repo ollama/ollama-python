@@ -405,7 +405,7 @@ class CreateRequest(BaseStreamableRequest):
   def serialize_model(self, nxt):
     output = nxt(self)
     if 'from_' in output:
-        output['from'] = output.pop('from_')
+      output['from'] = output.pop('from_')
     return output
 
   """
