@@ -622,7 +622,7 @@ def test_client_create_blob(httpserver: HTTPServer):
   client = Client(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
-    response = client._create_blob(blob.name)
+    response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
@@ -632,7 +632,7 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
   client = Client(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
-    response = client._create_blob(blob.name)
+    response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
@@ -1098,7 +1098,7 @@ async def test_async_client_create_blob(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
-    response = await client._create_blob(blob.name)
+    response = await client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
@@ -1109,7 +1109,7 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/'))
 
   with tempfile.NamedTemporaryFile() as blob:
-    response = await client._create_blob(blob.name)
+    response = await client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 

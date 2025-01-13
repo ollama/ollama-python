@@ -559,12 +559,12 @@ class Client(BaseClient):
       path = Path(args.strip()).expanduser()
       path = path if path.is_absolute() else base / path
       if path.exists():
-        args = f'@{self._create_blob(path)}\n'
+        args = f'@{self.create_blob(path)}\n'
       print(command, args, end='', file=out)
 
     return out.getvalue()
 
-  def _create_blob(self, path: Union[str, Path]) -> str:
+  def create_blob(self, path: Union[str, Path]) -> str:
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
@@ -1061,12 +1061,12 @@ class AsyncClient(BaseClient):
       path = Path(args.strip()).expanduser()
       path = path if path.is_absolute() else base / path
       if path.exists():
-        args = f'@{await self._create_blob(path)}\n'
+        args = f'@{await self.create_blob(path)}\n'
       print(command, args, end='', file=out)
 
     return out.getvalue()
 
-  async def _create_blob(self, path: Union[str, Path]) -> str:
+  async def create_blob(self, path: Union[str, Path]) -> str:
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
