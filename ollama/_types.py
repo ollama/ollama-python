@@ -401,9 +401,9 @@ class PushRequest(BaseStreamableRequest):
 
 
 class CreateRequest(BaseStreamableRequest):
-  @model_serializer
-  def serialize_model(self):
-    output = {k: v for k, v in self.__dict__.items() if v is not None}
+  @model_serializer(mode='wrap')
+  def serialize_model(self, nxt):
+    output = nxt(self)
     if 'from_' in output:
         output['from'] = output.pop('from_')
     return output
