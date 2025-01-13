@@ -404,10 +404,15 @@ class CreateRequest(BaseStreamableRequest):
   """
   Request to create a new model.
   """
-
-  modelfile: Optional[str] = None
-
   quantize: Optional[str] = None
+  from_: Optional[str] = None
+  files: Optional[dict[str, str]] = None
+  adapters: Optional[dict[str, str]] = None
+  template: Optional[str] = None
+  license: Optional[Union[str, list[str]]] = None
+  system: Optional[str] = None
+  parameters: Optional[Union[Mapping[str, Any], Options]] = None
+  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
 
 
 class ModelDetails(SubscriptableBaseModel):

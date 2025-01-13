@@ -476,10 +476,16 @@ class Client(BaseClient):
   def create(
     self,
     model: str,
-    path: Optional[Union[str, PathLike]] = None,
-    modelfile: Optional[str] = None,
-    *,
     quantize: Optional[str] = None,
+    from_: Optional[str] = None,
+    files: Optional[dict[str, str]] = None,
+    adapters: Optional[dict[str, str]] = None,
+    template: Optional[str] = None,
+    license: Optional[Union[str, list[str]]] = None,
+    system: Optional[str] = None,
+    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
     stream: Literal[False] = False,
   ) -> ProgressResponse: ...
 
@@ -487,20 +493,32 @@ class Client(BaseClient):
   def create(
     self,
     model: str,
-    path: Optional[Union[str, PathLike]] = None,
-    modelfile: Optional[str] = None,
-    *,
     quantize: Optional[str] = None,
+    from_: Optional[str] = None,
+    files: Optional[dict[str, str]] = None,
+    adapters: Optional[dict[str, str]] = None,
+    template: Optional[str] = None,
+    license: Optional[Union[str, list[str]]] = None,
+    system: Optional[str] = None,
+    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
     stream: Literal[True] = True,
   ) -> Iterator[ProgressResponse]: ...
 
   def create(
     self,
     model: str,
-    path: Optional[Union[str, PathLike]] = None,
-    modelfile: Optional[str] = None,
-    *,
     quantize: Optional[str] = None,
+    from_: Optional[str] = None,
+    files: Optional[dict[str, str]] = None,
+    adapters: Optional[dict[str, str]] = None,
+    template: Optional[str] = None,
+    license: Optional[Union[str, list[str]]] = None,
+    system: Optional[str] = None,
+    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
+    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    *,
     stream: bool = False,
   ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
     """
@@ -508,12 +526,8 @@ class Client(BaseClient):
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
     """
-    if (realpath := _as_path(path)) and realpath.exists():
-      modelfile = self._parse_modelfile(realpath.read_text(), base=realpath.parent)
-    elif modelfile:
-      modelfile = self._parse_modelfile(modelfile)
-    else:
-      raise RequestError('must provide either path or modelfile')
+    #if from_ == None and files == None:
+    #  raise RequestError('neither ''from'' or ''files'' was specified')
 
     return self._request(
       ProgressResponse,
@@ -521,9 +535,15 @@ class Client(BaseClient):
       '/api/create',
       json=CreateRequest(
         model=model,
-        modelfile=modelfile,
         stream=stream,
         quantize=quantize,
+        from_=from_,
+        files=files,
+        adapters=adapters,
+        license=license,
+        system=system,
+        parameters=parameters,
+        messages=messages,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
