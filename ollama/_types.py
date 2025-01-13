@@ -401,6 +401,13 @@ class PushRequest(BaseStreamableRequest):
 
 
 class CreateRequest(BaseStreamableRequest):
+  @model_serializer
+  def serialize_model(self):
+    output = {k: v for k, v in self.__dict__.items() if v is not None}
+    if 'from_' in output:
+        output['from'] = output.pop('from_')
+    return output
+
   """
   Request to create a new model.
   """
