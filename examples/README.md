@@ -6,6 +6,8 @@ Run the examples in this directory with:
 python3 examples/<example>.py
 ```
 
+See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md) for full API documentation
+
 ### Chat - Chat with a model
 - [chat.py](chat.py)
 - [async-chat.py](async-chat.py)
@@ -50,12 +52,8 @@ Requirement: `pip install tqdm`
 
 
 ### Ollama Create - Create a model from a Modelfile
-```python
-python create.py <model> <modelfile>
-```
 - [create.py](create.py) 
 
-See [ollama/docs/modelfile.md](https://github.com/ollama/ollama/blob/main/docs/modelfile.md) for more information on the Modelfile format.
 
 
 ### Ollama Embed - Generate embeddings with a model
