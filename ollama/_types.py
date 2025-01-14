@@ -2,7 +2,7 @@ import json
 from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Mapping, Optional, Union, Sequence, Dict
+from typing import Any, Mapping, Optional, Union, Sequence, Dict, List
 
 from pydantic.json_schema import JsonSchemaValue
 from typing_extensions import Annotated, Literal
@@ -416,7 +416,7 @@ class CreateRequest(BaseStreamableRequest):
   files: Optional[Dict[str, str]] = None
   adapters: Optional[Dict[str, str]] = None
   template: Optional[str] = None
-  license: Optional[Union[str, list[str]]] = None
+  license: Optional[Union[str, List[str]]] = None
   system: Optional[str] = None
   parameters: Optional[Union[Mapping[str, Any], Options]] = None
   messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
