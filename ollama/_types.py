@@ -2,7 +2,7 @@ import json
 from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Mapping, Optional, Union, Sequence
+from typing import Any, Mapping, Optional, Union, Sequence, Dict, List
 
 from pydantic.json_schema import JsonSchemaValue
 from typing_extensions import Annotated, Literal
@@ -401,13 +401,25 @@ class PushRequest(BaseStreamableRequest):
 
 
 class CreateRequest(BaseStreamableRequest):
+  @model_serializer(mode='wrap')
+  def serialize_model(self, nxt):
+    output = nxt(self)
+    if 'from_' in output:
+      output['from'] = output.pop('from_')
+    return output
+
   """
   Request to create a new model.
   """
-
-  modelfile: Optional[str] = None
-
   quantize: Optional[str] = None
+  from_: Optional[str] = None
+  files: Optional[Dict[str, str]] = None
+  adapters: Optional[Dict[str, str]] = None
+  template: Optional[str] = None
+  license: Optional[Union[str, List[str]]] = None
+  system: Optional[str] = None
+  parameters: Optional[Union[Mapping[str, Any], Options]] = None
+  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
 
 
 class ModelDetails(SubscriptableBaseModel):
