@@ -2,7 +2,7 @@ import json
 from base64 import b64decode, b64encode
 from pathlib import Path
 from datetime import datetime
-from typing import Any, Mapping, Optional, Union, Sequence
+from typing import Any, Mapping, Optional, Union, Sequence, Dict
 
 from pydantic.json_schema import JsonSchemaValue
 from typing_extensions import Annotated, Literal
@@ -413,8 +413,8 @@ class CreateRequest(BaseStreamableRequest):
   """
   quantize: Optional[str] = None
   from_: Optional[str] = None
-  files: Optional[dict[str, str]] = None
-  adapters: Optional[dict[str, str]] = None
+  files: Optional[Dict[str, str]] = None
+  adapters: Optional[Dict[str, str]] = None
   template: Optional[str] = None
   license: Optional[Union[str, list[str]]] = None
   system: Optional[str] = None
