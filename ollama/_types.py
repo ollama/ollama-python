@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 import json
 from base64 import b64decode, b64encode
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Any, Mapping, Sequence
 
 from pydantic import (
   BaseModel,
@@ -102,38 +104,38 @@ class SubscriptableBaseModel(BaseModel):
 
 class Options(SubscriptableBaseModel):
   # load time options
-  numa: Optional[bool] = None
-  num_ctx: Optional[int] = None
-  num_batch: Optional[int] = None
-  num_gpu: Optional[int] = None
-  main_gpu: Optional[int] = None
-  low_vram: Optional[bool] = None
-  f16_kv: Optional[bool] = None
-  logits_all: Optional[bool] = None
-  vocab_only: Optional[bool] = None
-  use_mmap: Optional[bool] = None
-  use_mlock: Optional[bool] = None
-  embedding_only: Optional[bool] = None
-  num_thread: Optional[int] = None
+  numa: bool | None = None
+  num_ctx: int | None = None
+  num_batch: int | None = None
+  num_gpu: int | None = None
+  main_gpu: int | None = None
+  low_vram: bool | None = None
+  f16_kv: bool | None = None
+  logits_all: bool | None = None
+  vocab_only: bool | None = None
+  use_mmap: bool | None = None
+  use_mlock: bool | None = None
+  embedding_only: bool | None = None
+  num_thread: int | None = None
 
   # runtime options
-  num_keep: Optional[int] = None
-  seed: Optional[int] = None
-  num_predict: Optional[int] = None
-  top_k: Optional[int] = None
-  top_p: Optional[float] = None
-  tfs_z: Optional[float] = None
-  typical_p: Optional[float] = None
-  repeat_last_n: Optional[int] = None
-  temperature: Optional[float] = None
-  repeat_penalty: Optional[float] = None
-  presence_penalty: Optional[float] = None
-  frequency_penalty: Optional[float] = None
-  mirostat: Optional[int] = None
-  mirostat_tau: Optional[float] = None
-  mirostat_eta: Optional[float] = None
-  penalize_newline: Optional[bool] = None
-  stop: Optional[Sequence[str]] = None
+  num_keep: int | None = None
+  seed: int | None = None
+  num_predict: int | None = None
+  top_k: int | None = None
+  top_p: float | None = None
+  tfs_z: float | None = None
+  typical_p: float | None = None
+  repeat_last_n: int | None = None
+  temperature: float | None = None
+  repeat_penalty: float | None = None
+  presence_penalty: float | None = None
+  frequency_penalty: float | None = None
+  mirostat: int | None = None
+  mirostat_tau: float | None = None
+  mirostat_eta: float | None = None
+  penalize_newline: bool | None = None
+  stop: Sequence[str] | None = None
 
 
 class BaseRequest(SubscriptableBaseModel):
@@ -142,23 +144,23 @@ class BaseRequest(SubscriptableBaseModel):
 
 
 class BaseStreamableRequest(BaseRequest):
-  stream: Optional[bool] = None
+  stream: bool | None = None
   'Stream response.'
 
 
 class BaseGenerateRequest(BaseStreamableRequest):
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: Mapping[str, Any] | Options | None = None
   'Options to use for the request.'
 
-  format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None
+  format: Literal['', 'json'] | JsonSchemaValue | None = None
   'Format of the response.'
 
-  keep_alive: Optional[Union[float, str]] = None
+  keep_alive: float | str | None = None
   'Keep model alive for the specified duration.'
 
 
 class Image(BaseModel):
-  value: Union[str, bytes, Path]
+  value: str | bytes | Path
 
   @model_serializer
   def serialize_model(self):
@@ -186,56 +188,56 @@ class Image(BaseModel):
 
 
 class GenerateRequest(BaseGenerateRequest):
-  prompt: Optional[str] = None
+  prompt: str | None = None
   'Prompt to generate response from.'
 
-  suffix: Optional[str] = None
+  suffix: str | None = None
   'Suffix to append to the response.'
 
-  system: Optional[str] = None
+  system: str | None = None
   'System prompt to prepend to the prompt.'
 
-  template: Optional[str] = None
+  template: str | None = None
   'Template to use for the response.'
 
-  context: Optional[Sequence[int]] = None
+  context: Sequence[int] | None = None
   'Tokenized history to use for the response.'
 
-  raw: Optional[bool] = None
+  raw: bool | None = None
 
-  images: Optional[Sequence[Image]] = None
+  images: Sequence[Image] | None = None
   'Image data for multimodal models.'
 
 
 class BaseGenerateResponse(SubscriptableBaseModel):
-  model: Optional[str] = None
+  model: str | None = None
   'Model used to generate response.'
 
-  created_at: Optional[str] = None
+  created_at: str | None = None
   'Time when the request was created.'
 
-  done: Optional[bool] = None
+  done: bool | None = None
   'True if response is complete, otherwise False. Useful for streaming to detect the final response.'
 
-  done_reason: Optional[str] = None
+  done_reason: str | None = None
   'Reason for completion. Only present when done is True.'
 
-  total_duration: Optional[int] = None
+  total_duration: int | None = None
   'Total duration in nanoseconds.'
 
-  load_duration: Optional[int] = None
+  load_duration: int | None = None
   'Load duration in nanoseconds.'
 
-  prompt_eval_count: Optional[int] = None
+  prompt_eval_count: int | None = None
   'Number of tokens evaluated in the prompt.'
 
-  prompt_eval_duration: Optional[int] = None
+  prompt_eval_duration: int | None = None
   'Duration of evaluating the prompt in nanoseconds.'
 
-  eval_count: Optional[int] = None
+  eval_count: int | None = None
   'Number of tokens evaluated in inference.'
 
-  eval_duration: Optional[int] = None
+  eval_duration: int | None = None
   'Duration of evaluating inference in nanoseconds.'
 
 
@@ -247,7 +249,7 @@ class GenerateResponse(BaseGenerateResponse):
   response: str
   'Response content. When streaming, this contains a fragment of the response.'
 
-  context: Optional[Sequence[int]] = None
+  context: Sequence[int] | None = None
   'Tokenized history up to the point of the response.'
 
 
@@ -259,10 +261,10 @@ class Message(SubscriptableBaseModel):
   role: Literal['user', 'assistant', 'system', 'tool']
   "Assumed role of the message. Response messages has role 'assistant' or 'tool'."
 
-  content: Optional[str] = None
+  content: str | None = None
   'Content of the message. Response messages contains message fragments when streaming.'
 
-  images: Optional[Sequence[Image]] = None
+  images: Sequence[Image] | None = None
   """
   Optional list of image data for multimodal models.
 
@@ -293,41 +295,41 @@ class Message(SubscriptableBaseModel):
     function: Function
     'Function to be called.'
 
-  tool_calls: Optional[Sequence[ToolCall]] = None
+  tool_calls: Sequence[ToolCall] | None = None
   """
   Tools calls to be made by the model.
   """
 
 
 class Tool(SubscriptableBaseModel):
-  type: Optional[Literal['function']] = 'function'
+  type: Literal['function'] | None = 'function'
 
   class Function(SubscriptableBaseModel):
-    name: Optional[str] = None
-    description: Optional[str] = None
+    name: str | None = None
+    description: str | None = None
 
     class Parameters(SubscriptableBaseModel):
-      type: Optional[Literal['object']] = 'object'
-      required: Optional[Sequence[str]] = None
+      type: Literal['object'] | None = 'object'
+      required: Sequence[str] | None = None
 
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
-        type: Optional[str] = None
-        description: Optional[str] = None
+        type: str | None = None
+        description: str | None = None
 
-      properties: Optional[Mapping[str, Property]] = None
+      properties: Mapping[str, Property] | None = None
 
-    parameters: Optional[Parameters] = None
+    parameters: Parameters | None = None
 
-  function: Optional[Function] = None
+  function: Function | None = None
 
 
 class ChatRequest(BaseGenerateRequest):
-  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
+  messages: Sequence[Mapping[str, Any] | Message] | None = None
   'Messages to chat with.'
 
-  tools: Optional[Sequence[Tool]] = None
+  tools: Sequence[Tool] | None = None
   'Tools to use for the chat.'
 
 
@@ -341,16 +343,16 @@ class ChatResponse(BaseGenerateResponse):
 
 
 class EmbedRequest(BaseRequest):
-  input: Union[str, Sequence[str]]
+  input: str | Sequence[str]
   'Input text to embed.'
 
-  truncate: Optional[bool] = None
+  truncate: bool | None = None
   'Truncate the input to the maximum token length.'
 
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: Mapping[str, Any] | Options | None = None
   'Options to use for the request.'
 
-  keep_alive: Optional[Union[float, str]] = None
+  keep_alive: float | str | None = None
 
 
 class EmbedResponse(BaseGenerateResponse):
@@ -363,13 +365,13 @@ class EmbedResponse(BaseGenerateResponse):
 
 
 class EmbeddingsRequest(BaseRequest):
-  prompt: Optional[str] = None
+  prompt: str | None = None
   'Prompt to generate embeddings from.'
 
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: Mapping[str, Any] | Options | None = None
   'Options to use for the request.'
 
-  keep_alive: Optional[Union[float, str]] = None
+  keep_alive: float | str | None = None
 
 
 class EmbeddingsResponse(SubscriptableBaseModel):
@@ -386,7 +388,7 @@ class PullRequest(BaseStreamableRequest):
   Request to pull the model.
   """
 
-  insecure: Optional[bool] = None
+  insecure: bool | None = None
   'Allow insecure (HTTP) connections.'
 
 
@@ -395,7 +397,7 @@ class PushRequest(BaseStreamableRequest):
   Request to pull the model.
   """
 
-  insecure: Optional[bool] = None
+  insecure: bool | None = None
   'Allow insecure (HTTP) connections.'
 
 
@@ -410,33 +412,33 @@ class CreateRequest(BaseStreamableRequest):
   """
   Request to create a new model.
   """
-  quantize: Optional[str] = None
-  from_: Optional[str] = None
-  files: Optional[Dict[str, str]] = None
-  adapters: Optional[Dict[str, str]] = None
-  template: Optional[str] = None
-  license: Optional[Union[str, List[str]]] = None
-  system: Optional[str] = None
-  parameters: Optional[Union[Mapping[str, Any], Options]] = None
-  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
+  quantize: str | None = None
+  from_: str | None = None
+  files: dict[str, str] | None = None
+  adapters: dict[str, str] | None = None
+  template: str | None = None
+  license: str | list[str] | None = None
+  system: str | None = None
+  parameters: Mapping[str, Any] | Options | None = None
+  messages: Sequence[Mapping[str, Any] | Message] | None = None
 
 
 class ModelDetails(SubscriptableBaseModel):
-  parent_model: Optional[str] = None
-  format: Optional[str] = None
-  family: Optional[str] = None
-  families: Optional[Sequence[str]] = None
-  parameter_size: Optional[str] = None
-  quantization_level: Optional[str] = None
+  parent_model: str | None = None
+  format: str | None = None
+  family: str | None = None
+  families: Sequence[str] | None = None
+  parameter_size: str | None = None
+  quantization_level: str | None = None
 
 
 class ListResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
-    model: Optional[str] = None
-    modified_at: Optional[datetime] = None
-    digest: Optional[str] = None
-    size: Optional[ByteSize] = None
-    details: Optional[ModelDetails] = None
+    model: str | None = None
+    modified_at: datetime | None = None
+    digest: str | None = None
+    size: ByteSize | None = None
+    details: ModelDetails | None = None
 
   models: Sequence[Model]
   'List of models.'
@@ -461,13 +463,13 @@ class CopyRequest(BaseModel):
 
 
 class StatusResponse(SubscriptableBaseModel):
-  status: Optional[str] = None
+  status: str | None = None
 
 
 class ProgressResponse(StatusResponse):
-  completed: Optional[int] = None
-  total: Optional[int] = None
-  digest: Optional[str] = None
+  completed: int | None = None
+  total: int | None = None
+  digest: str | None = None
 
 
 class ShowRequest(BaseRequest):
@@ -477,30 +479,30 @@ class ShowRequest(BaseRequest):
 
 
 class ShowResponse(SubscriptableBaseModel):
-  modified_at: Optional[datetime] = None
+  modified_at: datetime | None = None
 
-  template: Optional[str] = None
+  template: str | None = None
 
-  modelfile: Optional[str] = None
+  modelfile: str | None = None
 
-  license: Optional[str] = None
+  license: str | None = None
 
-  details: Optional[ModelDetails] = None
+  details: ModelDetails | None = None
 
-  modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
+  modelinfo: Mapping[str, Any] | None = Field(alias='model_info')
 
-  parameters: Optional[str] = None
+  parameters: str | None = None
 
 
 class ProcessResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
-    model: Optional[str] = None
-    name: Optional[str] = None
-    digest: Optional[str] = None
-    expires_at: Optional[datetime] = None
-    size: Optional[ByteSize] = None
-    size_vram: Optional[ByteSize] = None
-    details: Optional[ModelDetails] = None
+    model: str | None = None
+    name: str | None = None
+    digest: str | None = None
+    expires_at: datetime | None = None
+    size: ByteSize | None = None
+    size_vram: ByteSize | None = None
+    details: ModelDetails | None = None
 
   models: Sequence[Model]
 

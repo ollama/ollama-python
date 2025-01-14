@@ -7,6 +7,9 @@ anyio==4.5.2 ; python_version >= "3.8" and python_version < "4.0" \
 certifi==2024.8.30 ; python_version >= "3.8" and python_version < "4.0" \
     --hash=sha256:922820b53db7a7257ffbda3f597266d435245903d80737e34f8a45ff3e3230d8 \
     --hash=sha256:bec941d2aa8195e248a60b31ff9f0558284cf01a52591ceda73ea9afffd69fd9
+eval-type-backport==0.2.2 ; python_version >= "3.8" and python_version <= "3.10" \
+    --hash=sha256:cb6ad7c393517f476f96d456d0412ea80f0a8cf96f6892834cd9340149111b0a \
+    --hash=sha256:f0576b4cf01ebb5bd358d02314d31846af5e07678387486e2c798af0e7d849c1
 exceptiongroup==1.2.2 ; python_version >= "3.8" and python_version < "3.11" \
     --hash=sha256:3111b9d131c238bec2f8f516e123e14ba243563fb135d3fe885990585aa7795b \
     --hash=sha256:47c2edf7c6738fafb49fd34290706d1a1a2f4d1c6df275526b62cbb4aa5393cc

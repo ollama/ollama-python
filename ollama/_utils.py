@@ -3,14 +3,14 @@ from __future__ import annotations
 import inspect
 import re
 from collections import defaultdict
-from typing import Callable, Union
+from typing import Callable
 
 import pydantic
 
 from ollama._types import Tool
 
 
-def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
+def _parse_docstring(doc_string: str | None) -> dict[str, str]:
   parsed_docstring = defaultdict(str)
   if not doc_string:
     return parsed_docstring

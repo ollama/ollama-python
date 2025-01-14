@@ -12,6 +12,7 @@ repository = "https://github.com/ollama/ollama-python"
 python = "^3.8"
 httpx = ">=0.27,<0.29"
 pydantic = "^2.9.0"
+eval_type_backport = { version = "^0.2.2", markers = "python_version <= '3.10'" }
 
 [tool.poetry.requires-plugins]
 poetry-plugin-export = ">=1.8"

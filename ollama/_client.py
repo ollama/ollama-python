@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import ipaddress
 import json
 import os
@@ -10,15 +12,10 @@ from pathlib import Path
 from typing import (
   Any,
   Callable,
-  Dict,
-  List,
   Literal,
   Mapping,
-  Optional,
   Sequence,
-  Type,
   TypeVar,
-  Union,
   overload,
 )
 
@@ -74,10 +71,10 @@ class BaseClient:
   def __init__(
     self,
     client,
-    host: Optional[str] = None,
+    host: str | None = None,
     follow_redirects: bool = True,
     timeout: Any = None,
-    headers: Optional[Mapping[str, str]] = None,
+    headers: Mapping[str, str] | None = None,
     **kwargs,
   ) -> None:
     """
@@ -110,7 +107,7 @@ CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollam
 
 
 class Client(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
+  def __init__(self, host: str | None = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
   def _request_raw(self, *args, **kwargs):
@@ -126,7 +123,7 @@ class Client(BaseClient):
   @overload
   def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: Literal[False] = False,
     **kwargs,
@@ -135,7 +132,7 @@ class Client(BaseClient):
   @overload
   def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: Literal[True] = True,
     **kwargs,
@@ -144,19 +141,19 @@ class Client(BaseClient):
   @overload
   def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[T, Iterator[T]]: ...
+  ) -> T | Iterator[T]: ...
 
   def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[T, Iterator[T]]:
+  ) -> T | Iterator[T]:
     if stream:
 
       def inner():
@@ -186,13 +183,13 @@ class Client(BaseClient):
     *,
     system: str = '',
     template: str = '',
-    context: Optional[Sequence[int]] = None,
+    context: Sequence[int] | None = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -204,31 +201,31 @@ class Client(BaseClient):
     *,
     system: str = '',
     template: str = '',
-    context: Optional[Sequence[int]] = None,
+    context: Sequence[int] | None = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> Iterator[GenerateResponse]: ...
 
   def generate(
     self,
     model: str = '',
-    prompt: Optional[str] = None,
-    suffix: Optional[str] = None,
+    prompt: str | None = None,
+    suffix: str | None = None,
     *,
-    system: Optional[str] = None,
-    template: Optional[str] = None,
-    context: Optional[Sequence[int]] = None,
+    system: str | None = None,
+    template: str | None = None,
+    context: Sequence[int] | None = None,
     stream: bool = False,
-    raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
+    raw: bool | None = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
+  ) -> GenerateResponse | Iterator[GenerateResponse]:
     """
     Create a response using the requested model.
 
@@ -264,39 +261,39 @@ class Client(BaseClient):
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: Literal[False] = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> ChatResponse: ...
 
   @overload
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: Literal[True] = True,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> Iterator[ChatResponse]: ...
 
   def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[ChatResponse, Iterator[ChatResponse]]:
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
+  ) -> ChatResponse | Iterator[ChatResponse]:
     """
     Create a chat response using the requested model.
 
@@ -349,10 +346,10 @@ class Client(BaseClient):
   def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[str]] = '',
-    truncate: Optional[bool] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    input: str | Sequence[str] = '',
+    truncate: bool | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> EmbedResponse:
     return self._request(
       EmbedResponse,
@@ -370,9 +367,9 @@ class Client(BaseClient):
   def embeddings(
     self,
     model: str = '',
-    prompt: Optional[str] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    prompt: str | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> EmbeddingsResponse:
     """
     Deprecated in favor of `embed`.
@@ -413,7 +410,7 @@ class Client(BaseClient):
     *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
+  ) -> ProgressResponse | Iterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -455,7 +452,7 @@ class Client(BaseClient):
     *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
+  ) -> ProgressResponse | Iterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -477,15 +474,15 @@ class Client(BaseClient):
   def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: Literal[False] = False,
   ) -> ProgressResponse: ...
@@ -494,15 +491,15 @@ class Client(BaseClient):
   def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: Literal[True] = True,
   ) -> Iterator[ProgressResponse]: ...
@@ -510,18 +507,18 @@ class Client(BaseClient):
   def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: bool = False,
-  ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
+  ) -> ProgressResponse | Iterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -547,7 +544,7 @@ class Client(BaseClient):
       stream=stream,
     )
 
-  def create_blob(self, path: Union[str, Path]) -> str:
+  def create_blob(self, path: str | Path) -> str:
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
@@ -614,7 +611,7 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
+  def __init__(self, host: str | None = None, **kwargs) -> None:
     super().__init__(httpx.AsyncClient, host, **kwargs)
 
   async def _request_raw(self, *args, **kwargs):
@@ -630,7 +627,7 @@ class AsyncClient(BaseClient):
   @overload
   async def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: Literal[False] = False,
     **kwargs,
@@ -639,7 +636,7 @@ class AsyncClient(BaseClient):
   @overload
   async def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: Literal[True] = True,
     **kwargs,
@@ -648,19 +645,19 @@ class AsyncClient(BaseClient):
   @overload
   async def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[T, AsyncIterator[T]]: ...
+  ) -> T | AsyncIterator[T]: ...
 
   async def _request(
     self,
-    cls: Type[T],
+    cls: type[T],
     *args,
     stream: bool = False,
     **kwargs,
-  ) -> Union[T, AsyncIterator[T]]:
+  ) -> T | AsyncIterator[T]:
     if stream:
 
       async def inner():
@@ -690,13 +687,13 @@ class AsyncClient(BaseClient):
     *,
     system: str = '',
     template: str = '',
-    context: Optional[Sequence[int]] = None,
+    context: Sequence[int] | None = None,
     stream: Literal[False] = False,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -708,31 +705,31 @@ class AsyncClient(BaseClient):
     *,
     system: str = '',
     template: str = '',
-    context: Optional[Sequence[int]] = None,
+    context: Sequence[int] | None = None,
     stream: Literal[True] = True,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> AsyncIterator[GenerateResponse]: ...
 
   async def generate(
     self,
     model: str = '',
-    prompt: Optional[str] = None,
-    suffix: Optional[str] = None,
+    prompt: str | None = None,
+    suffix: str | None = None,
     *,
-    system: Optional[str] = None,
-    template: Optional[str] = None,
-    context: Optional[Sequence[int]] = None,
+    system: str | None = None,
+    template: str | None = None,
+    context: Sequence[int] | None = None,
     stream: bool = False,
-    raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    images: Optional[Sequence[Union[str, bytes]]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
+    raw: bool | None = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    images: Sequence[str | bytes] | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
+  ) -> GenerateResponse | AsyncIterator[GenerateResponse]:
     """
     Create a response using the requested model.
 
@@ -767,39 +764,39 @@ class AsyncClient(BaseClient):
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: Literal[False] = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> ChatResponse: ...
 
   @overload
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: Literal[True] = True,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> AsyncIterator[ChatResponse]: ...
 
   async def chat(
     self,
     model: str = '',
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None,
     stream: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
-  ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
+    format: Literal['', 'json'] | JsonSchemaValue | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
+  ) -> ChatResponse | AsyncIterator[ChatResponse]:
     """
     Create a chat response using the requested model.
 
@@ -853,10 +850,10 @@ class AsyncClient(BaseClient):
   async def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[str]] = '',
-    truncate: Optional[bool] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    input: str | Sequence[str] = '',
+    truncate: bool | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> EmbedResponse:
     return await self._request(
       EmbedResponse,
@@ -874,9 +871,9 @@ class AsyncClient(BaseClient):
   async def embeddings(
     self,
     model: str = '',
-    prompt: Optional[str] = None,
-    options: Optional[Union[Mapping[str, Any], Options]] = None,
-    keep_alive: Optional[Union[float, str]] = None,
+    prompt: str | None = None,
+    options: Mapping[str, Any] | Options | None = None,
+    keep_alive: float | str | None = None,
   ) -> EmbeddingsResponse:
     """
     Deprecated in favor of `embed`.
@@ -917,7 +914,7 @@ class AsyncClient(BaseClient):
     *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
+  ) -> ProgressResponse | AsyncIterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -959,7 +956,7 @@ class AsyncClient(BaseClient):
     *,
     insecure: bool = False,
     stream: bool = False,
-  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
+  ) -> ProgressResponse | AsyncIterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -981,15 +978,15 @@ class AsyncClient(BaseClient):
   async def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: Literal[True] = True,
   ) -> ProgressResponse: ...
@@ -998,15 +995,15 @@ class AsyncClient(BaseClient):
   async def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: Literal[True] = True,
   ) -> AsyncIterator[ProgressResponse]: ...
@@ -1014,18 +1011,18 @@ class AsyncClient(BaseClient):
   async def create(
     self,
     model: str,
-    quantize: Optional[str] = None,
-    from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
-    template: Optional[str] = None,
-    license: Optional[Union[str, List[str]]] = None,
-    system: Optional[str] = None,
-    parameters: Optional[Union[Mapping[str, Any], Options]] = None,
-    messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
+    quantize: str | None = None,
+    from_: str | None = None,
+    files: dict[str, str] | None = None,
+    adapters: dict[str, str] | None = None,
+    template: str | None = None,
+    license: str | list[str] | None = None,
+    system: str | None = None,
+    parameters: Mapping[str, Any] | Options | None = None,
+    messages: Sequence[Mapping[str, Any] | Message] | None = None,
     *,
     stream: bool = False,
-  ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
+  ) -> ProgressResponse | AsyncIterator[ProgressResponse]:
     """
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -1052,7 +1049,7 @@ class AsyncClient(BaseClient):
       stream=stream,
     )
 
-  async def create_blob(self, path: Union[str, Path]) -> str:
+  async def create_blob(self, path: str | Path) -> str:
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
@@ -1125,24 +1122,24 @@ class AsyncClient(BaseClient):
     )
 
 
-def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
+def _copy_images(images: Sequence[Image | Any] | None) -> Iterator[Image]:
   for image in images or []:
     yield image if isinstance(image, Image) else Image(value=image)
 
 
-def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
+def _copy_messages(messages: Sequence[Mapping[str, Any] | Message] | None) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
       {k: [image for image in _copy_images(v)] if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+def _copy_tools(tools: Sequence[Mapping[str, Any] | Tool | Callable] | None = None) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
 
 
-def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
+def _as_path(s: str | PathLike | None) -> Path | None:
   if isinstance(s, str) or isinstance(s, Path):
     try:
       if (p := Path(s)).exists():
@@ -1152,7 +1149,7 @@ def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
   return None
 
 
-def _parse_host(host: Optional[str]) -> str:
+def _parse_host(host: str | None) -> str:
   """
   >>> _parse_host(None)
   'http://127.0.0.1:11434'
