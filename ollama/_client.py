@@ -1,5 +1,4 @@
 import os
-import io
 import json
 import platform
 import ipaddress
@@ -62,7 +61,6 @@ from ollama._types import (
   ProgressResponse,
   PullRequest,
   PushRequest,
-  RequestError,
   ResponseError,
   ShowRequest,
   ShowResponse,

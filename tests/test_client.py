@@ -946,7 +946,7 @@ async def test_async_client_create_with_blob(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
+  with tempfile.NamedTemporaryFile():
     response = await client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
     assert response['status'] == 'success'
 
@@ -972,7 +972,7 @@ async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPSer
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
+  with tempfile.NamedTemporaryFile():
     response = await client.create(
       'dummy',
       quantize='q4_k_m',
