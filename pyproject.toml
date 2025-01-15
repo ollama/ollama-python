@@ -21,7 +21,7 @@ pytest = ">=7.4.3,<9.0.0"
 pytest-asyncio = ">=0.23.2,<0.25.0"
 pytest-cov = ">=4.1,<6.0"
 pytest-httpserver = "^1.0.8"
-ruff = ">=0.1.8,<0.8.0"
+ruff = ">=0.9.1,<0.10.0"
 
 [build-system]
 requires = ["poetry-core"]
@@ -36,8 +36,16 @@ quote-style = "single"
 indent-style = "space"
 
 [tool.ruff.lint]
-select = ["E", "F", "B"]
-ignore = ["E501"]
+select = [
+  "E", # pycodestyle errors
+  "F", # pyflakes
+  "B", # bugbear (likely bugs)
+  "I", # sort imports
+  "RUF022", # sort __all__
+]
+ignore = [
+  "E501", # line too long
+]
 
 [tool.pytest.ini_options]
 addopts = '--doctest-modules --ignore examples'

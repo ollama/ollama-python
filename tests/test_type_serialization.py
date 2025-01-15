@@ -1,9 +1,10 @@
+import tempfile
 from base64 import b64encode
 from pathlib import Path
 
 import pytest
+
 from ollama._types import CreateRequest, Image
-import tempfile
 
 
 def test_image_serialization_bytes():

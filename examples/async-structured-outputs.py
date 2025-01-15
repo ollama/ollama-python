@@ -1,6 +1,8 @@
-from pydantic import BaseModel
-from ollama import AsyncClient
 import asyncio
+
+from pydantic import BaseModel
+
+from ollama import AsyncClient
 
 
 # Define the schema for the response
