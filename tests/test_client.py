@@ -9,7 +9,7 @@ from pydantic import BaseModel, ValidationError
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
-from ollama._client import AsyncClient, Client, _copy_tools
+from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -1116,15 +1116,15 @@ def test_tool_validation():
 
 def test_client_connection_error():
   client = Client('http://localhost:1234')
-  with pytest.raises(ConnectionError) as exc_info:
+
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
     client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
-  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
-  with pytest.raises(ConnectionError) as exc_info:
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
+    client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
     client.generate('model', 'prompt')
-  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
-  with pytest.raises(ConnectionError) as exc_info:
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
     client.show('model')
-  assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
 
 
 @pytest.mark.asyncio
