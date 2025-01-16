@@ -106,17 +106,22 @@ class BaseClient:
     )
 
 
+CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+
 class Client(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
   def _request_raw(self, *args, **kwargs):
-    r = self._client.request(*args, **kwargs)
     try:
+      r = self._client.request(*args, **kwargs)
       r.raise_for_status()
+      return r
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
-    return r
+    except httpx.ConnectError:
+      raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
 
   @overload
   def _request(
@@ -613,12 +618,14 @@ class AsyncClient(BaseClient):
     super().__init__(httpx.AsyncClient, host, **kwargs)
 
   async def _request_raw(self, *args, **kwargs):
-    r = await self._client.request(*args, **kwargs)
     try:
+      r = await self._client.request(*args, **kwargs)
       r.raise_for_status()
+      return r
     except httpx.HTTPStatusError as e:
       raise ResponseError(e.response.text, e.response.status_code) from None
-    return r
+    except httpx.ConnectError:
+      raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
 
   @overload
   async def _request(
