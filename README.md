@@ -129,12 +129,7 @@ ollama.show('llama3.2')
 ### Create
 
 ```python
-modelfile='''
-FROM llama3.2
-SYSTEM You are mario from super mario bros.
-'''
-
-ollama.create(model='example', modelfile=modelfile)
+ollama.create(model='example', from_='llama3.2', system="You are Mario from Super Mario Bros.")
 ```
 
 ### Copy
