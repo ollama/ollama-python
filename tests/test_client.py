@@ -1,6 +1,7 @@
 import base64
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
 
@@ -618,7 +619,7 @@ def test_client_create_from_library(httpserver: HTTPServer):
 
 
 def test_client_create_blob(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=201))
+  httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = Client(httpserver.url_for('/'))
 
@@ -1009,7 +1010,7 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
 
 @pytest.mark.asyncio
 async def test_async_client_create_blob(httpserver: HTTPServer):
-  httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=201))
+  httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = AsyncClient(httpserver.url_for('/'))
 
