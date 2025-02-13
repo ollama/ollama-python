@@ -23,10 +23,7 @@ while True:
   user_input = input('Chat with history: ')
   response = chat(
     'llama3.2',
-    messages=messages
-    + [
-      {'role': 'user', 'content': user_input},
-    ],
+    messages=[*messages, {'role': 'user', 'content': user_input}],
   )
 
   # Add the response to the messages to maintain the history

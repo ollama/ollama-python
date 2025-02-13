@@ -18,6 +18,13 @@ from ollama._types import Image, Message
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
 
+pytestmark = pytest.mark.anyio
+
+
+@pytest.fixture
+def anyio_backend():
+  return 'asyncio'
+
 
 class PrefixPattern(URIPattern):
   def __init__(self, prefix: str):
@@ -205,7 +212,6 @@ def test_client_chat_format_pydantic(httpserver: HTTPServer):
   assert response['message']['content'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
 
 
-@pytest.mark.asyncio
 async def test_async_client_chat_format_json(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -234,7 +240,6 @@ async def test_async_client_chat_format_json(httpserver: HTTPServer):
   assert response['message']['content'] == '{"answer": "Because of Rayleigh scattering"}'
 
 
-@pytest.mark.asyncio
 async def test_async_client_chat_format_pydantic(httpserver: HTTPServer):
   class ResponseFormat(BaseModel):
     answer: str
@@ -441,7 +446,6 @@ def test_client_generate_format_pydantic(httpserver: HTTPServer):
   assert response['response'] == '{"answer": "Because of Rayleigh scattering", "confidence": 0.95}'
 
 
-@pytest.mark.asyncio
 async def test_async_client_generate_format_json(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/generate',
@@ -465,7 +469,6 @@ async def test_async_client_generate_format_json(httpserver: HTTPServer):
   assert response['response'] == '{"answer": "Because of Rayleigh scattering"}'
 
 
-@pytest.mark.asyncio
 async def test_async_client_generate_format_pydantic(httpserver: HTTPServer):
   class ResponseFormat(BaseModel):
     answer: str
@@ -695,7 +698,6 @@ def test_client_copy(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_chat(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -723,7 +725,6 @@ async def test_async_client_chat(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
-@pytest.mark.asyncio
 async def test_async_client_chat_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
     def generate():
@@ -763,7 +764,6 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
     assert part['message']['content'] == next(it)
 
 
-@pytest.mark.asyncio
 async def test_async_client_chat_images(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -798,7 +798,6 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
-@pytest.mark.asyncio
 async def test_async_client_generate(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/generate',
@@ -821,7 +820,6 @@ async def test_async_client_generate(httpserver: HTTPServer):
   assert response['response'] == 'Because it is.'
 
 
-@pytest.mark.asyncio
 async def test_async_client_generate_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
     def generate():
@@ -857,7 +855,6 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
     assert part['response'] == next(it)
 
 
-@pytest.mark.asyncio
 async def test_async_client_generate_images(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/generate',
@@ -885,7 +882,6 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
     assert response['response'] == 'Because it is.'
 
 
-@pytest.mark.asyncio
 async def test_async_client_pull(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/pull',
@@ -902,7 +898,6 @@ async def test_async_client_pull(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_pull_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
     def generate():
@@ -932,7 +927,6 @@ async def test_async_client_pull_stream(httpserver: HTTPServer):
     assert part['status'] == next(it)
 
 
-@pytest.mark.asyncio
 async def test_async_client_push(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/push',
@@ -949,7 +943,6 @@ async def test_async_client_push(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_push_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
     def generate():
@@ -977,7 +970,6 @@ async def test_async_client_push_stream(httpserver: HTTPServer):
     assert part['status'] == next(it)
 
 
-@pytest.mark.asyncio
 async def test_async_client_create_with_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
@@ -996,7 +988,6 @@ async def test_async_client_create_with_blob(httpserver: HTTPServer):
     assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
@@ -1033,7 +1024,6 @@ async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPSer
     assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_create_from_library(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
@@ -1051,7 +1041,6 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
@@ -1062,7 +1051,6 @@ async def test_async_client_create_blob(httpserver: HTTPServer):
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-@pytest.mark.asyncio
 async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
@@ -1073,7 +1061,6 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-@pytest.mark.asyncio
 async def test_async_client_delete(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
   client = AsyncClient(httpserver.url_for('/api/delete'))
@@ -1081,7 +1068,6 @@ async def test_async_client_delete(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-@pytest.mark.asyncio
 async def test_async_client_copy(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/copy'), method='POST').respond_with_response(Response(status=200))
   client = AsyncClient(httpserver.url_for('/api/copy'))
@@ -1111,14 +1097,12 @@ def test_copy_tools():
     Args:
         x (integer): A number
     """
-    pass
 
   def func2(y: str) -> int:
     """Simple function 2.
     Args:
         y (string): A string
     """
-    pass
 
   # Test with list of functions
   tools = list(_copy_tools([func1, func2]))
@@ -1171,7 +1155,6 @@ def test_client_connection_error():
     client.show('model')
 
 
-@pytest.mark.asyncio
 async def test_async_client_connection_error():
   client = AsyncClient('http://localhost:1234')
   with pytest.raises(ConnectionError) as exc_info:
@@ -1205,7 +1188,6 @@ async def _mock_request_async(*args: Any, **kwargs: Any) -> Response:
   return httpxResponse(status_code=200, content="{'response': 'Hello world!'}")
 
 
-@pytest.mark.asyncio
 async def test_arbitrary_roles_accepted_in_message_request_async(monkeypatch: pytest.MonkeyPatch):
   monkeypatch.setattr(AsyncClient, '_request', _mock_request_async)
 

@@ -22,6 +22,7 @@ from typing import (
   overload,
 )
 
+import anyio
 from pydantic.json_schema import JsonSchemaValue
 
 from ollama._utils import convert_function_to_tool
@@ -75,6 +76,7 @@ class BaseClient:
     self,
     client,
     host: Optional[str] = None,
+    *,
     follow_redirects: bool = True,
     timeout: Any = None,
     headers: Optional[Mapping[str, str]] = None,
@@ -253,7 +255,7 @@ class Client(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[image for image in _copy_images(images)] if images else None,
+        images=list(_copy_images(images)) if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -336,8 +338,8 @@ class Client(BaseClient):
       '/api/chat',
       json=ChatRequest(
         model=model,
-        messages=[message for message in _copy_messages(messages)],
-        tools=[tool for tool in _copy_tools(tools)],
+        messages=list(_copy_messages(messages)),
+        tools=list(_copy_tools(tools)),
         stream=stream,
         format=format,
         options=options,
@@ -756,7 +758,7 @@ class AsyncClient(BaseClient):
         stream=stream,
         raw=raw,
         format=format,
-        images=[image for image in _copy_images(images)] if images else None,
+        images=list(_copy_images(images)) if images else None,
         options=options,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -840,8 +842,8 @@ class AsyncClient(BaseClient):
       '/api/chat',
       json=ChatRequest(
         model=model,
-        messages=[message for message in _copy_messages(messages)],
-        tools=[tool for tool in _copy_tools(tools)],
+        messages=list(_copy_messages(messages)),
+        tools=list(_copy_tools(tools)),
         stream=stream,
         format=format,
         options=options,
@@ -991,7 +993,7 @@ class AsyncClient(BaseClient):
     parameters: Optional[Union[Mapping[str, Any], Options]] = None,
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    stream: Literal[True] = True,
+    stream: Literal[False] = False,
   ) -> ProgressResponse: ...
 
   @overload
@@ -1054,9 +1056,9 @@ class AsyncClient(BaseClient):
 
   async def create_blob(self, path: Union[str, Path]) -> str:
     sha256sum = sha256()
-    with open(path, 'rb') as r:
+    async with await anyio.open_file(path, 'rb') as r:
       while True:
-        chunk = r.read(32 * 1024)
+        chunk = await r.read(32 * 1024)
         if not chunk:
           break
         sha256sum.update(chunk)
@@ -1064,9 +1066,9 @@ class AsyncClient(BaseClient):
     digest = f'sha256:{sha256sum.hexdigest()}'
 
     async def upload_bytes():
-      with open(path, 'rb') as r:
+      async with await anyio.open_file(path, 'rb') as r:
         while True:
-          chunk = r.read(32 * 1024)
+          chunk = await r.read(32 * 1024)
           if not chunk:
             break
           yield chunk
@@ -1133,7 +1135,7 @@ def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Imag
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: [image for image in _copy_images(v)] if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
@@ -1143,7 +1145,7 @@ def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
-  if isinstance(s, str) or isinstance(s, Path):
+  if isinstance(s, (str, Path)):
     try:
       if (p := Path(s)).exists():
         return p
@@ -1225,7 +1227,7 @@ def _parse_host(host: Optional[str]) -> str:
   elif scheme == 'https':
     port = 443
 
-  split = urllib.parse.urlsplit('://'.join([scheme, hostport]))
+  split = urllib.parse.urlsplit(f'{scheme}://{hostport}')
   host = split.hostname or '127.0.0.1'
   port = split.port or port
 

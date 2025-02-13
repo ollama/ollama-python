@@ -1,51 +1,65 @@
-[tool.poetry]
-name = "ollama"
-version = "0.0.0"
-description = "The official Python client for Ollama."
-authors = ["Ollama <hello@ollama.com>"]
-license = "MIT"
-readme = "README.md"
-homepage = "https://ollama.com"
-repository = "https://github.com/ollama/ollama-python"
+[project]
+name = 'ollama'
+description = 'The official Python client for Ollama.'
+authors = [
+    { email = 'hello@ollama.com' },
+]
+readme = 'README.md'
+requires-python = '>=3.8'
+dependencies = [
+    'httpx>=0.27',
+    'pydantic>=2.9',
+]
+dynamic = [ 'version' ]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-httpx = ">=0.27,<0.29"
-pydantic = "^2.9.0"
-
-[tool.poetry.requires-plugins]
-poetry-plugin-export = ">=1.8"
-
-[tool.poetry.group.dev.dependencies]
-pytest = ">=7.4.3,<9.0.0"
-pytest-asyncio = ">=0.23.2,<0.25.0"
-pytest-cov = ">=4.1,<6.0"
-pytest-httpserver = "^1.0.8"
-ruff = ">=0.9.1,<0.10.0"
+[project.urls]
+homepage = 'https://ollama.com'
+repository = 'https://github.com/ollama/ollama-python'
+issues = 'https://github.com/ollama/ollama-python/issues'
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = [ 'hatchling', 'hatch-vcs' ]
+build-backend = 'hatchling.build'
+
+[tool.hatch.version]
+source = 'vcs'
+
+[tool.hatch.envs.hatch-test]
+default-args = ['ollama', 'tests']
+extra-dependencies = [
+    'pytest-anyio',
+    'pytest-httpserver',
+]
+
+[tool.hatch.envs.hatch-static-analysis]
+dependencies = [ 'ruff>=0.9.1' ]
+config-path = 'none'
 
 [tool.ruff]
 line-length = 999
 indent-width = 2
 
 [tool.ruff.format]
-quote-style = "single"
-indent-style = "space"
+quote-style = 'single'
+indent-style = 'space'
+docstring-code-format = false
 
 [tool.ruff.lint]
 select = [
-  "E", # pycodestyle errors
-  "F", # pyflakes
-  "B", # bugbear (likely bugs)
-  "I", # sort imports
-  "RUF022", # sort __all__
-]
-ignore = [
-  "E501", # line too long
+    'F', # pyflakes
+    'E', # pycodestyle errors
+    'W', # pycodestyle warnings
+    'I', # sort imports
+    'N', # pep8-naming
+    'ASYNC', # flake8-async
+    'FBT', # flake8-boolean-trap
+    'B', # flake8-bugbear
+    'C4', # flake8-comprehensions
+    'PIE', # flake8-pie
+    'SIM', # flake8-simplify
+    'FLY', # flynt
+    'RUF', # ruff-specific rules
 ]
 
 [tool.pytest.ini_options]
-addopts = '--doctest-modules --ignore examples'
+addopts = ['--doctest-modules']

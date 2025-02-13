@@ -8,39 +8,29 @@ on:
 
 jobs:
   test:
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pipx install poetry
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: ${{ matrix.python-version }}
-          cache: poetry
-      - run: poetry install --with=dev
-      - run: poetry run pytest . --junitxml=junit/test-results-${{ matrix.python-version }}.xml --cov=ollama --cov-report=xml --cov-report=html
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pytest-results-${{ matrix.python-version }}
-          path: junit/test-results-${{ matrix.python-version }}.xml
+          enable-cache: true
+      - run: uvx hatch test -acp
         if: ${{ always() }}
   lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pipx install poetry
       - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v5
         with:
-          python-version: "3.13"
-          cache: poetry
-      - run: poetry install --with=dev
-      - run: poetry run ruff check --output-format=github .
-      - run: poetry run ruff format --check .
-      - name: check poetry.lock is up-to-date
-        run: poetry check --lock
+          enable-cache: true
+      - name: check formatting
+        run: uvx hatch fmt --check -f
+      - name: check linting
+        run: uvx hatch fmt --check -l --output-format=github
+      - name: check uv.lock is up-to-date
+        run: uv lock --check
       - name: check requirements.txt is up-to-date
         run: |
-          poetry export >requirements.txt
+          uv export >requirements.txt
           git diff --exit-code requirements.txt
