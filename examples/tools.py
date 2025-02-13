@@ -12,14 +12,14 @@ def add_two_numbers(a: int, b: int) -> int:
   Returns:
     int: The sum of the two numbers
   """
-  return a + b
+  return int(a) + int(b)
 
 
 def subtract_two_numbers(a: int, b: int) -> int:
   """
   Subtract two numbers
   """
-  return a - b
+  return int(a) - int(b)
 
 
 # Tools can still be manually defined and passed into chat
