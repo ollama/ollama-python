@@ -124,6 +124,15 @@ class Client(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
+  def close(self):
+    self._client.close()
+
+  def __enter__(self):
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    self.close()
+
   def _request_raw(self, *args, **kwargs):
     try:
       r = self._client.request(*args, **kwargs)
@@ -701,6 +710,15 @@ class Client(BaseClient):
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.AsyncClient, host, **kwargs)
+
+  async def close(self):
+    await self._client.aclose()
+
+  async def __aenter__(self):
+    return self
+
+  async def __aexit__(self, exc_type, exc_val, exc_tb):
+    await self.close()
 
   async def _request_raw(self, *args, **kwargs):
     try:
