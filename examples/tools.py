@@ -12,6 +12,9 @@ def add_two_numbers(a: int, b: int) -> int:
   Returns:
     int: The sum of the two numbers
   """
+
+  # The cast is necessary because LLM tool use doesn't always conform exactly to schema
+  # E.g. this would prevent "what is 30 + 12" to produce '3012' instead of 42
   return int(a) + int(b)
 
 
@@ -19,6 +22,8 @@ def subtract_two_numbers(a: int, b: int) -> int:
   """
   Subtract two numbers
   """
+
+  # The cast is necessary because LLM tool use doesn't always conform exactly to schema
   return int(a) - int(b)
 
 
