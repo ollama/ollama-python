@@ -1181,3 +1181,33 @@ async def test_async_client_connection_error():
   with pytest.raises(ConnectionError) as exc_info:
     await client.show('model')
   assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+
+def test_client_close():
+  client = Client()
+  client.close()
+  assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_close():
+  client = AsyncClient()
+  await client.close()
+  assert client._client.is_closed
+
+
+def test_client_context_manager():
+  with Client() as client:
+    assert isinstance(client, Client)
+    assert not client._client.is_closed
+
+  assert client._client.is_closed
+
+
+@pytest.mark.asyncio
+async def test_async_client_context_manager():
+  async with AsyncClient() as client:
+    assert isinstance(client, AsyncClient)
+    assert not client._client.is_closed
+
+  assert client._client.is_closed
