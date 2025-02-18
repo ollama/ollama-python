@@ -76,7 +76,7 @@ from ollama._types import (
 T = TypeVar('T')
 
 
-class BaseClient(contextlib.AbstractContextManager):
+class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncContextManager):
   def __init__(
     self,
     client,
@@ -119,9 +119,6 @@ class BaseClient(contextlib.AbstractContextManager):
 
   def __exit__(self, exc_type, exc_val, exc_tb):
     self.close()
-
-  async def __aenter__(self) -> Any:
-    return self
 
   async def __aexit__(self, exc_type, exc_val, exc_tb):
     await self.close()
