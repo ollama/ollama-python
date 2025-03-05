@@ -28,8 +28,8 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 
 ### Multimodal with Images - Chat with a multimodal (image chat) model
-- [multimodal_chat.py](multimodal_chat.py)
-- [multimodal_generate.py](multimodal_generate.py)
+- [multimodal-chat.py](multimodal-chat.py)
+- [multimodal-generate.py](multimodal-generate.py)
 
 
 ### Structured Outputs - Generate structured outputs with a model
