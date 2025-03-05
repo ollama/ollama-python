@@ -256,7 +256,7 @@ class Message(SubscriptableBaseModel):
   Chat message.
   """
 
-  role: Literal['user', 'assistant', 'system', 'tool']
+  role: Literal['user', 'assistant', 'system', 'tool', 'control']
   "Assumed role of the message. Response messages has role 'assistant' or 'tool'."
 
   content: Optional[str] = None
