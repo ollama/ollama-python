@@ -569,6 +569,11 @@ class Client(BaseClient):
       'GET',
       '/api/tags',
     )
+  
+  def models_list(self) -> List[str]:
+    response = self.list()
+    model_names = [m.model for m in response.models]
+    return model_names
 
   def delete(self, model: str) -> StatusResponse:
     r = self._request_raw(

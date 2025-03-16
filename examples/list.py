@@ -1,5 +1,4 @@
-from ollama import ListResponse, list
-
+from ollama import ListResponse, list, models_list
 response: ListResponse = list()
 
 for model in response.models:
@@ -11,3 +10,8 @@ for model in response.models:
     print('  Parameter Size:', model.details.parameter_size)
     print('  Quantization Level:', model.details.quantization_level)
   print('\n')
+
+models = models_list()
+
+for name in models:
+    print(name)

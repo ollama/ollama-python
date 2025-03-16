@@ -48,6 +48,7 @@ push = _client.push
 create = _client.create
 delete = _client.delete
 list = _client.list
+models_list = _client.models_list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
