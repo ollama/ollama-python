@@ -1,9 +1,11 @@
 import base64
+from httpx import Response as httpxResponse
 import json
 import os
 import re
-import tempfile
 from pathlib import Path
+import tempfile
+from typing import Any, AsyncIterator
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -11,7 +13,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
 from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
-from ollama._types import Image
+from ollama._types import Image, Message
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -1181,3 +1183,38 @@ async def test_async_client_connection_error():
   with pytest.raises(ConnectionError) as exc_info:
     await client.show('model')
   assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+def test_arbitrary_roles_accepted_in_message():
+  _ = Message(role="somerandomrole", content="I'm ok with you adding any role message now!")
+
+def _mock_request(*args: Any, **kwargs: Any) -> Response:
+    return httpxResponse(status_code=200, content="{'response': 'Hello world!'}")
+
+def test_arbitrary_roles_accepted_in_message_request(monkeypatch:pytest.MonkeyPatch):
+
+  monkeypatch.setattr(Client, "_request", _mock_request)
+
+  client = Client()
+
+  client.chat(model="llama3.1",
+              messages=[
+                {"role":"somerandomrole","content":"I'm ok with you adding any role message now!"},
+                {"role":"user","content":"Hello world!"}
+              ])
+  
+async def _mock_request_async(*args: Any, **kwargs: Any) -> Response:
+    return httpxResponse(status_code=200, content="{'response': 'Hello world!'}")
+
+@pytest.mark.asyncio
+async def test_arbitrary_roles_accepted_in_message_request_async(monkeypatch:pytest.MonkeyPatch):
+
+  monkeypatch.setattr(AsyncClient, "_request", _mock_request_async)
+
+  client = AsyncClient()
+
+  await client.chat(model="llama3.1",
+              messages=[
+                {"role":"somerandomrole","content":"I'm ok with you adding any role message now!"},
+                {"role":"user","content":"Hello world!"}
+              ])
+  
