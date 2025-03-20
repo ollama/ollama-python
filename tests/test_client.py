@@ -1,13 +1,13 @@
 import base64
-from httpx import Response as httpxResponse
 import json
 import os
 import re
-from pathlib import Path
 import tempfile
-from typing import Any, AsyncIterator
+from pathlib import Path
+from typing import Any
 
 import pytest
+from httpx import Response as httpxResponse
 from pydantic import BaseModel, ValidationError
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
