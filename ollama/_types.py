@@ -1,3 +1,4 @@
+import contextlib
 import json
 from base64 import b64decode, b64encode
 from datetime import datetime
@@ -97,7 +98,7 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg.get('tool_calls')[0]['function']['name']
     'foo'
     """
-    return self[key] if key in self else default
+    return getattr(self, key) if hasattr(self, key) else default
 
 
 class Options(SubscriptableBaseModel):
@@ -522,12 +523,10 @@ class ResponseError(Exception):
   """
 
   def __init__(self, error: str, status_code: int = -1):
-    try:
-      # try to parse content as JSON and extract 'error'
-      # fallback to raw content if JSON parsing fails
+    # try to parse content as JSON and extract 'error'
+    # fallback to raw content if JSON parsing fails
+    with contextlib.suppress(json.JSONDecodeError):
       error = json.loads(error).get('error', error)
-    except json.JSONDecodeError:
-      ...
 
     super().__init__(error)
     self.error = error
