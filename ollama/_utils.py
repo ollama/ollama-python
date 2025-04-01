@@ -15,12 +15,12 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   if not doc_string:
     return parsed_docstring
 
-  key = hash(doc_string)
+  key = str(hash(doc_string))
   for line in doc_string.splitlines():
     lowered_line = line.lower().strip()
     if lowered_line.startswith('args:'):
       key = 'args'
-    elif lowered_line.startswith('returns:') or lowered_line.startswith('yields:') or lowered_line.startswith('raises:'):
+    elif lowered_line.startswith(('returns:', 'yields:', 'raises:')):
       key = '_'
 
     else:
@@ -54,7 +54,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
 
 def convert_function_to_tool(func: Callable) -> Tool:
-  doc_string_hash = hash(inspect.getdoc(func))
+  doc_string_hash = str(hash(inspect.getdoc(func)))
   parsed_docstring = _parse_docstring(inspect.getdoc(func))
   schema = type(
     func.__name__,
