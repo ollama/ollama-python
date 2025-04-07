@@ -330,21 +330,19 @@ class Client(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
-    request_data = ChatRequest(
-      model=model,
-      messages=[message for message in _copy_messages(messages)],
-      tools=[tool for tool in _copy_tools(tools)],
-      stream=stream,
-      format=format,
-      options=options,
-      keep_alive=keep_alive,
-    ).model_dump(exclude_none=True)
-    print('Sending chat request to Ollama API:', request_data)
     return self._request(
       ChatResponse,
       'POST',
       '/api/chat',
-      json=request_data,
+      json=ChatRequest(
+        model=model,
+        messages=[message for message in _copy_messages(messages)],
+        tools=[tool for tool in _copy_tools(tools)],
+        stream=stream,
+        format=format,
+        options=options,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
       stream=stream,
     )
 
