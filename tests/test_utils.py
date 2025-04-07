@@ -200,8 +200,8 @@ def test_function_with_only_description():
   assert tool['function']['parameters'] == {
     'type': 'object',
     'properties': {
-      'x': {'type': 'integer', 'description': ''},
-      'y': {'type': 'integer', 'description': ''},
+      'x': {'type': 'integer', 'description': '', 'enum': None},
+      'y': {'type': 'integer', 'description': '', 'enum': None},
     },
     'required': ['x', 'y'],
   }
