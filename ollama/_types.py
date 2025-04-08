@@ -313,7 +313,7 @@ class Tool(SubscriptableBaseModel):
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
-        type: Optional[str] = None
+        type: Optional[Union[str, Sequence[str]]] = None
         description: Optional[str] = None
         enum: Optional[Sequence] = None
 

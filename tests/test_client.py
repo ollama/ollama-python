@@ -1139,7 +1139,7 @@ def test_copy_tools():
       'description': 'Test function',
       'parameters': {
         'type': 'object',
-        'properties': {'x': {'type': 'string', 'description': 'A string'}},
+        'properties': {'x': {'type': 'string', 'description': 'A string', 'enum': ['a', 'b', 'c']}, 'y': {'type': ['integer', 'number'], 'description': 'An integer'}},
         'required': ['x'],
       },
     },
