@@ -315,6 +315,7 @@ class Tool(SubscriptableBaseModel):
 
         type: Optional[str] = None
         description: Optional[str] = None
+        enum: Optional[Sequence] = None
 
       properties: Optional[Mapping[str, Property]] = None
 
