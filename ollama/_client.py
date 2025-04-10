@@ -342,7 +342,7 @@ class Client(BaseClient):
         format=format,
         options=options,
         keep_alive=keep_alive,
-      ).model_dump(exclude_none=True),
+      ).model_dump(exclude_none=True, by_alias=True),
       stream=stream,
     )
 
@@ -846,7 +846,7 @@ class AsyncClient(BaseClient):
         format=format,
         options=options,
         keep_alive=keep_alive,
-      ).model_dump(exclude_none=True),
+      ).model_dump(exclude_none=True, by_alias=True),
       stream=stream,
     )
 
