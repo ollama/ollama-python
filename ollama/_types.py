@@ -307,6 +307,8 @@ class Tool(SubscriptableBaseModel):
     description: Optional[str] = None
 
     class Parameters(SubscriptableBaseModel):
+      model_config = ConfigDict(populate_by_name=True)
+
       type: Optional[Literal['object']] = 'object'
       defs: Optional[Any] = Field(None, alias='$defs')
       items: Optional[Any] = None
