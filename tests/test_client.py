@@ -1111,14 +1111,12 @@ def test_copy_tools():
     Args:
         x (integer): A number
     """
-    pass
 
   def func2(y: str) -> int:
     """Simple function 2.
     Args:
         y (string): A string
     """
-    pass
 
   # Test with list of functions
   tools = list(_copy_tools([func1, func2]))
