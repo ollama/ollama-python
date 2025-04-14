@@ -308,7 +308,6 @@ class Tool(SubscriptableBaseModel):
 
     class Parameters(SubscriptableBaseModel):
       model_config = ConfigDict(populate_by_name=True)
-
       type: Optional[Literal['object']] = 'object'
       defs: Optional[Any] = Field(None, alias='$defs')
       items: Optional[Any] = None
@@ -330,6 +329,15 @@ class Tool(SubscriptableBaseModel):
 
 
 class ChatRequest(BaseGenerateRequest):
+  @model_serializer(mode='wrap')
+  def serialize_model(self, nxt):
+    output = nxt(self)
+    if 'tools' in output and output['tools']:
+      for tool in output['tools']:
+        if 'function' in tool and 'parameters' in tool['function'] and 'defs' in tool['function']['parameters']:
+          tool['function']['parameters']['$defs'] = tool['function']['parameters'].pop('defs')
+    return output
+
   messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
   'Messages to chat with.'
 
