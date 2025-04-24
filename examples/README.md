@@ -59,7 +59,6 @@ Requirement: `pip install tqdm`
 - [create.py](create.py) 
 
 
-
 ### Ollama Embed - Generate embeddings with a model
 - [embed.py](embed.py)
 
