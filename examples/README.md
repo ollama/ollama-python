@@ -59,3 +59,5 @@ Requirement: `pip install tqdm`
 ### Ollama Embed - Generate embeddings with a model
 - [embed.py](embed.py)
 
+### Ollama Show - Display downloaded model's properties and capabilities
+- [show.py](show.py)
