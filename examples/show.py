@@ -1,17 +1,11 @@
 from ollama import ShowResponse, show
-from ollama import ListResponse, list
 
-response: ListResponse = list()
-
-for model in response.models:
-  print('Name:', model.model)
-  model_details: ShowResponse = show(model.model)
-  if "embedding" in model_details.capabilities:
-    print("Embedding model")
-  elif "vision" in model_details.capabilities:
-    print("Vision model")
-  elif "completion" in model_details.capabilities:
-    print("Chat model")
-  else:
-    print("Unknown", model_details.capabilities)
-  print('\n')
+response: ShowResponse = show("gemma3")
+print(f"Modified at: {response.modified_at}\n")
+print(f"Template: {response.template}\n")
+print(f"Modelfile: {response.modelfile}\n")
+print(f"License: {response.license}\n")
+print(f"Details: {response.details}\n")
+print(f"Model Info: {response.modelinfo}\n")
+print(f"Parameters: {response.parameters}\n")
+print(f"Capabilities: {response.capabilities}\n")
