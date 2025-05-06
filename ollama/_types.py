@@ -1,3 +1,4 @@
+import contextlib
 import json
 from base64 import b64decode, b64encode
 from datetime import datetime
@@ -78,8 +79,8 @@ class SubscriptableBaseModel(BaseModel):
     if key in self.model_fields_set:
       return True
 
-    if key in self.model_fields:
-      return self.model_fields[key].default is not None
+    if value := self.model_fields.get(key):
+      return value.default is not None
 
     return False
 
@@ -97,7 +98,7 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg.get('tool_calls')[0]['function']['name']
     'foo'
     """
-    return self[key] if key in self else default
+    return getattr(self, key) if hasattr(self, key) else default
 
 
 class Options(SubscriptableBaseModel):
@@ -332,7 +333,7 @@ class ChatRequest(BaseGenerateRequest):
   @model_serializer(mode='wrap')
   def serialize_model(self, nxt):
     output = nxt(self)
-    if 'tools' in output and output['tools']:
+    if output.get('tools'):
       for tool in output['tools']:
         if 'function' in tool and 'parameters' in tool['function'] and 'defs' in tool['function']['parameters']:
           tool['function']['parameters']['$defs'] = tool['function']['parameters'].pop('defs')
@@ -536,12 +537,10 @@ class ResponseError(Exception):
   """
 
   def __init__(self, error: str, status_code: int = -1):
-    try:
-      # try to parse content as JSON and extract 'error'
-      # fallback to raw content if JSON parsing fails
+    # try to parse content as JSON and extract 'error'
+    # fallback to raw content if JSON parsing fails
+    with contextlib.suppress(json.JSONDecodeError):
       error = json.loads(error).get('error', error)
-    except json.JSONDecodeError:
-      ...
 
     super().__init__(error)
     self.error = error

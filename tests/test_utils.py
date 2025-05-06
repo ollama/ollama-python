@@ -37,7 +37,6 @@ def test_function_with_no_args():
     Returns:
         None
     """
-    pass
 
   tool = convert_function_to_tool(simple_func).model_dump()
   assert tool['function']['name'] == 'simple_func'
@@ -64,7 +63,6 @@ def test_function_with_all_types():
           w (object): The fourth number
           v (integer | string | None): The fifth number
       """
-      pass
   else:
 
     def all_types(
@@ -91,7 +89,6 @@ def test_function_with_all_types():
           l (array): The eighth number
           o (integer | None): The ninth number
       """
-      pass
 
   tool_json = convert_function_to_tool(all_types).model_dump_json()
   tool = json.loads(tool_json)
@@ -101,7 +98,7 @@ def test_function_with_all_types():
   if sys.version_info >= (3, 10):
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
     assert tool['function']['parameters']['properties']['w']['type'] == 'object'
-    assert set(x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')) == {'string', 'integer'}
+    assert {x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')} == {'string', 'integer'}
     assert tool['function']['parameters']['properties']['v']['type'] != 'null'
     assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
   else:
@@ -133,7 +130,6 @@ def test_function_docstring_parsing():
         object: A dictionary
             with multiple lines
     """
-    pass
 
   tool = convert_function_to_tool(func_with_complex_docs).model_dump()
   assert tool['function']['description'] == 'Test function with complex docstring.'
@@ -155,7 +151,6 @@ def test_skewed_docstring_parsing():
     Returns:
         integer: The sum of x and y
     """
-    pass
 
   tool = convert_function_to_tool(add_two_numbers).model_dump()
   assert tool['function']['parameters']['properties']['x']['description'] == ': The first number'
@@ -163,11 +158,9 @@ def test_skewed_docstring_parsing():
 
 
 def test_function_with_no_docstring():
-  def no_docstring():
-    pass
+  def no_docstring(): ...
 
-  def no_docstring_with_args(x: int, y: int):
-    pass
+  def no_docstring_with_args(x: int, y: int): ...
 
   tool = convert_function_to_tool(no_docstring).model_dump()
   assert tool['function']['description'] == ''
@@ -183,7 +176,6 @@ def test_function_with_only_description():
     """
     A function with only a description.
     """
-    pass
 
   tool = convert_function_to_tool(only_description).model_dump()
   assert tool['function']['description'] == 'A function with only a description.'
@@ -193,7 +185,6 @@ def test_function_with_only_description():
     """
     A function with only a description.
     """
-    pass
 
   tool = convert_function_to_tool(only_description_with_args).model_dump()
   assert tool['function']['description'] == 'A function with only a description.'
@@ -221,7 +212,6 @@ def test_function_with_yields():
     Yields:
       The sum of x and y
     """
-    pass
 
   tool = convert_function_to_tool(function_with_yields).model_dump()
   assert tool['function']['description'] == 'A function with yields section.'
@@ -234,7 +224,6 @@ def test_function_with_no_types():
     """
     A function with no types.
     """
-    pass
 
   tool = convert_function_to_tool(no_types).model_dump()
   assert tool['function']['parameters']['properties']['a']['type'] == 'string'
@@ -251,7 +240,6 @@ def test_function_with_parentheses():
     Returns:
         int: The sum of a and b
     """
-    pass
 
   def func_with_parentheses_and_args(a: int, b: int):
     """
@@ -260,7 +248,6 @@ def test_function_with_parentheses():
         a(integer) : First (:thing) number to add
         b(integer) :Second number to add
     """
-    pass
 
   tool = convert_function_to_tool(func_with_parentheses).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'

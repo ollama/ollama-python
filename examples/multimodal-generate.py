@@ -8,10 +8,7 @@ from ollama import generate
 latest = httpx.get('https://xkcd.com/info.0.json')
 latest.raise_for_status()
 
-if len(sys.argv) > 1:
-  num = int(sys.argv[1])
-else:
-  num = random.randint(1, latest.json().get('num'))
+num = int(sys.argv[1]) if len(sys.argv) > 1 else random.randint(1, latest.json().get('num'))
 
 comic = httpx.get(f'https://xkcd.com/{num}/info.0.json')
 comic.raise_for_status()
