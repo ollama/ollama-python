@@ -42,7 +42,7 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [list.py](list.py)
 
 
-### Ollama Show - Display downloaded model's properties and capabilities
+### Ollama Show - Display model properties and capabilities
 - [show.py](show.py)
 
 

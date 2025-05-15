@@ -505,7 +505,7 @@ class ShowResponse(SubscriptableBaseModel):
 
   parameters: Optional[str] = None
 
-  capabilities: Optional[list[str]] = None
+  capabilities: Optional[List[str]] = None
 
 
 class ProcessResponse(SubscriptableBaseModel):
