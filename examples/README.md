@@ -42,6 +42,10 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [list.py](list.py)
 
 
+### Ollama Show - Display model properties and capabilities
+- [show.py](show.py)
+
+
 ### Ollama ps - Show model status with CPU/GPU usage
 - [ps.py](ps.py)
 
@@ -53,7 +57,6 @@ Requirement: `pip install tqdm`
 
 ### Ollama Create - Create a model from a Modelfile
 - [create.py](create.py) 
-
 
 
 ### Ollama Embed - Generate embeddings with a model
