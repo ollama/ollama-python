@@ -104,6 +104,8 @@ class BaseClient:
           'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
         }.items()
       },
+      http2=False,
+      transport=httpx.HTTPTransport(retries=3),
       **kwargs,
     )
 
