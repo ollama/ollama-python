@@ -114,31 +114,3 @@ def create_function_tool(tool_name: str, description: str, parameter_list: list,
             }
         }
     return tool_definition
-
-list_tools = []
-async_list_tools = []
-
-def ollama_async_tool(func):
-    async_list_tools.append(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
-
-def ollama_tool(func):
-    list_tools.append(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-    return wrapper
-
-def get_tools_name():
-    list_name_tools = {} 
-    for func in list_tools + async_list_tools:
-        if func.__name__ not in list_name_tools:
-            list_name_tools[func.__name__] = func
-    return list_name_tools
-
-def get_tools():
-    return list_tools + async_list_tools
-
-def get_name_async_tools():
-    return {f"{func.__name__}" for func in async_list_tools}

@@ -257,19 +257,6 @@ def test_function_with_parentheses():
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
 
-
-def test__get_parameters():
-    params = [
-        {"param1": {"type": "string", "description": "desc1"}},
-        {"param2": {"type": "integer", "description": "desc2"}},
-    ]
-    from ollama._utils import _get_parameters
-    result = _get_parameters(params)
-    assert result == {
-        "param1": {"type": "string", "description": "desc1"},
-        "param2": {"type": "integer", "description": "desc2"},
-    }
-
 def test_create_function_tool():
     from ollama._utils import create_function_tool
     tool = create_function_tool(
@@ -285,45 +272,14 @@ def test_create_function_tool():
     assert tool["function"]["parameters"]["properties"]["foo"]["description"] == "bar"
     assert tool["function"]["parameters"]["required"] == ["foo"]
 
-def test_tool_and_async_tool_registration():
-    import types
-    from ollama import _utils
-    # Limpar listas para evitar interferência
-    _utils.list_tools.clear()
-    _utils.async_list_tools.clear()
-
-    @(_utils.ollama_tool)
-    def t1():
-        return "ok"
-
-    @(_utils.ollama_async_tool)
-    async def t2():
-        return "ok"
-
-    assert t1 in _utils.list_tools
-    assert t2 in _utils.async_list_tools
-    # Testa wrappers
-    assert t1() == "ok"
-    import asyncio
-    assert asyncio.run(t2()) == "ok"
-
-def test_get_tools_name_and_get_tools():
-    from ollama import _utils
-    _utils.list_tools.clear()
-    _utils.async_list_tools.clear()
-
-    @(_utils.ollama_tool)
-    def t3():
-        return 1
-    @(_utils.ollama_async_tool)
-    async def t4():
-        return 2
-
-    names = _utils.get_tools_name()
-    assert "t3" in names
-    assert "t4" in names
-    assert callable(names["t3"])
-    assert callable(names["t4"])
-    tools = _utils.get_tools()
-    assert t3 in tools
-    assert t4 in tools
+def test_get_parameters():
+    params = [
+        {"param1": {"type": "string", "description": "desc1"}},
+        {"param2": {"type": "integer", "description": "desc2"}},
+    ]
+    from ollama._utils import _get_parameters
+    result = _get_parameters(params)
+    assert result == {
+        "param1": {"type": "string", "description": "desc1"},
+        "param2": {"type": "integer", "description": "desc2"},
+    }

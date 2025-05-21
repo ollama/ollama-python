@@ -1,6 +1,12 @@
 import asyncio
 from ollama import ChatResponse, chat
-from ollama import ollama_tool, ollama_async_tool, get_tools, get_name_async_tools, get_tools_name
+from ollama import (
+  ollama_tool, 
+  ollama_async_tool, 
+  get_ollama_tools, 
+  get_ollama_name_async_tools, 
+  get_ollama_tools_name, 
+  get_ollama_tool_description)
 
 @ollama_tool
 def add_two_numbers(a: int, b: int) -> int:
@@ -37,18 +43,20 @@ async def web_search(query: str) -> str:
   """
   return f"Searching the web for {query}"
 
-available_functions = get_tools_name() # this is a dictionary of tools
+available_functions = get_ollama_tools_name() # this is a dictionary of tools
 
 # tools are treated differently in synchronous code
-async_available_functions = get_name_async_tools()
+async_available_functions = get_ollama_name_async_tools()
 
-messages = [{'role': 'user', 'content': 'What is three plus one? and Search the web for what is ollama'}]
-print('Prompt:', messages[0]['content'])
+messages = [
+  {'role': 'system', 'content': f'You are a helpful assistant, with access to these tools: {get_ollama_tool_description()}'}, #usage example for the get_ollama_tool_description function
+  {'role': 'user', 'content': 'What is three plus one? and Search the web for what is ollama'}]
+print('Prompt:', messages[1]['content'])
 
 response: ChatResponse = chat(
   'llama3.1',
   messages=messages,
-  tools=get_tools(), # this is the list of tools using decorators
+  tools=get_ollama_tools(), # this is the list of tools using decorators
 )
 
 if response.message.tool_calls:

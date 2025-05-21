@@ -1,5 +1,5 @@
 from ollama import ChatResponse, chat, create_function_tool
-
+from ollama import get_ollama_tool_description
 
 def add_two_numbers(a: int, b: int) -> int:
   """
@@ -56,8 +56,10 @@ multiply_two_numbers_tool = create_function_tool(tool_name="multiply_two_numbers
                                                                   "b": {"type": "integer", "description": "The second number"}}], 
                                                  required_parameters=["a", "b"])
 
-messages = [{'role': 'user', 'content': 'What is three plus one? And what is three times two?'}]
-print('Prompt:', messages[0]['content'])
+messages = [
+  {'role': 'system', 'content': f'You are a helpful assistant, with access to these tools: {get_ollama_tool_description()}'}, #usage example for the get_ollama_tool_description function
+  {'role': 'user', 'content': 'What is three plus one? and Search the web for what is ollama'}]
+print('Prompt:', messages[1]['content'])
 
 available_functions = {
   'add_two_numbers': add_two_numbers,
