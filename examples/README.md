@@ -62,3 +62,6 @@ Requirement: `pip install tqdm`
 ### Ollama Embed - Generate embeddings with a model
 - [embed.py](embed.py)
 
+
+### Thinking - Enable thinking mode for a model
+- [thinking.py](thinking.py)
