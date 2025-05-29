@@ -207,6 +207,9 @@ class GenerateRequest(BaseGenerateRequest):
   images: Optional[Sequence[Image]] = None
   'Image data for multimodal models.'
 
+  think: Optional[bool] = None
+  'Enable thinking mode (for thinking models).'
+
 
 class BaseGenerateResponse(SubscriptableBaseModel):
   model: Optional[str] = None
@@ -248,6 +251,9 @@ class GenerateResponse(BaseGenerateResponse):
   response: str
   'Response content. When streaming, this contains a fragment of the response.'
 
+  thinking: Optional[str] = None
+  'Thinking content. Only present when thinking is enabled.'
+
   context: Optional[Sequence[int]] = None
   'Tokenized history up to the point of the response.'
 
@@ -262,6 +268,9 @@ class Message(SubscriptableBaseModel):
 
   content: Optional[str] = None
   'Content of the message. Response messages contains message fragments when streaming.'
+
+  thinking: Optional[str] = None
+  'Thinking content. Only present when thinking is enabled.'
 
   images: Optional[Sequence[Image]] = None
   """
@@ -344,6 +353,9 @@ class ChatRequest(BaseGenerateRequest):
 
   tools: Optional[Sequence[Tool]] = None
   'Tools to use for the chat.'
+
+  think: Optional[bool] = None
+  'Enable thinking mode (for thinking models).'
 
 
 class ChatResponse(BaseGenerateResponse):
