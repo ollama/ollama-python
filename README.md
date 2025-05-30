@@ -5,6 +5,7 @@ The Ollama Python library provides the easiest way to integrate Python 3.8+ proj
 ## Prerequisites
 
 - [Ollama](https://ollama.com/download) should be installed and running
+  - The library connects to Ollama running on `http://localhost:11434` by default. This can be changed with a [custom client](https://github.com/ollama/ollama-python?tab=readme-ov-file#custom-client).
 - Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull llama3.2`
   - See [Ollama.com](https://ollama.com/search) for more information on the models available.
 
