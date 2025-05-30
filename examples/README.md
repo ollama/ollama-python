@@ -65,3 +65,6 @@ Requirement: `pip install tqdm`
 
 ### Thinking - Enable thinking mode for a model
 - [thinking.py](thinking.py)
+
+### Thinking (generate) - Enable thinking mode for a model
+- [thinking-generate.py](thinking-generate.py)
