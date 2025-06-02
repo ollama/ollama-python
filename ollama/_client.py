@@ -582,7 +582,7 @@ class Client(BaseClient):
 
   def delete(self, model: str) -> StatusResponse:
     r = self._request_raw(
-      'DELETE',
+      'POST',
       '/api/delete',
       json=DeleteRequest(
         model=model,
@@ -1102,7 +1102,7 @@ class AsyncClient(BaseClient):
 
   async def delete(self, model: str) -> StatusResponse:
     r = await self._request_raw(
-      'DELETE',
+      'POST',
       '/api/delete',
       json=DeleteRequest(
         model=model,
