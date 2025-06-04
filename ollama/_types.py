@@ -464,6 +464,7 @@ class ListResponse(SubscriptableBaseModel):
     digest: Optional[str] = None
     size: Optional[ByteSize] = None
     details: Optional[ModelDetails] = None
+    capabilities: Optional[List[str]] = None
 
   models: Sequence[Model]
   'List of models.'
