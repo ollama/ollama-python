@@ -468,6 +468,9 @@ class ListResponse(SubscriptableBaseModel):
   models: Sequence[Model]
   'List of models.'
 
+  def __len__(self) -> int:
+    return len(self.models)
+
 
 class DeleteRequest(BaseRequest):
   """
