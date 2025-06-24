@@ -237,6 +237,11 @@ class Client(BaseClient):
     """
     Create a response using the requested model.
 
+    Args:
+      stream: Whether to stream the response.
+      think: Whether to think before generating a response.
+      format: The format of the response.
+
     Raises `RequestError` if a model is not provided.
 
     Raises `ResponseError` if the request could not be fulfilled.
@@ -315,6 +320,7 @@ class Client(BaseClient):
         Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
+      think: Whether to think before generating a response.
       format: The format of the response.
 
     Example:
@@ -749,6 +755,11 @@ class AsyncClient(BaseClient):
     """
     Create a response using the requested model.
 
+    Args:
+      stream: Whether to stream the response.
+      think: Whether to think before generating a response.
+      format: The format of the response.
+
     Raises `RequestError` if a model is not provided.
 
     Raises `ResponseError` if the request could not be fulfilled.
@@ -826,6 +837,7 @@ class AsyncClient(BaseClient):
         Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
+      think: Whether to think before generating a response.
       format: The format of the response.
 
     Example:
