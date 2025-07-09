@@ -25,6 +25,7 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 ### Tools/Function Calling - Call a function with a model
 - [tools.py](tools.py) - Simple example of Tools/Function Calling
 - [async-tools.py](async-tools.py)
+- [multi-tool.py](multi-tool.py) - Using multiple tools, with thinking enabled
 
 
 ### Multimodal with Images - Chat with a multimodal (image chat) model

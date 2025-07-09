@@ -60,6 +60,7 @@ select = [
     'FLY', # flynt
     'RUF', # ruff-specific rules
 ]
+ignore = ['FBT001'] # Boolean-typed positional argument in function definition
 
 [tool.pytest.ini_options]
 addopts = ['--doctest-modules']

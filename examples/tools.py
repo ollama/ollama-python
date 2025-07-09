@@ -74,7 +74,7 @@ if response.message.tool_calls:
 if response.message.tool_calls:
   # Add the function response to messages for the model to use
   messages.append(response.message)
-  messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
+  messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})
 
   # Get final response from model with function outputs
   final_response = chat('llama3.1', messages=messages)

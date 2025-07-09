@@ -284,6 +284,9 @@ class Message(SubscriptableBaseModel):
   Valid image formats depend on the model. See the model card for more information.
   """
 
+  tool_name: Optional[str] = None
+  'Name of the executed tool.'
+
   class ToolCall(SubscriptableBaseModel):
     """
     Model tool calls.
