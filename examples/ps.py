@@ -23,4 +23,5 @@ for model in response.models:
   print('  Size: ', model.size)
   print('  Size vram: ', model.size_vram)
   print('  Details: ', model.details)
+  print('  Context length: ', model.context_length)
   print('\n')

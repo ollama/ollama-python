@@ -533,6 +533,7 @@ class ProcessResponse(SubscriptableBaseModel):
     size: Optional[ByteSize] = None
     size_vram: Optional[ByteSize] = None
     details: Optional[ModelDetails] = None
+    context_length: Optional[int] = None
 
   models: Sequence[Model]
 
