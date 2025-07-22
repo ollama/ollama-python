@@ -12,7 +12,7 @@ async def main():
   ]
 
   client = AsyncClient()
-  response = await client.chat('llama3.2', messages=messages)
+  response = await client.chat('gemma3', messages=messages)
   print(response['message']['content'])
 
 

@@ -5,7 +5,7 @@ The Ollama Python library provides the easiest way to integrate Python 3.8+ proj
 ## Prerequisites
 
 - [Ollama](https://ollama.com/download) should be installed and running
-- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull llama3.2`
+- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull gemma3`
   - See [Ollama.com](https://ollama.com/search) for more information on the models available.
 
 ## Install
@@ -20,7 +20,7 @@ pip install ollama
 from ollama import chat
 from ollama import ChatResponse
 
-response: ChatResponse = chat(model='llama3.2', messages=[
+response: ChatResponse = chat(model='gemma3', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -41,7 +41,7 @@ Response streaming can be enabled by setting `stream=True`.
 from ollama import chat
 
 stream = chat(
-    model='llama3.2',
+    model='gemma3',
     messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
     stream=True,
 )
@@ -61,7 +61,7 @@ client = Client(
   host='http://localhost:11434',
   headers={'x-some-header': 'some-value'}
 )
-response = client.chat(model='llama3.2', messages=[
+response = client.chat(model='gemma3', messages=[
   {
     'role': 'user',
     'content': 'Why is the sky blue?',
@@ -79,7 +79,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='llama3.2', messages=[message])
+  response = await AsyncClient().chat(model='gemma3', messages=[message])
 
 asyncio.run(chat())
 ```
@@ -92,7 +92,7 @@ from ollama import AsyncClient
 
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='llama3.2', messages=[message], stream=True):
+  async for part in await AsyncClient().chat(model='gemma3', messages=[message], stream=True):
     print(part['message']['content'], end='', flush=True)
 
 asyncio.run(chat())
@@ -105,13 +105,13 @@ The Ollama Python library's API is designed around the [Ollama REST API](https:/
 ### Chat
 
 ```python
-ollama.chat(model='llama3.2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+ollama.chat(model='gemma3', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 ```
 
 ### Generate
 
 ```python
-ollama.generate(model='llama3.2', prompt='Why is the sky blue?')
+ollama.generate(model='gemma3', prompt='Why is the sky blue?')
 ```
 
 ### List
@@ -123,49 +123,49 @@ ollama.list()
 ### Show
 
 ```python
-ollama.show('llama3.2')
+ollama.show('gemma3')
 ```
 
 ### Create
 
 ```python
-ollama.create(model='example', from_='llama3.2', system="You are Mario from Super Mario Bros.")
+ollama.create(model='example', from_='gemma3', system="You are Mario from Super Mario Bros.")
 ```
 
 ### Copy
 
 ```python
-ollama.copy('llama3.2', 'user/llama3.2')
+ollama.copy('gemma3', 'user/gemma3')
 ```
 
 ### Delete
 
 ```python
-ollama.delete('llama3.2')
+ollama.delete('gemma3')
 ```
 
 ### Pull
 
 ```python
-ollama.pull('llama3.2')
+ollama.pull('gemma3')
 ```
 
 ### Push
 
 ```python
-ollama.push('user/llama3.2')
+ollama.push('user/gemma3')
 ```
 
 ### Embed
 
 ```python
-ollama.embed(model='llama3.2', input='The sky is blue because of rayleigh scattering')
+ollama.embed(model='gemma3', input='The sky is blue because of rayleigh scattering')
 ```
 
 ### Embed (batch)
 
 ```python
-ollama.embed(model='llama3.2', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
+ollama.embed(model='gemma3', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
 ```
 
 ### Ps
