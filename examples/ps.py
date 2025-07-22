@@ -1,7 +1,7 @@
 from ollama import ProcessResponse, chat, ps, pull
 
 # Ensure at least one model is loaded
-response = pull('llama3.2', stream=True)
+response = pull('gemma3', stream=True)
 progress_states = set()
 for progress in response:
   if progress.get('status') in progress_states:
@@ -12,7 +12,7 @@ for progress in response:
 print('\n')
 
 print('Waiting for model to load... \n')
-chat(model='llama3.2', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+chat(model='gemma3', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 
 
 response: ProcessResponse = ps()
