@@ -1160,16 +1160,6 @@ def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
 
 
-def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
-  if isinstance(s, (str, Path)):
-    try:
-      if (p := Path(s)).exists():
-        return p
-    except Exception:
-      ...
-  return None
-
-
 def _parse_host(host: Optional[str]) -> str:
   """
   >>> _parse_host(None)
