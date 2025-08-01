@@ -1,57 +1,59 @@
 import asyncio
-
 import ollama
-from ollama import ChatResponse, get_ollama_tool_description
+from ollama import ChatResponse
+from ollama import (
+  ollama_tool, 
+  ollama_async_tool, 
+  get_ollama_tools, 
+  get_ollama_name_async_tools, 
+  get_ollama_tools_name, 
+  get_ollama_tool_description)
 
 
+@ollama_tool
 def add_two_numbers(a: int, b: int) -> int:
   """
   Add two numbers
-
   Args:
     a (int): The first number
     b (int): The second number
-
   Returns:
     int: The sum of the two numbers
   """
   return a + b
 
-
+@ollama_tool
 def subtract_two_numbers(a: int, b: int) -> int:
   """
   Subtract two numbers
+  Args:
+    a (int): The first number
+    b (int): The second number
+  Returns:
+    int: The difference of the two numbers
   """
   return a - b
 
+@ollama_async_tool
+async def web_search(query: str) -> str:
+  """
+  Search the web for information,
+  Args:
+    query (str): The query to search the web for
+  Returns:
+    str: The result of the web search
+  """
+  return f"Searching the web for {query}"
 
-# Tools can still be manually defined and passed into chat
-subtract_two_numbers_tool = {
-  'type': 'function',
-  'function': {
-    'name': 'subtract_two_numbers',
-    'description': 'Subtract two numbers',
-    'parameters': {
-      'type': 'object',
-      'required': ['a', 'b'],
-      'properties': {
-        'a': {'type': 'integer', 'description': 'The first number'},
-        'b': {'type': 'integer', 'description': 'The second number'},
-      },
-    },
-  },
-}
+available_functions = get_ollama_tools_name() # this is a dictionary of tools
+
+# tools are treated differently in synchronous code
+async_available_functions = get_ollama_name_async_tools()
 
 messages = [
   {'role': 'system', 'content': f'You are a helpful assistant, with access to these tools: {get_ollama_tool_description()}'}, #usage example for the get_ollama_tool_description function
   {'role': 'user', 'content': 'What is three plus one? and Search the web for what is ollama'}]
 print('Prompt:', messages[1]['content'])
-
-available_functions = {
-  'add_two_numbers': add_two_numbers,
-  'subtract_two_numbers': subtract_two_numbers,
-}
-
 
 async def main():
   client = ollama.AsyncClient()
@@ -59,7 +61,7 @@ async def main():
   response: ChatResponse = await client.chat(
     'llama3.1',
     messages=messages,
-    tools=[add_two_numbers, subtract_two_numbers_tool],
+    tools=get_ollama_tools(),
   )
 
   if response.message.tool_calls:
@@ -69,7 +71,11 @@ async def main():
       if function_to_call := available_functions.get(tool.function.name):
         print('Calling function:', tool.function.name)
         print('Arguments:', tool.function.arguments)
-        output = function_to_call(**tool.function.arguments)
+        # if the function is in the list of asynchronous functions it is executed with asyncio.run()
+        if tool.function.name in async_available_functions:
+          output = await function_to_call(**tool.function.arguments)
+        else:
+          output = function_to_call(**tool.function.arguments)
         print('Function output:', output)
       else:
         print('Function', tool.function.name, 'not found')
@@ -78,7 +84,7 @@ async def main():
   if response.message.tool_calls:
     # Add the function response to messages for the model to use
     messages.append(response.message)
-    messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})
+    messages.append({'role': 'tool', 'content': str(output), 'name': tool.function.name})
 
     # Get final response from model with function outputs
     final_response = await client.chat('llama3.1', messages=messages)
