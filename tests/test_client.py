@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 from httpx import Response as httpxResponse
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
