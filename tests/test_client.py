@@ -8,7 +8,7 @@ from typing import Any
 
 import pytest
 from httpx import Response as httpxResponse
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
@@ -1136,10 +1136,11 @@ def test_copy_tools():
 
 
 def test_tool_validation():
-  # Raises ValidationError when used as it is a generator
-  with pytest.raises(ValidationError):
-    invalid_tool = {'type': 'invalid_type', 'function': {'name': 'test'}}
-    list(_copy_tools([invalid_tool]))
+  arbitrary_tool = {'type': 'custom_type', 'function': {'name': 'test'}}
+  tools = list(_copy_tools([arbitrary_tool]))
+  assert len(tools) == 1
+  assert tools[0].type == 'custom_type'
+  assert tools[0].function.name == 'test'
 
 
 def test_client_connection_error():

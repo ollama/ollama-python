@@ -79,11 +79,12 @@ def convert_function_to_tool(func: Callable) -> Tool:
     }
 
   tool = Tool(
+    type='function',
     function=Tool.Function(
       name=func.__name__,
       description=schema.get('description', ''),
       parameters=Tool.Function.Parameters(**schema),
-    )
+    ),
   )
 
   return Tool.model_validate(tool)
