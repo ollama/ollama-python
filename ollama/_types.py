@@ -313,7 +313,7 @@ class Message(SubscriptableBaseModel):
 
 
 class Tool(SubscriptableBaseModel):
-  type: Optional[Literal['function']] = 'function'
+  type: Optional[str] = None
 
   class Function(SubscriptableBaseModel):
     name: Optional[str] = None
