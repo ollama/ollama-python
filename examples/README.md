@@ -27,6 +27,10 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [async-tools.py](async-tools.py)
 - [multi-tool.py](multi-tool.py) - Using multiple tools, with thinking enabled
 
+ #### gpt-oss
+- [gpt-oss-tools.py](gpt-oss-tools.py) - Using tools with gpt-oss
+- [gpt-oss-tools-stream.py](gpt-oss-tools-stream.py) - Using tools with gpt-oss, with streaming enabled
+
 
 ### Multimodal with Images - Chat with a multimodal (image chat) model
 - [multimodal-chat.py](multimodal-chat.py)
