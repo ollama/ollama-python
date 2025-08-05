@@ -79,7 +79,7 @@ class SubscriptableBaseModel(BaseModel):
     if key in self.model_fields_set:
       return True
 
-    if value := self.model_fields.get(key):
+    if value := self.__class__.model_fields.get(key):
       return value.default is not None
 
     return False
@@ -313,7 +313,7 @@ class Message(SubscriptableBaseModel):
 
 
 class Tool(SubscriptableBaseModel):
-  type: Optional[str] = None
+  type: Optional[str] = 'function'
 
   class Function(SubscriptableBaseModel):
     name: Optional[str] = None
