@@ -1,8 +1,6 @@
-from ollama import chat
-
-
 import random
 
+from ollama import chat
 from ollama._types import ChatResponse
 
 

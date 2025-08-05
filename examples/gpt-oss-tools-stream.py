@@ -1,9 +1,7 @@
-from typing import Iterator
-from ollama import chat
-
-
 import random
+from typing import Iterator
 
+from ollama import chat
 from ollama._types import ChatResponse
 
 
