@@ -207,7 +207,7 @@ class GenerateRequest(BaseGenerateRequest):
   images: Optional[Sequence[Image]] = None
   'Image data for multimodal models.'
 
-  think: Optional[bool] = None
+  think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'
 
 
@@ -357,7 +357,7 @@ class ChatRequest(BaseGenerateRequest):
   tools: Optional[Sequence[Tool]] = None
   'Tools to use for the chat.'
 
-  think: Optional[bool] = None
+  think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'
 
 
