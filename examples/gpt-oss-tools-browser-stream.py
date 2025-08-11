@@ -9,13 +9,15 @@
 
 import asyncio
 import json
-from typing import Optional
+from typing import Iterator, Optional
 
 from gpt_oss.tools.simple_browser import ExaBackend, SimpleBrowserTool
 from openai_harmony import Author, Role, TextContent
 from openai_harmony import Message as HarmonyMessage
+from rich import print
 
 from ollama import Client
+from ollama._types import ChatResponse
 
 _backend = ExaBackend(source='web')
 _browser_tool = SimpleBrowserTool(backend=_backend)
@@ -98,7 +100,6 @@ def browser_find(pattern: str, cursor: int = -1) -> str:
   return asyncio.run(_browser_find_async(pattern=pattern, cursor=cursor))
 
 
-
 # Schema definitions for each browser tool
 browser_search_schema = {
   'type': 'function',
@@ -136,48 +137,69 @@ print('You: ', prompt, '\n')
 messages = [{'role': 'user', 'content': prompt}]
 
 client = Client()
+
+# gpt-oss can call tools while "thinking"
+# a loop is needed to call the tools and get the results
+final = True
 while True:
-  response = client.chat(
+  response_stream: Iterator[ChatResponse] = client.chat(
     model=model,
     messages=messages,
     tools=[browser_search_schema, browser_open_schema, browser_find_schema],
-    options={'num_ctx': 32000} # 8192 is the recommended lower limit for the context window
+    options={'num_ctx': 32000}, # 8192 is the recommended lower limit for the context window
+    stream=True
   )
 
-  if hasattr(response.message, 'thinking') and response.message.thinking:
-    heading('Thinking')
-    print(response.message.thinking.strip() + '\n')
+  tool_calls = []
+  thinking = ''
+  content = ''
 
-  if hasattr(response.message, 'content') and response.message.content:
-    heading('Assistant')
-    print(response.message.content.strip() + '\n')
+  for chunk in response_stream:
+    if chunk.message.tool_calls:
+      tool_calls.extend(chunk.message.tool_calls)
 
-  # add message to chat history
-  messages.append(response.message)
+    if chunk.message.content:
+      if not (chunk.message.thinking or chunk.message.thinking == '') and final:
+        heading('\n\nFinal result: ')
+        final = False
+      print(chunk.message.content, end='', flush=True)
 
-  if response.message.tool_calls:
-    for tool_call in response.message.tool_calls:
+    if chunk.message.thinking:
+      thinking += chunk.message.thinking
+      print(chunk.message.thinking, end='', flush=True)
+
+  if thinking != '':
+    messages.append({'role': 'assistant', 'content': thinking, 'tool_calls': tool_calls})
+
+  print()
+
+  if tool_calls:
+    for tool_call in tool_calls:
       tool_name = tool_call.function.name
       args = tool_call.function.arguments or {}
       function_to_call = available_tools.get(tool_name)
-      if not function_to_call:
-        print(f'Unknown tool: {tool_name}')
-        continue
 
-      try:
-        result = function_to_call(**args)
-        heading(f'Tool: {tool_name}')
+      if function_to_call:
+        heading(f'\nCalling tool: {tool_name}')
         if args:
           print(f'Arguments: {args}')
-        print(result[:200])
-        if len(result) > 200:
-          print('... [truncated]')
-        print()
-        messages.append({'role': 'tool', 'content': result, 'tool_name': tool_name})
-      except Exception as e:
-        err = f'Error from {tool_name}: {e}'
-        print(err)
-        messages.append({'role': 'tool', 'content': err, 'tool_name': tool_name})
+
+        try:
+          result = function_to_call(**args)
+          print(f'Tool result: {result[:200]}')
+          if len(result) > 200:
+            heading('... [truncated]')
+          print()
+
+          result_message = {'role': 'tool', 'content': result, 'tool_name': tool_name}
+          messages.append(result_message)
+
+        except Exception as e:
+          err = f'Error from {tool_name}: {e}'
+          print(err)
+          messages.append({'role': 'tool', 'content': err, 'tool_name': tool_name})
+      else:
+        print(f'Tool {tool_name} not found')
   else:
-    # break on no more tool calls
+    # no more tool calls, we can stop the loop
     break
