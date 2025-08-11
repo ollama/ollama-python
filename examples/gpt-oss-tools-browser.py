@@ -23,7 +23,7 @@ _browser_tool = SimpleBrowserTool(backend=_backend)
 
 def heading(text):
   print(text)
-  print('=' * (len(text) +3))
+  print('=' * (len(text) + 3))
 
 
 async def _browser_search_async(query: str, topn: int = 10, source: str | None = None) -> str:
@@ -44,14 +44,7 @@ async def _browser_search_async(query: str, topn: int = 10, source: str | None =
 
 
 async def _browser_open_async(id: int | str = -1, cursor: int = -1, loc: int = -1, num_lines: int = -1, *, view_source: bool = False, source: str | None = None) -> str:
-  payload = {
-    'id': id,
-    'cursor': cursor,
-    'loc': loc,
-    'num_lines': num_lines,
-    'view_source': view_source,
-    'source': source
-  }
+  payload = {'id': id, 'cursor': cursor, 'loc': loc, 'num_lines': num_lines, 'view_source': view_source, 'source': source}
 
   harmony_message = HarmonyMessage(
     author=Author(role=Role.USER),
@@ -98,7 +91,6 @@ def browser_find(pattern: str, cursor: int = -1) -> str:
   return asyncio.run(_browser_find_async(pattern=pattern, cursor=cursor))
 
 
-
 # Schema definitions for each browser tool
 browser_search_schema = {
   'type': 'function',
@@ -141,7 +133,7 @@ while True:
     model=model,
     messages=messages,
     tools=[browser_search_schema, browser_open_schema, browser_find_schema],
-    options={'num_ctx': 32000} # 8192 is the recommended lower limit for the context window
+    options={'num_ctx': 8192},  # 8192 is the recommended lower limit for the context window
   )
 
   if hasattr(response.message, 'thinking') and response.message.thinking:

@@ -25,7 +25,7 @@ _browser_tool = SimpleBrowserTool(backend=_backend)
 
 def heading(text):
   print(text)
-  print('=' * (len(text) +3))
+  print('=' * (len(text) + 3))
 
 
 async def _browser_search_async(query: str, topn: int = 10, source: str | None = None) -> str:
@@ -46,14 +46,7 @@ async def _browser_search_async(query: str, topn: int = 10, source: str | None =
 
 
 async def _browser_open_async(id: int | str = -1, cursor: int = -1, loc: int = -1, num_lines: int = -1, *, view_source: bool = False, source: str | None = None) -> str:
-  payload = {
-    'id': id,
-    'cursor': cursor,
-    'loc': loc,
-    'num_lines': num_lines,
-    'view_source': view_source,
-    'source': source
-  }
+  payload = {'id': id, 'cursor': cursor, 'loc': loc, 'num_lines': num_lines, 'view_source': view_source, 'source': source}
 
   harmony_message = HarmonyMessage(
     author=Author(role=Role.USER),
@@ -146,8 +139,8 @@ while True:
     model=model,
     messages=messages,
     tools=[browser_search_schema, browser_open_schema, browser_find_schema],
-    options={'num_ctx': 32000}, # 8192 is the recommended lower limit for the context window
-    stream=True
+    options={'num_ctx': 8192},  # 8192 is the recommended lower limit for the context window
+    stream=True,
   )
 
   tool_calls = []
