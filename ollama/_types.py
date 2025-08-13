@@ -320,14 +320,14 @@ class Tool(SubscriptableBaseModel):
     description: Optional[str] = None
 
     class Parameters(SubscriptableBaseModel):
-      model_config = ConfigDict(populate_by_name=True)
+      model_config = ConfigDict(populate_by_name=True, extra='allow')
       type: Optional[Literal['object']] = 'object'
       defs: Optional[Any] = Field(None, alias='$defs')
       items: Optional[Any] = None
       required: Optional[Sequence[str]] = None
 
       class Property(SubscriptableBaseModel):
-        model_config = ConfigDict(arbitrary_types_allowed=True)
+        model_config = ConfigDict(arbitrary_types_allowed=True, extra='allow')
 
         type: Optional[Union[str, Sequence[str]]] = None
         items: Optional[Any] = None
