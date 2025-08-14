@@ -462,6 +462,7 @@ class ModelDetails(SubscriptableBaseModel):
 
 class ListResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
+    name: Optional[str] = None
     model: Optional[str] = None
     modified_at: Optional[datetime] = None
     digest: Optional[str] = None
