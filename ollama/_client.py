@@ -90,8 +90,13 @@ class BaseClient:
     `kwargs` are passed to the httpx client.
     """
 
+    config = _parse_host(host or os.getenv('OLLAMA_HOST'))
+
+    # Combine parsed config with user-provided kwargs.
+    # User kwargs take precedence over URL-based config.
+    final_kwargs = {**config, **kwargs}
+
     self._client = client(
-      base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
       # Lowercase all headers to ensure override
@@ -104,7 +109,7 @@ class BaseClient:
           'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
         }.items()
       },
-      **kwargs,
+      **final_kwargs,
     )
 
 
@@ -1148,16 +1153,20 @@ def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Imag
     yield image if isinstance(image, Image) else Image(value=image)
 
 
-def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
+def _copy_messages(
+  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]],
+) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
       {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+def _copy_tools(
+  tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
-    yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
+    yield (convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool))
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
@@ -1173,88 +1182,104 @@ def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
 def _parse_host(host: Optional[str]) -> str:
   """
   >>> _parse_host(None)
-  'http://127.0.0.1:11434'
+  {'base_url': 'http://127.0.0.1:11434'}
   >>> _parse_host('')
-  'http://127.0.0.1:11434'
+  {'base_url': 'http://127.0.0.1:11434'}
   >>> _parse_host('1.2.3.4')
-  'http://1.2.3.4:11434'
+  {'base_url': 'http://1.2.3.4:11434'}
   >>> _parse_host(':56789')
-  'http://127.0.0.1:56789'
+  {'base_url': 'http://127.0.0.1:56789'}
   >>> _parse_host('1.2.3.4:56789')
-  'http://1.2.3.4:56789'
+  {'base_url': 'http://1.2.3.4:56789'}
   >>> _parse_host('http://1.2.3.4')
-  'http://1.2.3.4:80'
+  {'base_url': 'http://1.2.3.4:80'}
   >>> _parse_host('https://1.2.3.4')
-  'https://1.2.3.4:443'
+  {'base_url': 'https://1.2.3.4:443'}
   >>> _parse_host('https://1.2.3.4:56789')
-  'https://1.2.3.4:56789'
+  {'base_url': 'https://1.2.3.4:56789'}
   >>> _parse_host('example.com')
-  'http://example.com:11434'
+  {'base_url': 'http://example.com:11434'}
   >>> _parse_host('example.com:56789')
-  'http://example.com:56789'
+  {'base_url': 'http://example.com:56789'}
   >>> _parse_host('http://example.com')
-  'http://example.com:80'
+  {'base_url': 'http://example.com:80'}
   >>> _parse_host('https://example.com')
-  'https://example.com:443'
+  {'base_url': 'https://example.com:443'}
   >>> _parse_host('https://example.com:56789')
-  'https://example.com:56789'
+  {'base_url': 'https://example.com:56789'}
   >>> _parse_host('example.com/')
-  'http://example.com:11434'
+  {'base_url': 'http://example.com:11434'}
   >>> _parse_host('example.com:56789/')
-  'http://example.com:56789'
+  {'base_url': 'http://example.com:56789'}
   >>> _parse_host('example.com/path')
-  'http://example.com:11434/path'
+  {'base_url': 'http://example.com:11434/path'}
   >>> _parse_host('example.com:56789/path')
-  'http://example.com:56789/path'
+  {'base_url': 'http://example.com:56789/path'}
   >>> _parse_host('https://example.com:56789/path')
-  'https://example.com:56789/path'
+  {'base_url': 'https://example.com:56789/path'}
   >>> _parse_host('example.com:56789/path/')
-  'http://example.com:56789/path'
+  {'base_url': 'http://example.com:56789/path'}
   >>> _parse_host('[0001:002:003:0004::1]')
-  'http://[0001:002:003:0004::1]:11434'
+  {'base_url': 'http://[0001:002:003:0004::1]:11434'}
   >>> _parse_host('[0001:002:003:0004::1]:56789')
-  'http://[0001:002:003:0004::1]:56789'
+  {'base_url': 'http://[0001:002:003:0004::1]:56789'}
   >>> _parse_host('http://[0001:002:003:0004::1]')
-  'http://[0001:002:003:0004::1]:80'
+  {'base_url': 'http://[0001:002:003:0004::1]:80'}
   >>> _parse_host('https://[0001:002:003:0004::1]')
-  'https://[0001:002:003:0004::1]:443'
+  {'base_url': 'https://[0001:002:003:0004::1]:443'}
   >>> _parse_host('https://[0001:002:003:0004::1]:56789')
-  'https://[0001:002:003:0004::1]:56789'
+  {'base_url': 'https://[0001:002:003:0004::1]:56789'}
   >>> _parse_host('[0001:002:003:0004::1]/')
-  'http://[0001:002:003:0004::1]:11434'
+  {'base_url': 'http://[0001:002:003:0004::1]:11434'}
   >>> _parse_host('[0001:002:003:0004::1]:56789/')
-  'http://[0001:002:003:0004::1]:56789'
+  {'base_url': 'http://[0001:002:003:0004::1]:56789'}
   >>> _parse_host('[0001:002:003:0004::1]/path')
-  'http://[0001:002:003:0004::1]:11434/path'
+  {'base_url': 'http://[0001:002:003:0004::1]:11434/path'}
   >>> _parse_host('[0001:002:003:0004::1]:56789/path')
-  'http://[0001:002:003:0004::1]:56789/path'
+  {'base_url': 'http://[0001:002:003:0004::1]:56789/path'}
   >>> _parse_host('https://[0001:002:003:0004::1]:56789/path')
-  'https://[0001:002:003:0004::1]:56789/path'
+  {'base_url': 'https://[0001:002:003:0004::1]:56789/path'}
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
-  'http://[0001:002:003:0004::1]:56789/path'
+  {'base_url': 'http://[0001:002:003:0004::1]:56789/path'}
+  >>> _parse_host(None)
+  {'base_url': 'http://127.0.0.1:11434'}
+  >>> _parse_host('https://user:password@ollama.mysite.com:11343')
+  {'base_url': 'https://ollama.mysite.com:11343', 'auth': <httpx.BasicAuth object at ...>}
   """
 
-  host, port = host or '', 11434
-  scheme, _, hostport = host.partition('://')
+  host_str, port = host or '', 11434
+  scheme, _, hostport = host_str.partition('://')
   if not hostport:
-    scheme, hostport = 'http', host
+    scheme, hostport = 'http', host_str
   elif scheme == 'http':
     port = 80
   elif scheme == 'https':
     port = 443
 
   split = urllib.parse.urlsplit(f'{scheme}://{hostport}')
-  host = split.hostname or '127.0.0.1'
+  hostname = split.hostname or '127.0.0.1'
   port = split.port or port
 
+  auth = None
+  if split.username:
+    # Create an auth tuple if a username is present in the URL
+    auth = httpx.BasicAuth(username=split.username, password=split.password or '')
+
   try:
-    if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
+    if isinstance(ipaddress.ip_address(hostname), ipaddress.IPv6Address):
       # Fix missing square brackets for IPv6 from urlsplit
-      host = f'[{host}]'
+      hostname = f'[{hostname}]'
   except ValueError:
     ...
 
-  if path := split.path.strip('/'):
-    return f'{scheme}://{host}:{port}/{path}'
+  path = split.path.strip('/')
+  base_url = f'{scheme}://{hostname}:{port}'
+  if path:
+    base_url = f'{base_url}/{path}'
 
-  return f'{scheme}://{host}:{port}'
+  # Return a dictionary with client configuration
+  config = {'base_url': base_url}
+  if auth:
+    config['auth'] = auth
+
+  return config
