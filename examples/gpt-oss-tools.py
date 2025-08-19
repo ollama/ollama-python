@@ -6,7 +6,6 @@
 #     "rich",
 # ]
 # ///
-import os
 import random
 
 from rich import print

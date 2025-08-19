@@ -71,7 +71,7 @@ while True:
 
     if chunk.message.content:
       if not (chunk.message.thinking or chunk.message.thinking == '') and final:
-        print('\n\n' + '='*10)
+        print('\n\n' + '=' * 10)
         print('Final result: ')
         final = False
       print(chunk.message.content, end='', flush=True)
@@ -80,7 +80,6 @@ while True:
       # accumulate thinking
       thinking += chunk.message.thinking
       print(chunk.message.thinking, end='', flush=True)
-
 
   if thinking != '' or content != '':
     messages.append({'role': 'assistant', 'thinking': thinking, 'content': content, 'tool_calls': tool_calls})
