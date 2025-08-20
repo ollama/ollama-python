@@ -55,7 +55,7 @@ client = Client(
   # host="https://ollama.com", headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))}
 )
 
-model = 'gpt-oss:120b'
+model = 'gpt-oss:20b'
 # gpt-oss can call tools while "thinking"
 # a loop is needed to call the tools and get the results
 final = True
@@ -81,7 +81,7 @@ while True:
       thinking += chunk.message.thinking
       print(chunk.message.thinking, end='', flush=True)
 
-  if thinking != '' or content != '':
+  if thinking != '' or content != '' or len(tool_calls) > 0:
     messages.append({'role': 'assistant', 'thinking': thinking, 'content': content, 'tool_calls': tool_calls})
 
   print()
