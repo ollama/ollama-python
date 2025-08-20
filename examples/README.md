@@ -77,4 +77,4 @@ Requirement: `pip install tqdm`
 - [thinking-generate.py](thinking-generate.py)
 
 ### Thinking (levels) - Choose the thinking level
-- [thinking-levels.py](thinking-generate.py)
+- [thinking-levels.py](thinking-levels.py)
