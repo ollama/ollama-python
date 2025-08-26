@@ -3,11 +3,13 @@ from __future__ import annotations
 import inspect
 import re
 from collections import defaultdict
-from typing import Callable, Union
+from typing import Any, Callable, Union
 
 import pydantic
 
 from ollama._types import Tool
+
+AnyCallable = Callable[..., Any]
 
 
 def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
@@ -53,7 +55,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   return parsed_docstring
 
 
-def convert_function_to_tool(func: Callable) -> Tool:
+def convert_function_to_tool(func: AnyCallable) -> Tool:
   doc_string_hash = str(hash(inspect.getdoc(func)))
   parsed_docstring = _parse_docstring(inspect.getdoc(func))
   schema = type(
