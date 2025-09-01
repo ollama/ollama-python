@@ -1,4 +1,12 @@
 from ollama._client import AsyncClient, Client
+from ollama._utils import create_function_tool
+from ollama._tools import (
+  ollama_tool, 
+  ollama_async_tool, 
+  get_ollama_tools, 
+  get_ollama_name_async_tools, 
+  get_ollama_tools_name,
+  get_ollama_tool_description)
 from ollama._types import (
   ChatResponse,
   EmbeddingsResponse,
