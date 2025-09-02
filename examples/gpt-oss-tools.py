@@ -78,7 +78,7 @@ while True:
         messages.append({'role': 'tool', 'content': result, 'tool_name': tool_call.function.name})
       else:
         print(f'Tool {tool_call.function.name} not found')
-
+        messages.append({'role': 'tool', 'content': f'Tool {tool_call.function.name} not found', 'tool_name': tool_call.function.name})
   else:
     # no more tool calls, we can stop the loop
     break
