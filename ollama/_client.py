@@ -363,6 +363,7 @@ class Client(BaseClient):
     truncate: Optional[bool] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    dimensions: Optional[int] = None,
   ) -> EmbedResponse:
     return self._request(
       EmbedResponse,
@@ -374,6 +375,7 @@ class Client(BaseClient):
         truncate=truncate,
         options=options,
         keep_alive=keep_alive,
+        dimensions=dimensions,
       ).model_dump(exclude_none=True),
     )
 
@@ -875,6 +877,7 @@ class AsyncClient(BaseClient):
     truncate: Optional[bool] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    dimensions: Optional[int] = None,
   ) -> EmbedResponse:
     return await self._request(
       EmbedResponse,
@@ -886,6 +889,7 @@ class AsyncClient(BaseClient):
         truncate=truncate,
         options=options,
         keep_alive=keep_alive,
+        dimensions=dimensions,
       ).model_dump(exclude_none=True),
     )
 
