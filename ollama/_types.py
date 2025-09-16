@@ -382,6 +382,9 @@ class EmbedRequest(BaseRequest):
 
   keep_alive: Optional[Union[float, str]] = None
 
+  dimensions: Optional[int] = None
+  'Dimensions truncates the output embedding to the specified dimension.'
+
 
 class EmbedResponse(BaseGenerateResponse):
   """
