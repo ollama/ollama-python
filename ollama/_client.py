@@ -66,6 +66,10 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  WebCrawlRequest,
+  WebCrawlResponse,
+  WebSearchRequest,
+  WebSearchResponse,
 )
 
 T = TypeVar('T')
@@ -102,6 +106,8 @@ class BaseClient:
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+          # TODO: this is to make the client feel good
+          # 'Authorization': f'Bearer {(headers or {}).get("Authorization") or os.getenv("OLLAMA_API_KEY")}' if (headers or {}).get("Authorization") or os.getenv("OLLAMA_API_KEY") else None,
         }.items()
       },
       **kwargs,
@@ -620,6 +626,46 @@ class Client(BaseClient):
       ProcessResponse,
       'GET',
       '/api/ps',
+    )
+
+  def websearch(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+    """
+    Performs a web search
+
+    Args:
+      queries: The queries to search for
+      max_results: The maximum number of results to return.
+
+    Returns:
+      WebSearchResponse with the search results
+    """
+    return self._request(
+      WebSearchResponse,
+      'POST',
+      'https://ollama.com/api/web_search',
+      json=WebSearchRequest(
+        queries=queries,
+        max_results=max_results,
+      ).model_dump(exclude_none=True),
+    )
+
+  def webcrawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+    """
+    Gets the content of web pages for the provided URLs.
+
+    Args:
+      urls: The URLs to crawl
+
+    Returns:
+      WebCrawlResponse with the crawl results
+    """
+    return self._request(
+      WebCrawlResponse,
+      'POST',
+      'https://ollama.com/api/web_crawl',
+      json=WebCrawlRequest(
+        urls=urls,
+      ).model_dump(exclude_none=True),
     )
 
 

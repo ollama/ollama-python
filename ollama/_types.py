@@ -538,6 +538,51 @@ class ProcessResponse(SubscriptableBaseModel):
   models: Sequence[Model]
 
 
+class WebSearchRequest(SubscriptableBaseModel):
+  queries: Sequence[str]
+  max_results: Optional[int] = None
+
+
+class SearchResult(SubscriptableBaseModel):
+  title: str
+  url: str
+  content: str
+
+
+class CrawlResult(SubscriptableBaseModel):
+  title: str
+  url: str
+  content: str
+  links: Optional[Sequence[str]] = None
+
+
+class SearchResultContent(SubscriptableBaseModel):
+  snippet: str
+  full_text: str
+
+
+class WebSearchResponse(SubscriptableBaseModel):
+  results: Mapping[str, Sequence[SearchResult]]
+  success: bool
+  errors: Optional[Sequence[str]] = None
+
+
+class WebCrawlRequest(SubscriptableBaseModel):
+  urls: Sequence[str]
+
+
+class CrawlResultContent(SubscriptableBaseModel):
+  # provides the first 200 characters of the full text
+  snippet: str
+  full_text: str
+
+
+class WebCrawlResponse(SubscriptableBaseModel):
+  results: Mapping[str, Sequence[CrawlResult]]
+  success: bool
+  errors: Optional[Sequence[str]] = None
+
+
 class RequestError(Exception):
   """
   Common class for request errors.
