@@ -1,4 +1,8 @@
 from ollama._client import AsyncClient, Client
+
+from ollama._browser import (
+  Browser
+)
 from ollama._types import (
   ChatResponse,
   EmbeddingsResponse,
@@ -15,6 +19,8 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  WebSearchResponse,
+  WebCrawlResponse,
 )
 
 __all__ = [
@@ -35,6 +41,9 @@ __all__ = [
   'ShowResponse',
   'StatusResponse',
   'Tool',
+  'WebSearchResponse',
+  'WebCrawlResponse',
+  'Browser',
 ]
 
 _client = Client()
@@ -51,3 +60,5 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+websearch = _client.websearch
+webcrawl = _client.webcrawl

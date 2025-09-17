@@ -538,6 +538,103 @@ class ProcessResponse(SubscriptableBaseModel):
   models: Sequence[Model]
 
 
+class WebSearchRequest(SubscriptableBaseModel):
+  queries: Sequence[str]
+  max_results: Optional[int] = None
+
+class SearchResult(SubscriptableBaseModel):
+  title: str
+  url: str
+  content: str
+  metadata: Optional['SearchResultMetadata'] = None
+
+
+class CrawlResult(SubscriptableBaseModel):
+  title: str
+  url: str
+  content: str
+  links: Optional[Sequence[str]] = None
+  metadata: Optional['CrawlResultMetadata'] = None
+
+
+class SearchResultContent(SubscriptableBaseModel):
+  snippet: str
+  full_text: str
+
+
+class SearchResultMetadata(SubscriptableBaseModel):
+  published_date: Optional[str] = None
+  author: Optional[str] = None
+
+
+class WebSearchResponse(SubscriptableBaseModel):
+  results: Mapping[str, Sequence[SearchResult]]
+  success: bool
+  errors: Optional[Sequence[str]] = None
+
+  def __str__(self) -> str:
+    if not self.success:
+      error_msg = ', '.join(self.errors) if self.errors else 'Unknown error'
+      return f'Web search failed: {error_msg}'
+    
+    output = []
+    for query, search_results in self.results.items():
+      output.append(f'Search results for "{query}":')
+      for i, result in enumerate(search_results, 1):
+        output.append(f'{i}. {result.title}')
+        output.append(f'   URL: {result.url}')
+        output.append(f'   Content: {result.content}')
+        if result.metadata and result.metadata.published_date:
+          output.append(f'   Published: {result.metadata.published_date}')
+        if result.metadata and result.metadata.author:
+          output.append(f'   Author: {result.metadata.author}')
+        output.append('')
+    
+    return '\n'.join(output).rstrip()
+
+class WebCrawlRequest(SubscriptableBaseModel):
+  urls: Sequence[str]
+
+
+class CrawlResultContent(SubscriptableBaseModel):
+  # provides the first 200 characters of the full text
+  snippet: str
+  full_text: str
+
+
+class CrawlResultMetadata(SubscriptableBaseModel):
+  published_date: Optional[str] = None
+  author: Optional[str] = None
+
+
+class WebCrawlResponse(SubscriptableBaseModel):
+  results: Mapping[str, Sequence[CrawlResult]]
+  success: bool
+  errors: Optional[Sequence[str]] = None
+
+  def __str__(self) -> str:
+    if not self.success:
+      error_msg = ', '.join(self.errors) if self.errors else 'Unknown error'
+      return f'Web crawl failed: {error_msg}'
+    
+    output = []
+    for url, crawl_results in self.results.items():
+      output.append(f'Crawl results for "{url}":')
+      for i, result in enumerate(crawl_results, 1):
+        output.append(f'{i}. {result.title}')
+        output.append(f'   URL: {result.url}')
+        output.append(f'   Content: {result.content}')
+        if result.links:
+          output.append(f'   Links: {", ".join(result.links)}')
+        if result.metadata and result.metadata.published_date:
+          output.append(f'   Published: {result.metadata.published_date}')
+        if result.metadata and result.metadata.author:
+          output.append(f'   Author: {result.metadata.author}')
+        output.append('')
+    
+    return '\n'.join(output).rstrip()
+
+
 class RequestError(Exception):
   """
   Common class for request errors.
