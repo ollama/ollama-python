@@ -66,6 +66,10 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  WebCrawlRequest,
+  WebCrawlResponse,
+  WebSearchRequest,
+  WebSearchResponse,
 )
 
 T = TypeVar('T')
@@ -624,6 +628,46 @@ class Client(BaseClient):
       '/api/ps',
     )
 
+  def web_search(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+    """
+    Performs a web search
+
+    Args:
+      queries: The queries to search for
+      max_results: The maximum number of results to return.
+
+    Returns:
+      WebSearchResponse with the search results
+    """
+    return self._request(
+      WebSearchResponse,
+      'POST',
+      'https://ollama.com/api/web_search',
+      json=WebSearchRequest(
+        queries=queries,
+        max_results=max_results,
+      ).model_dump(exclude_none=True),
+    )
+
+  def web_crawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+    """
+    Gets the content of web pages for the provided URLs.
+
+    Args:
+      urls: The URLs to crawl
+
+    Returns:
+      WebCrawlResponse with the crawl results
+    """
+    return self._request(
+      WebCrawlResponse,
+      'POST',
+      'https://ollama.com/api/web_crawl',
+      json=WebCrawlRequest(
+        urls=urls,
+      ).model_dump(exclude_none=True),
+    )
+
 
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
@@ -692,6 +736,46 @@ class AsyncClient(BaseClient):
       return inner()
 
     return cls(**(await self._request_raw(*args, **kwargs)).json())
+
+  async def websearch(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+    """
+    Performs a web search
+
+    Args:
+      queries: The queries to search for
+      max_results: The maximum number of results to return.
+
+    Returns:
+      WebSearchResponse with the search results
+    """
+    return await self._request(
+      WebSearchResponse,
+      'POST',
+      'https://ollama.com/api/web_search',
+      json=WebSearchRequest(
+        queries=queries,
+        max_results=max_results,
+      ).model_dump(exclude_none=True),
+    )
+
+  async def webcrawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+    """
+    Gets the content of web pages for the provided URLs.
+
+    Args:
+      urls: The URLs to crawl
+
+    Returns:
+      WebCrawlResponse with the crawl results
+    """
+    return await self._request(
+      WebCrawlResponse,
+      'POST',
+      'https://ollama.com/api/web_crawl',
+      json=WebCrawlRequest(
+        urls=urls,
+      ).model_dump(exclude_none=True),
+    )
 
   @overload
   async def generate(

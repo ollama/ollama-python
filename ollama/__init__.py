@@ -15,6 +15,8 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  WebCrawlResponse,
+  WebSearchResponse,
 )
 
 __all__ = [
@@ -35,6 +37,8 @@ __all__ = [
   'ShowResponse',
   'StatusResponse',
   'Tool',
+  'WebCrawlResponse',
+  'WebSearchResponse',
 ]
 
 _client = Client()
@@ -51,3 +55,5 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+websearch = _client.web_search
+webcrawl = _client.web_crawl
