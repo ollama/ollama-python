@@ -124,10 +124,7 @@ class BaseClient:
         kwargs['headers'] = {}
       kwargs['headers']['Authorization'] = auth_token
 
-      if '?' in path:
-        path = f'{path}&ts={timestamp}'
-      else:
-        path = f'{path}?ts={timestamp}'
+      path = f'{path}&ts={timestamp}' if '?' in path else f'{path}?ts={timestamp}'
 
     return {'method': method, 'url': path, **kwargs}
 

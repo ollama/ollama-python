@@ -42,9 +42,9 @@ class OllamaAuth:
       )
       return private_key
     except FileNotFoundError:
-      raise FileNotFoundError(f"Could not find Ollama private key at {self.key_path}. Please generate one using: ssh-keygen -t ed25519 -f ~/.ollama/id_ed25519 -N ''")
+      raise FileNotFoundError(f"Could not find Ollama private key at {self.key_path}. Please generate one using: ssh-keygen -t ed25519 -f ~/.ollama/id_ed25519 -N ''") from None
     except Exception as e:
-      raise ValueError(f'Invalid private key at {self.key_path}: {e!s}')
+      raise ValueError(f'Invalid private key at {self.key_path}: {e!s}') from e
 
   def get_public_key_b64(self, private_key):
     """Get the base64 encoded public key.
