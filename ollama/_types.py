@@ -543,26 +543,21 @@ class WebSearchRequest(SubscriptableBaseModel):
   max_results: Optional[int] = None
 
 
-class SearchResult(SubscriptableBaseModel):
+class WebSearchResult(SubscriptableBaseModel):
   title: str
   url: str
   content: str
 
 
-class CrawlResult(SubscriptableBaseModel):
+class WebCrawlResult(SubscriptableBaseModel):
   title: str
   url: str
   content: str
   links: Optional[Sequence[str]] = None
 
 
-class SearchResultContent(SubscriptableBaseModel):
-  snippet: str
-  full_text: str
-
-
 class WebSearchResponse(SubscriptableBaseModel):
-  results: Mapping[str, Sequence[SearchResult]]
+  results: Mapping[str, Sequence[WebSearchResult]]
   success: bool
   errors: Optional[Sequence[str]] = None
 
@@ -571,14 +566,8 @@ class WebCrawlRequest(SubscriptableBaseModel):
   urls: Sequence[str]
 
 
-class CrawlResultContent(SubscriptableBaseModel):
-  # provides the first 200 characters of the full text
-  snippet: str
-  full_text: str
-
-
 class WebCrawlResponse(SubscriptableBaseModel):
-  results: Mapping[str, Sequence[CrawlResult]]
+  results: Mapping[str, Sequence[WebCrawlResult]]
   success: bool
   errors: Optional[Sequence[str]] = None
 
