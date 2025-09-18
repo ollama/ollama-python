@@ -106,8 +106,6 @@ class BaseClient:
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
-          # TODO: this is to make the client feel good
-          # 'Authorization': f'Bearer {(headers or {}).get("Authorization") or os.getenv("OLLAMA_API_KEY")}' if (headers or {}).get("Authorization") or os.getenv("OLLAMA_API_KEY") else None,
         }.items()
       },
       **kwargs,
@@ -628,7 +626,7 @@ class Client(BaseClient):
       '/api/ps',
     )
 
-  def websearch(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+  def web_search(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
     """
     Performs a web search
 
@@ -649,7 +647,7 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
-  def webcrawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+  def web_crawl(self, urls: Sequence[str]) -> WebCrawlResponse:
     """
     Gets the content of web pages for the provided URLs.
 

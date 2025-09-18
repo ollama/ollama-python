@@ -49,14 +49,14 @@ def format_tool_results(results: Union[WebSearchResponse, WebCrawlResponse]):
 
 
 client = Client(headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))})
-available_tools = {'websearch': client.websearch, 'webcrawl': client.webcrawl}
+available_tools = {'web_search': client.web_search, 'web_crawl': client.web_crawl}
 
 query = "ollama's new engine"
 print('Query: ', query)
 
 messages = [{'role': 'user', 'content': query}]
 while True:
-  response = client.chat(model='qwen3', messages=messages, tools=[client.websearch, client.webcrawl], think=True)
+  response = client.chat(model='qwen3', messages=messages, tools=[client.web_search, client.web_crawl], think=True)
   if response.message.thinking:
     print('Thinking: ')
     print(response.message.thinking + '\n\n')

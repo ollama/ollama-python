@@ -55,5 +55,5 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
-websearch = _client.websearch
-webcrawl = _client.webcrawl
+websearch = _client.web_search
+webcrawl = _client.web_crawl
