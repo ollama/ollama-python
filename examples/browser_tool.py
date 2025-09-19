@@ -1,26 +1,19 @@
 from __future__ import annotations
-
+from browser_tool_helpers import Browser 
+from ollama import Client
 import os
 from typing import Any, Dict, List
-
-from ollama import Client
-
-try:
-  from .browser_tool_helpers import Browser  # when run with -m
-except Exception:
-  from browser_tool_helpers import Browser  # when run as a script
 
 
 def main() -> None:
   client = Client(headers={'Authorization': os.getenv('OLLAMA_API_KEY')})
   browser = Browser(initial_state=None, client=client)
 
-  # Minimal tool schemas (match other examples: names only)
+  # Minimal tool schemas
   browser_search_schema = {'type': 'function', 'function': {'name': 'browser.search'}}
   browser_open_schema = {'type': 'function', 'function': {'name': 'browser.open'}}
   browser_find_schema = {'type': 'function', 'function': {'name': 'browser.find'}}
 
-  # Simple wrappers returning page text
   def browser_search(query: str, topn: int = 10) -> str:
     return browser.search(query=query, topn=topn)['pageText']
 
