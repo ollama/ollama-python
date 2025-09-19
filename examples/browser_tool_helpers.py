@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Protocol, Any, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple
 from urllib.parse import urlparse
-import re
+
 from ollama import Client
+
 
 @dataclass
 class Page:
@@ -192,7 +194,7 @@ class Browser:
             page.lines = [""]
             total_lines = 1
 
-        if loc != loc or loc < 0: 
+        if loc != loc or loc < 0:
             loc = 0
         elif loc >= total_lines:
             loc = max(0, total_lines - 1)
