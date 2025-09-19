@@ -78,3 +78,16 @@ Requirement: `pip install tqdm`
 
 ### Thinking (levels) - Choose the thinking level
 - [thinking-levels.py](thinking-levels.py)
+
+
+### MCP server - Expose web search and crawl tools to MCP clients
+Requires: `pip install mcp`
+- [mcp_web_search_crawl_server.py](mcp_web_search_crawl_server.py)
+
+Run via stdio (for Cursor/Claude MCP):
+```sh
+python3 examples/mcp_web_search_crawl_server.py
+```
+
+Optional environment:
+- `OLLAMA_API_KEY`: If set, will be passed as an Authorization header for Ollama hosted web search/crawl APIs.
