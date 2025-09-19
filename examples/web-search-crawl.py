@@ -2,6 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "rich",
+#     "ollama",
 # ]
 # ///
 import os
