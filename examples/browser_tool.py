@@ -1,8 +1,11 @@
 from __future__ import annotations
-from browser_tool_helpers import Browser 
-from ollama import Client
+
 import os
 from typing import Any, Dict, List
+
+from browser_tool_helpers import Browser
+
+from ollama import Client
 
 
 def main() -> None:
