@@ -10,6 +10,7 @@ try:
 except Exception:
   from browser_tool_helpers import Browser  # when run as a script
 
+
 def main() -> None:
   client = Client(headers={'Authorization': os.getenv('OLLAMA_API_KEY')})
   browser = Browser(initial_state=None, client=client)
