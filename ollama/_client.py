@@ -5,12 +5,12 @@ import platform
 import sys
 import urllib.parse
 from hashlib import sha256
-from os import PathLike
 from pathlib import Path
 from typing import (
   Any,
   Callable,
   Dict,
+  Generic,
   List,
   Literal,
   Mapping,
@@ -73,12 +73,14 @@ from ollama._types import (
 )
 
 T = TypeVar('T')
+CT = TypeVar('CT', httpx.Client, httpx.AsyncClient)
+AnyCallable = Callable[..., Any]
 
 
-class BaseClient:
+class BaseClient(Generic[CT]):
   def __init__(
     self,
-    client,
+    client: Type[CT],
     host: Optional[str] = None,
     *,
     follow_redirects: bool = True,
@@ -94,7 +96,7 @@ class BaseClient:
     `kwargs` are passed to the httpx client.
     """
 
-    self._client = client(
+    self._client: CT = client(
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
@@ -115,7 +117,7 @@ class BaseClient:
 CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
 
 
-class Client(BaseClient):
+class Client(BaseClient[httpx.Client]):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
@@ -143,18 +145,9 @@ class Client(BaseClient):
     self,
     cls: Type[T],
     *args,
-    stream: Literal[True] = True,
+    stream: Literal[True],
     **kwargs,
   ) -> Iterator[T]: ...
-
-  @overload
-  def _request(
-    self,
-    cls: Type[T],
-    *args,
-    stream: bool = False,
-    **kwargs,
-  ) -> Union[T, Iterator[T]]: ...
 
   def _request(
     self,
@@ -193,7 +186,7 @@ class Client(BaseClient):
     system: str = '',
     template: str = '',
     context: Optional[Sequence[int]] = None,
-    stream: Literal[False] = False,
+    stream: Literal[False],
     think: Optional[bool] = None,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -276,7 +269,7 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
     stream: Literal[False] = False,
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -290,8 +283,8 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
-    stream: Literal[True] = True,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
+    stream: Literal[True],
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
@@ -303,7 +296,7 @@ class Client(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
     stream: bool = False,
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -420,7 +413,7 @@ class Client(BaseClient):
     model: str,
     *,
     insecure: bool = False,
-    stream: Literal[True] = True,
+    stream: Literal[True],
   ) -> Iterator[ProgressResponse]: ...
 
   def pull(
@@ -453,7 +446,7 @@ class Client(BaseClient):
     model: str,
     *,
     insecure: bool = False,
-    stream: Literal[False] = False,
+    stream: Literal[False],
   ) -> ProgressResponse: ...
 
   @overload
@@ -503,7 +496,7 @@ class Client(BaseClient):
     parameters: Optional[Union[Mapping[str, Any], Options]] = None,
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    stream: Literal[False] = False,
+    stream: Literal[False],
   ) -> ProgressResponse: ...
 
   @overload
@@ -669,7 +662,7 @@ class Client(BaseClient):
     )
 
 
-class AsyncClient(BaseClient):
+class AsyncClient(BaseClient[httpx.AsyncClient]):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.AsyncClient, host, **kwargs)
 
@@ -869,7 +862,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
     stream: Literal[False] = False,
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -883,7 +876,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
     stream: Literal[True] = True,
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -896,7 +889,7 @@ class AsyncClient(BaseClient):
     model: str = '',
     messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None,
     *,
-    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+    tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None,
     stream: bool = False,
     think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -1243,19 +1236,9 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, AnyCallable]]] = None) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
-
-
-def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
-  if isinstance(s, (str, Path)):
-    try:
-      if (p := Path(s)).exists():
-        return p
-    except Exception:
-      ...
-  return None
 
 
 def _parse_host(host: Optional[str]) -> str:
