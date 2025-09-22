@@ -764,7 +764,7 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebSearchResponse,
       'POST',
-      '/api/web_search',
+      'https://ollama.com/api/web_search',
       json=WebSearchRequest(
         query=query,
         max_results=max_results,
@@ -784,7 +784,7 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebFetchResponse,
       'POST',
-      '/api/web_fetch',
+      'https://ollama.com/api/web_fetch',
       json=WebFetchRequest(
         url=url,
       ).model_dump(exclude_none=True),
