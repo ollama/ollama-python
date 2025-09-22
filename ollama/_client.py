@@ -94,6 +94,8 @@ class BaseClient:
     `kwargs` are passed to the httpx client.
     """
 
+    api_key = os.getenv('OLLAMA_API_KEY', None)
+
     self._client = client(
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
@@ -106,6 +108,7 @@ class BaseClient:
           'Content-Type': 'application/json',
           'Accept': 'application/json',
           'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+          'Authorization': f'Bearer {api_key}' if api_key else '',
         }.items()
       },
       **kwargs,
@@ -638,7 +641,13 @@ class Client(BaseClient):
 
     Returns:
       WebSearchResponse with the search results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    api_key = os.getenv('OLLAMA_API_KEY')
+    if not api_key:
+      raise ValueError('OLLAMA_API_KEY environment variable is required for web search')
+
     return self._request(
       WebSearchResponse,
       'POST',
@@ -658,7 +667,13 @@ class Client(BaseClient):
 
     Returns:
       WebCrawlResponse with the crawl results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    api_key = os.getenv('OLLAMA_API_KEY')
+    if not api_key:
+      raise ValueError('OLLAMA_API_KEY environment variable is required for web fetch')
+
     return self._request(
       WebCrawlResponse,
       'POST',
