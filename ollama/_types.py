@@ -542,37 +542,26 @@ class ProcessResponse(SubscriptableBaseModel):
 
 
 class WebSearchRequest(SubscriptableBaseModel):
-  queries: Sequence[str]
+  query: str
   max_results: Optional[int] = None
 
 
 class WebSearchResult(SubscriptableBaseModel):
-  title: str
-  url: str
   content: str
 
 
-class WebCrawlResult(SubscriptableBaseModel):
-  title: str
+class WebFetchRequest(SubscriptableBaseModel):
   url: str
-  content: str
-  links: Optional[Sequence[str]] = None
 
 
 class WebSearchResponse(SubscriptableBaseModel):
-  results: Mapping[str, Sequence[WebSearchResult]]
-  success: bool
-  errors: Optional[Sequence[str]] = None
+  results: Sequence[WebSearchResult]
 
 
-class WebCrawlRequest(SubscriptableBaseModel):
-  urls: Sequence[str]
-
-
-class WebCrawlResponse(SubscriptableBaseModel):
-  results: Mapping[str, Sequence[WebCrawlResult]]
-  success: bool
-  errors: Optional[Sequence[str]] = None
+class WebFetchResponse(SubscriptableBaseModel):
+  title: str
+  content: str
+  links: Optional[Sequence[str]] = None
 
 
 class RequestError(Exception):

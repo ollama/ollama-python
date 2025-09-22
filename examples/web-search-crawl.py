@@ -7,58 +7,39 @@
 # ///
 from typing import Union
 
-from rich import print
-
-from ollama import WebCrawlResponse, WebSearchResponse, chat, web_crawl, web_search
+from ollama import Client, WebFetchResponse, WebSearchResponse
 
 
-def format_tool_results(results: Union[WebSearchResponse, WebCrawlResponse]):
+def format_tool_results(results: Union[WebSearchResponse, WebFetchResponse]):
   if isinstance(results, WebSearchResponse):
-    if not results.success:
-      error_msg = ', '.join(results.errors) if results.errors else 'Unknown error'
-      return f'Web search failed: {error_msg}'
-
     output = []
-    for query, search_results in results.results.items():
-      output.append(f'Search results for "{query}":')
-      for i, result in enumerate(search_results, 1):
-        output.append(f'{i}. {result.title}')
-        output.append(f'   URL: {result.url}')
-        output.append(f'   Content: {result.content}')
-        output.append('')
+    for i, result in enumerate(results.results, 1):
+      output.append(f'{i}. {result.content}')
+      output.append('')
 
     return '\n'.join(output).rstrip()
 
-  elif isinstance(results, WebCrawlResponse):
-    if not results.success:
-      error_msg = ', '.join(results.errors) if results.errors else 'Unknown error'
-      return f'Web crawl failed: {error_msg}'
-
-    output = []
-    for url, crawl_results in results.results.items():
-      output.append(f'Crawl results for "{url}":')
-      for i, result in enumerate(crawl_results, 1):
-        output.append(f'{i}. {result.title}')
-        output.append(f'   URL: {result.url}')
-        output.append(f'   Content: {result.content}')
-        if result.links:
-          output.append(f'   Links: {", ".join(result.links)}')
-        output.append('')
+  elif isinstance(results, WebFetchResponse):
+    output = [
+      f'Title: {results.title}',
+      f'Content: {results.content}',
+    ]
+    if results.links:
+      output.append(f'Links: {", ".join(results.links)}')
+    output.append('')
 
     return '\n'.join(output).rstrip()
 
 
-# Set OLLAMA_API_KEY in the environment variable or use the headers parameter to set the authorization header
-# client = Client(headers={'Authorization': 'Bearer <OLLAMA_API_KEY>'})
-
-available_tools = {'web_search': web_search, 'web_crawl': web_crawl}
+client = Client(headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))})
+available_tools = {'web_search': client.web_search, 'web_fetch': client.web_fetch}
 
 query = "ollama's new engine"
 print('Query: ', query)
 
 messages = [{'role': 'user', 'content': query}]
 while True:
-  response = chat(model='qwen3', messages=messages, tools=[web_search, web_crawl], think=True)
+  response = client.chat(model='qwen3', messages=messages, tools=[client.web_search, client.web_fetch], think=True)
   if response.message.thinking:
     print('Thinking: ')
     print(response.message.thinking + '\n\n')
@@ -72,7 +53,7 @@ while True:
     for tool_call in response.message.tool_calls:
       function_to_call = available_tools.get(tool_call.function.name)
       if function_to_call:
-        result: WebSearchResponse | WebCrawlResponse = function_to_call(**tool_call.function.arguments)
+        result: Union[WebSearchResponse, WebFetchResponse] = function_to_call(**tool_call.function.arguments)
         print('Result from tool call name: ', tool_call.function.name, 'with arguments: ', tool_call.function.arguments)
         print('Result: ', format_tool_results(result)[:200])
 
