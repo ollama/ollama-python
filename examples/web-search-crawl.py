@@ -6,7 +6,7 @@
 # ]
 # ///
 import os
-from typing import Optional, Union
+from typing import Union
 
 from rich import print
 
@@ -20,7 +20,6 @@ def format_tool_results(
   if isinstance(results, WebSearchResponse):
     output = []
     output.append(f'Search results for "{user_search}":')
-    print()
     for i, result in enumerate(results.results, 1):
       title = getattr(result, 'title', None)
       url_value = getattr(result, 'url', None)
@@ -44,7 +43,8 @@ def format_tool_results(
     output.append('')
     return '\n'.join(output).rstrip()
 
-client = Client(headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))})
+api_key = os.getenv('OLLAMA_API_KEY')
+client = Client(headers={'Authorization': f"Bearer {s.getenv('OLLAMA_API_KEY')}"} if api_key else None)
 available_tools = {'web_search': client.web_search, 'web_fetch': client.web_fetch}
 
 query = "ollama's new engine"

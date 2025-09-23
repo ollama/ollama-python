@@ -652,7 +652,7 @@ class Client(BaseClient):
     return self._request(
       WebSearchResponse,
       'POST',
-      'https://ollama.com/api/web_search',
+      'http://localhost:8080/api/web_search',
       json=WebSearchRequest(
         query=query,
         max_results=max_results,
@@ -675,7 +675,7 @@ class Client(BaseClient):
     return self._request(
       WebFetchResponse,
       'POST',
-      'https://ollama.com/api/web_fetch',
+      'http://localhost:8080/api/web_fetch',
       json=WebFetchRequest(
         url=url,
       ).model_dump(exclude_none=True),
@@ -764,7 +764,7 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebSearchResponse,
       'POST',
-      'https://ollama.com/api/web_search',
+      'http://localhost:8080/api/web_search',
       json=WebSearchRequest(
         query=query,
         max_results=max_results,
@@ -784,7 +784,7 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebFetchResponse,
       'POST',
-      'https://ollama.com/api/web_fetch',
+      'http://localhost:8080/api/web_fetch',
       json=WebFetchRequest(
         url=url,
       ).model_dump(exclude_none=True),
