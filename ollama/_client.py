@@ -66,8 +66,8 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
-  WebCrawlRequest,
-  WebCrawlResponse,
+  WebFetchRequest,
+  WebFetchResponse,
   WebSearchRequest,
   WebSearchResponse,
 )
@@ -633,13 +633,13 @@ class Client(BaseClient):
       '/api/ps',
     )
 
-  def web_search(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+  def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
     Performs a web search
 
     Args:
-      queries: The queries to search for
-      max_results: The maximum number of results to return.
+      query: The query to search for
+      max_results: The maximum number of results to return (default: 3)
 
     Returns:
       WebSearchResponse with the search results
@@ -654,32 +654,30 @@ class Client(BaseClient):
       'POST',
       'https://ollama.com/api/web_search',
       json=WebSearchRequest(
-        queries=queries,
+        query=query,
         max_results=max_results,
       ).model_dump(exclude_none=True),
     )
 
-  def web_crawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+  def web_fetch(self, url: str) -> WebFetchResponse:
     """
-    Gets the content of web pages for the provided URLs.
+    Fetches the content of a web page for the provided URL.
 
     Args:
-      urls: The URLs to crawl
+      url: The URL to fetch
 
     Returns:
-      WebCrawlResponse with the crawl results
-    Raises:
-      ValueError: If OLLAMA_API_KEY environment variable is not set
+      WebFetchResponse with the fetched result
     """
     if not self._client.headers.get('authorization', '').startswith('Bearer '):
       raise ValueError('Authorization header with Bearer token is required for web fetch')
 
     return self._request(
-      WebCrawlResponse,
+      WebFetchResponse,
       'POST',
-      'https://ollama.com/api/web_crawl',
-      json=WebCrawlRequest(
-        urls=urls,
+      'https://ollama.com/api/web_fetch',
+      json=WebFetchRequest(
+        url=url,
       ).model_dump(exclude_none=True),
     )
 
@@ -752,13 +750,13 @@ class AsyncClient(BaseClient):
 
     return cls(**(await self._request_raw(*args, **kwargs)).json())
 
-  async def websearch(self, queries: Sequence[str], max_results: int = 3) -> WebSearchResponse:
+  async def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
     Performs a web search
 
     Args:
-      queries: The queries to search for
-      max_results: The maximum number of results to return.
+      query: The query to search for
+      max_results: The maximum number of results to return (default: 3)
 
     Returns:
       WebSearchResponse with the search results
@@ -768,27 +766,27 @@ class AsyncClient(BaseClient):
       'POST',
       'https://ollama.com/api/web_search',
       json=WebSearchRequest(
-        queries=queries,
+        query=query,
         max_results=max_results,
       ).model_dump(exclude_none=True),
     )
 
-  async def webcrawl(self, urls: Sequence[str]) -> WebCrawlResponse:
+  async def web_fetch(self, url: str) -> WebFetchResponse:
     """
-    Gets the content of web pages for the provided URLs.
+    Fetches the content of a web page for the provided URL.
 
     Args:
-      urls: The URLs to crawl
+      url: The URL to fetch
 
     Returns:
-      WebCrawlResponse with the crawl results
+      WebFetchResponse with the fetched result
     """
     return await self._request(
-      WebCrawlResponse,
+      WebFetchResponse,
       'POST',
-      'https://ollama.com/api/web_crawl',
-      json=WebCrawlRequest(
-        urls=urls,
+      'https://ollama.com/api/web_fetch',
+      json=WebFetchRequest(
+        url=url,
       ).model_dump(exclude_none=True),
     )
 
