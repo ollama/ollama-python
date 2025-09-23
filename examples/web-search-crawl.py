@@ -2,7 +2,7 @@
 # requires-python = ">=3.11"
 # dependencies = [
 #     "rich",
-#     "ollama @ file:///Users/nicole/Desktop/ollama-python",
+#     "ollama",
 # ]
 # ///
 import os
