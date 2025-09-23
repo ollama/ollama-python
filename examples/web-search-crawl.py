@@ -7,7 +7,6 @@
 # ///
 import os
 from typing import Optional, Union
-
 from rich import print
 
 from ollama import Client, WebFetchResponse, WebSearchResponse
