@@ -94,20 +94,25 @@ class BaseClient:
     `kwargs` are passed to the httpx client.
     """
 
+    headers = {
+      k.lower(): v
+      for k, v in {
+        **(headers or {}),
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+      }.items()
+      if v is not None
+    }
+    api_key = os.getenv('OLLAMA_API_KEY', None)
+    if not headers.get('authorization') and api_key:
+      headers['authorization'] = f'Bearer {api_key}'
+
     self._client = client(
       base_url=_parse_host(host or os.getenv('OLLAMA_HOST')),
       follow_redirects=follow_redirects,
       timeout=timeout,
-      # Lowercase all headers to ensure override
-      headers={
-        k.lower(): v
-        for k, v in {
-          **(headers or {}),
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
-        }.items()
-      },
+      headers=headers,
       **kwargs,
     )
 
@@ -638,7 +643,12 @@ class Client(BaseClient):
 
     Returns:
       WebSearchResponse with the search results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web search')
+
     return self._request(
       WebSearchResponse,
       'POST',
@@ -658,7 +668,12 @@ class Client(BaseClient):
 
     Returns:
       WebCrawlResponse with the crawl results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web fetch')
+
     return self._request(
       WebCrawlResponse,
       'POST',

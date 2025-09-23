@@ -5,12 +5,11 @@
 #     "ollama",
 # ]
 # ///
-import os
 from typing import Union
 
 from rich import print
 
-from ollama import Client, WebCrawlResponse, WebSearchResponse
+from ollama import WebCrawlResponse, WebSearchResponse, chat, web_crawl, web_search
 
 
 def format_tool_results(results: Union[WebSearchResponse, WebCrawlResponse]):
@@ -49,15 +48,17 @@ def format_tool_results(results: Union[WebSearchResponse, WebCrawlResponse]):
     return '\n'.join(output).rstrip()
 
 
-client = Client(headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))})
-available_tools = {'web_search': client.web_search, 'web_crawl': client.web_crawl}
+# Set OLLAMA_API_KEY in the environment variable or use the headers parameter to set the authorization header
+# client = Client(headers={'Authorization': 'Bearer <OLLAMA_API_KEY>'})
+
+available_tools = {'web_search': web_search, 'web_crawl': web_crawl}
 
 query = "ollama's new engine"
 print('Query: ', query)
 
 messages = [{'role': 'user', 'content': query}]
 while True:
-  response = client.chat(model='qwen3', messages=messages, tools=[client.web_search, client.web_crawl], think=True)
+  response = chat(model='qwen3', messages=messages, tools=[web_search, web_crawl], think=True)
   if response.message.thinking:
     print('Thinking: ')
     print(response.message.thinking + '\n\n')
