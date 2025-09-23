@@ -49,11 +49,13 @@ def format_tool_results(
     output = []
     if url:
       output.append(f'Fetch results for "{url}":')
-    output.extend([
-      f'Title: {results.title}',
-      f'URL: {url}' if url else '',
-      f'Content: {results.content}',
-    ])
+    output.extend(
+      [
+        f'Title: {results.title}',
+        f'URL: {url}' if url else '',
+        f'Content: {results.content}',
+      ]
+    )
     if results.links:
       output.append(f'Links: {", ".join(results.links)}')
     output.append('')
