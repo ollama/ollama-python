@@ -639,7 +639,7 @@ class Client(BaseClient):
 
     Args:
       query: The query to search for
-      max_results: The maximum number of results to return.
+      max_results: The maximum number of results to return (default: 3)
 
     Returns:
       WebSearchResponse with the search results
@@ -750,13 +750,13 @@ class AsyncClient(BaseClient):
 
     return cls(**(await self._request_raw(*args, **kwargs)).json())
 
-  async def websearch(self, query: str, max_results: int = 3) -> WebSearchResponse:
+  async def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
     Performs a web search
 
     Args:
       query: The query to search for
-      max_results: The maximum number of results to return.
+      max_results: The maximum number of results to return (default: 3)
 
     Returns:
       WebSearchResponse with the search results
@@ -764,14 +764,14 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebSearchResponse,
       'POST',
-      'http://localhost:8080/api/web_search',
+      'https://ollama.com/api/web_search',
       json=WebSearchRequest(
         query=query,
         max_results=max_results,
       ).model_dump(exclude_none=True),
     )
 
-  async def webfetch(self, url: str) -> WebFetchResponse:
+  async def web_fetch(self, url: str) -> WebFetchResponse:
     """
     Fetches the content of a web page for the provided URL.
 
@@ -784,7 +784,7 @@ class AsyncClient(BaseClient):
     return await self._request(
       WebFetchResponse,
       'POST',
-      'http://localhost:8080/api/web_fetch',
+      'https://ollama.com/api/web_fetch',
       json=WebFetchRequest(
         url=url,
       ).model_dump(exclude_none=True),

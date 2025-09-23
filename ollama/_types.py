@@ -547,7 +547,9 @@ class WebSearchRequest(SubscriptableBaseModel):
 
 
 class WebSearchResult(SubscriptableBaseModel):
-  content: str
+  content: Optional[str] = None
+  title: Optional[str] = None
+  url: Optional[str] = None
 
 
 class WebFetchRequest(SubscriptableBaseModel):
@@ -559,8 +561,8 @@ class WebSearchResponse(SubscriptableBaseModel):
 
 
 class WebFetchResponse(SubscriptableBaseModel):
-  title: str
-  content: str
+  title: Optional[str] = None
+  content: Optional[str] = None
   links: Optional[Sequence[str]] = None
 
 
