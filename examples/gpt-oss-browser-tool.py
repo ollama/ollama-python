@@ -10,10 +10,7 @@ from ollama import Client
 
 def main() -> None:
   api_key = os.getenv('OLLAMA_API_KEY')
-  if api_key:
-    client = Client(headers={'Authorization': f'Bearer {api_key}'})
-  else:
-    client = Client()
+  client = Client(headers={'Authorization': f'Bearer {api_key}'}) if api_key else Client()
   browser = Browser(initial_state=None, client=client)
 
   # Tool schemas
