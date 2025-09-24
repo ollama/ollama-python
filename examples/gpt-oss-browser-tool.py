@@ -9,10 +9,7 @@ from ollama import Client
 
 
 def main() -> None:
-  api_key = os.getenv('OLLAMA_API_KEY')
-  if not api_key:
-    raise RuntimeError('OLLAMA_API_KEY is required to run this example')
-  client = Client(host='https://ollama.com', headers={'Authorization': f'Bearer {api_key}'})
+  client = Client()
   browser = Browser(initial_state=None, client=client)
 
   # Tool schemas
@@ -65,7 +62,7 @@ def main() -> None:
   def browser_search(query: str, topn: int = 10) -> str:
     return browser.search(query=query, topn=topn)['pageText']
 
-  def browser_open(id: int | str = -1, cursor: int = -1, loc: int = -1, num_lines: int = -1) -> str:
+  def browser_open(id: int | str | None = None, cursor: int = -1, loc: int = -1, num_lines: int = -1) -> str:
     return browser.open(id=id, cursor=cursor, loc=loc, num_lines=num_lines)['pageText']
 
   def browser_find(pattern: str, cursor: int = -1, **_: Any) -> str:
@@ -76,9 +73,11 @@ def main() -> None:
     'browser.open': browser_open,
     'browser.find': browser_find,
   }
+  query = 'What is Ollama.com?'
+  print('Prompt:', query, '\n')
 
-  messages: List[Dict[str, Any]] = [{'role': 'user', 'content': 'When did Ollama announce the new engine?'}]
-  print('----- Prompt:', messages[0]['content'], '\n')
+  messages: List[Dict[str, Any]] = [{'role': 'user', 'content': query}]
+
 
   while True:
     resp = client.chat(
@@ -88,11 +87,11 @@ def main() -> None:
       think=True,
     )
 
-    if getattr(resp.message, 'thinking', None):
+    if resp.message.thinking: 
       print('Thinking:\n========\n')
       print(resp.message.thinking + '\n')
-
-    if getattr(resp.message, 'content', None):
+      
+    if resp.message.content:
       print('Response:\n========\n')
       print(resp.message.content + '\n')
 
