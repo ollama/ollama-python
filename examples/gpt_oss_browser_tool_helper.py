@@ -117,15 +117,8 @@ class Browser:
 
   def _join_lines_with_numbers(self, lines: List[str]) -> str:
     result = []
-    had_zero = False
     for i, line in enumerate(lines):
-      if i == 0:
-        result.append('L0:')
-        had_zero = True
-      if had_zero:
-        result.append(f'L{i + 1}: {line}')
-      else:
-        result.append(f'L{i}: {line}')
+      result.append(f'L{i}: {line}')
     return '\n'.join(result)
 
   def _wrap_lines(self, text: str, width: int = 80) -> List[str]:
@@ -182,18 +175,9 @@ class Browser:
     if num_lines <= 0:
       txt = self._join_lines_with_numbers(lines[loc:])
       data = self.state.get_data()
-      if len(txt) > data.view_tokens:
-        max_chars_per_token = 128
-        upper_bound = min((data.view_tokens + 1) * max_chars_per_token, len(txt))
-        segment = txt[:upper_bound]
-        approx_tokens = len(segment) / 4
-        if approx_tokens > data.view_tokens:
-          end_idx = min(data.view_tokens * 4, len(txt))
-          num_lines = segment[:end_idx].count('\n') + 1
-        else:
-          num_lines = total_lines
-      else:
-        num_lines = total_lines
+      chars_per_token = 4
+      max_chars = min(data.view_tokens * chars_per_token, len(txt))
+      num_lines = txt[:max_chars].count('\n') + 1
     return min(loc + num_lines, total_lines)
 
   def _display_page(self, page: Page, cursor: int, loc: int, num_lines: int) -> str:
@@ -214,15 +198,8 @@ class Browser:
     header += f'**viewing lines [{loc} - {end_loc - 1}] of {total_lines - 1}**\n\n'
 
     body_lines = []
-    had_zero = False
     for i in range(loc, end_loc):
-      if i == 0:
-        body_lines.append('L0:')
-        had_zero = True
-      if had_zero:
-        body_lines.append(f'L{i + 1}: {page.lines[i]}')
-      else:
-        body_lines.append(f'L{i}: {page.lines[i]}')
+      body_lines.append(f'L{i}: {page.lines[i]}')
 
     return header + '\n'.join(body_lines)
 
@@ -240,7 +217,6 @@ class Browser:
 
     tb = []
     tb.append('')
-    tb.append('URL: ')
     tb.append('# Search Results')
     tb.append('')
 
@@ -415,15 +391,6 @@ class Browser:
 
     state = self.get_state()
 
-    page: Optional[Page] = None
-    if cursor >= 0:
-      if cursor >= len(state.page_stack):
-        cursor = max(0, len(state.page_stack) - 1)
-      page = self._page_from_stack(state.page_stack[cursor])
-    else:
-      if state.page_stack:
-        page = self._page_from_stack(state.page_stack[-1])
-
     if isinstance(id, str):
       url = id
       if url in state.url_to_page:
@@ -449,6 +416,19 @@ class Browser:
       cursor = len(self.get_state().page_stack) - 1
       page_text = self._display_page(new_page, cursor, loc, num_lines)
       return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
+
+    # Resolve current page from stack only if needed (int id or no id)
+    page: Optional[Page] = None
+    if cursor >= 0:
+      if state.page_stack:
+        if cursor >= len(state.page_stack):
+          cursor = max(0, len(state.page_stack) - 1)
+        page = self._page_from_stack(state.page_stack[cursor])
+      else:
+        page = None
+    else:
+      if state.page_stack:
+        page = self._page_from_stack(state.page_stack[-1])
 
     if isinstance(id, int):
       if not page:
