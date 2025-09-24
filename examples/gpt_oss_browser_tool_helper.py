@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Protocol, Tuple
+from typing import Any, Dict, List, Optional, Protocol, Tuple, Union
 from urllib.parse import urlparse
 
 from ollama import Client
@@ -30,7 +30,7 @@ class BrowserStateData:
 class WebSearchResult:
   title: str
   url: str
-  content: Dict[str, str]  # {"fullText": str}
+  content: Dict[str, str]
 
 
 class SearchClient(Protocol):
@@ -94,7 +94,6 @@ class Browser:
     self.state = BrowserState(initial_state)
     self._client: Optional[Client] = client
 
-  # parity with TS: one setter that accepts both
   def set_client(self, client: Client) -> None:
     self._client = client
 
@@ -160,10 +159,9 @@ class Browser:
     links: Dict[int, str] = {}
     link_id = 0
 
-    # collapse [text]\n(url) -> [text](url)
     multiline_pattern = re.compile(r'\[([^\]]+)\]\s*\n\s*\(([^)]+)\)')
     text = multiline_pattern.sub(lambda m: f'[{m.group(1)}]({m.group(2)})', text)
-    text = re.sub(r'\s+', ' ', text)  # mild cleanup from the above
+    text = re.sub(r'\s+', ' ', text)
 
     link_pattern = re.compile(r'\[([^\]]+)\]\(([^)]+)\)')
 
@@ -185,7 +183,6 @@ class Browser:
       txt = self._join_lines_with_numbers(lines[loc:])
       data = self.state.get_data()
       if len(txt) > data.view_tokens:
-        # approximate char-per-token heuristic (keep identical to TS flow)
         max_chars_per_token = 128
         upper_bound = min((data.view_tokens + 1) * max_chars_per_token, len(txt))
         segment = txt[:upper_bound]
@@ -242,10 +239,10 @@ class Browser:
     )
 
     tb = []
-    tb.append('')  # L0 blank
-    tb.append('URL: ')  # L1 "URL: "
-    tb.append('# Search Results')  # L2
-    tb.append('')  # L3 blank
+    tb.append('')
+    tb.append('URL: ')
+    tb.append('# Search Results')
+    tb.append('')
 
     link_idx = 0
     for query_results in results.get('results', {}).values():
@@ -276,7 +273,6 @@ class Browser:
       fetched_at=datetime.utcnow(),
     )
 
-    # preview block (when no full text)
     link_fmt = f'【{link_idx}†{result.title}】\n'
     preview = link_fmt + f'URL: {result.url}\n'
     full_text = result.content.get('fullText', '') if result.content else ''
@@ -296,7 +292,7 @@ class Browser:
     page.lines = self._wrap_lines(page.text, 80)
     return page
 
-  def _build_page_from_crawl(self, requested_url: str, crawl_response: Dict[str, Any]) -> Page:
+  def _build_page_from_fetch(self, requested_url: str, fetch_response: Dict[str, Any]) -> Page:
     page = Page(
       url=requested_url,
       title=requested_url,
@@ -306,7 +302,7 @@ class Browser:
       fetched_at=datetime.utcnow(),
     )
 
-    for url, url_results in crawl_response.get('results', {}).items():
+    for url, url_results in fetch_response.get('results', {}).items():
       if url_results:
         r0 = url_results[0]
         if r0.get('content'):
@@ -372,22 +368,20 @@ class Browser:
     if not self._client:
       raise RuntimeError('Client not provided')
 
-    resp = self._client.web_search([query], max_results=topn)
+    resp = self._client.web_search(query, max_results=topn)
 
-    # Normalize to dict shape used by page builders
     normalized: Dict[str, Any] = {'results': {}}
-    for q, items in resp.results.items():
-      rows: List[Dict[str, str]] = []
-      for item in items:
-        content = item.content or ''
-        rows.append(
-          {
-            'title': item.title,
-            'url': item.url,
-            'content': content,
-          }
-        )
-      normalized['results'][q] = rows
+    rows: List[Dict[str, str]] = []
+    for item in resp.results:
+      content = item.content or ''
+      rows.append(
+        {
+          'title': item.title,
+          'url': item.url,
+          'content': content,
+        }
+      )
+    normalized['results'][query] = rows
 
     search_page = self._build_search_results_page_collection(query, normalized)
     self._save_page(search_page)
@@ -430,7 +424,6 @@ class Browser:
       if state.page_stack:
         page = self._page_from_stack(state.page_stack[-1])
 
-    # Open by URL (string id)
     if isinstance(id, str):
       url = id
       if url in state.url_to_page:
@@ -439,35 +432,30 @@ class Browser:
         page_text = self._display_page(state.url_to_page[url], cursor, loc, num_lines)
         return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
 
-      crawl_response = self._client.web_crawl([url])
-      # Normalize to dict shape used by page builders
-      normalized: Dict[str, Any] = {'results': {}}
-      for u, items in crawl_response.results.items():
-        rows: List[Dict[str, str]] = []
-        for item in items:
-          content = item.content or ''
-          rows.append(
+      fetch_response = self._client.web_fetch(url)
+      normalized: Dict[str, Any] = {
+        'results': {
+          url: [
             {
-              'title': item.title,
-              'url': item.url,
-              'content': content,
+              'title': fetch_response.title or url,
+              'url': url,
+              'content': fetch_response.content or '',
             }
-          )
-        normalized['results'][u] = rows
-      new_page = self._build_page_from_crawl(url, normalized)
+          ]
+        }
+      }
+      new_page = self._build_page_from_fetch(url, normalized)
       self._save_page(new_page)
       cursor = len(self.get_state().page_stack) - 1
       page_text = self._display_page(new_page, cursor, loc, num_lines)
       return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
 
-    # Open by link id (int) from current page
     if isinstance(id, int):
       if not page:
         raise RuntimeError('No current page to resolve link from')
 
       link_url = page.links.get(id)
       if not link_url:
-        # build an error page like TS
         err = Page(
           url=f'invalid_link_{id}',
           title=f'No link with id {id} on `{page.title}`',
@@ -497,28 +485,25 @@ class Browser:
 
       new_page = state.url_to_page.get(link_url)
       if not new_page:
-        crawl_response = self._client.web_crawl([link_url])
-        normalized: Dict[str, Any] = {'results': {}}
-        for u, items in crawl_response.results.items():
-          rows: List[Dict[str, str]] = []
-          for item in items:
-            content = item.content or ''
-            rows.append(
+        fetch_response = self._client.web_fetch(link_url)
+        normalized: Dict[str, Any] = {
+          'results': {
+            link_url: [
               {
-                'title': item.title,
-                'url': item.url,
-                'content': content,
+                'title': fetch_response.title or link_url,
+                'url': link_url,
+                'content': fetch_response.content or '',
               }
-            )
-          normalized['results'][u] = rows
-        new_page = self._build_page_from_crawl(link_url, normalized)
+            ]
+          }
+        }
+        new_page = self._build_page_from_fetch(link_url, normalized)
 
       self._save_page(new_page)
       cursor = len(self.get_state().page_stack) - 1
       page_text = self._display_page(new_page, cursor, loc, num_lines)
       return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
 
-    # No id: just re-display the current page and advance stack
     if not page:
       raise RuntimeError('No current page to display')
 
@@ -547,3 +532,5 @@ class Browser:
 
     page_text = self._display_page(find_page, new_cursor, 0, -1)
     return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
+
+
