@@ -78,7 +78,6 @@ def main() -> None:
 
   messages: List[Dict[str, Any]] = [{'role': 'user', 'content': query}]
 
-
   while True:
     resp = client.chat(
       model='gpt-oss',
@@ -87,10 +86,10 @@ def main() -> None:
       think=True,
     )
 
-    if resp.message.thinking: 
+    if resp.message.thinking:
       print('Thinking:\n========\n')
       print(resp.message.thinking + '\n')
-      
+
     if resp.message.content:
       print('Response:\n========\n')
       print(resp.message.content + '\n')
