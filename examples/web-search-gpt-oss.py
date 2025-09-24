@@ -1,9 +1,12 @@
-from __future__ import annotations
-
-import os
+# /// script
+# requires-python = ">=3.11"
+# dependencies = [
+#     "ollama",
+# ]
+# ///
 from typing import Any, Dict, List
 
-from gpt_oss_browser_tool_helper import Browser
+from web_search_gpt_oss_helper import Browser
 
 from ollama import Client
 
@@ -11,53 +14,6 @@ from ollama import Client
 def main() -> None:
   client = Client()
   browser = Browser(initial_state=None, client=client)
-
-  # Tool schemas
-  browser_search_schema = {
-    'type': 'function',
-    'function': {
-      'name': 'browser.search',
-      'parameters': {
-        'type': 'object',
-        'properties': {
-          'query': {'type': 'string'},
-          'topn': {'type': 'integer'},
-        },
-        'required': ['query'],
-      },
-    },
-  }
-
-  browser_open_schema = {
-    'type': 'function',
-    'function': {
-      'name': 'browser.open',
-      'parameters': {
-        'type': 'object',
-        'properties': {
-          'id': {'anyOf': [{'type': 'integer'}, {'type': 'string'}]},
-          'cursor': {'type': 'integer'},
-          'loc': {'type': 'integer'},
-          'num_lines': {'type': 'integer'},
-        },
-      },
-    },
-  }
-
-  browser_find_schema = {
-    'type': 'function',
-    'function': {
-      'name': 'browser.find',
-      'parameters': {
-        'type': 'object',
-        'properties': {
-          'pattern': {'type': 'string'},
-          'cursor': {'type': 'integer'},
-        },
-        'required': ['pattern'],
-      },
-    },
-  }
 
   def browser_search(query: str, topn: int = 10) -> str:
     return browser.search(query=query, topn=topn)['pageText']
@@ -68,29 +24,50 @@ def main() -> None:
   def browser_find(pattern: str, cursor: int = -1, **_: Any) -> str:
     return browser.find(pattern=pattern, cursor=cursor)['pageText']
 
+  browser_search_schema = {
+    'type': 'function',
+    'function': {
+      'name': 'browser.search',
+    },
+  }
+
+  browser_open_schema = {
+    'type': 'function',
+    'function': {
+      'name': 'browser.open',
+    },
+  }
+
+  browser_find_schema = {
+    'type': 'function',
+    'function': {
+      'name': 'browser.find',
+    },
+  }
+
   available_tools = {
     'browser.search': browser_search,
     'browser.open': browser_open,
     'browser.find': browser_find,
   }
-  query = 'What is Ollama.com?'
+
+  query = "what is ollama's new engine"
   print('Prompt:', query, '\n')
 
   messages: List[Dict[str, Any]] = [{'role': 'user', 'content': query}]
 
-
   while True:
     resp = client.chat(
-      model='gpt-oss',
+      model='gpt-oss:120b-cloud',
       messages=messages,
       tools=[browser_search_schema, browser_open_schema, browser_find_schema],
       think=True,
     )
 
-    if resp.message.thinking: 
+    if resp.message.thinking:
       print('Thinking:\n========\n')
       print(resp.message.thinking + '\n')
-      
+
     if resp.message.content:
       print('Response:\n========\n')
       print(resp.message.content + '\n')
@@ -103,6 +80,7 @@ def main() -> None:
     for tc in resp.message.tool_calls:
       tool_name = tc.function.name
       args = tc.function.arguments or {}
+      print(f'Tool name: {tool_name}, args: {args}')
       fn = available_tools.get(tool_name)
       if not fn:
         messages.append({'role': 'tool', 'content': f'Tool {tool_name} not found', 'tool_name': tool_name})
@@ -110,6 +88,7 @@ def main() -> None:
 
       try:
         result_text = fn(**args)
+        print('Result: ', result_text[:200] + '...')
       except Exception as e:
         result_text = f'Error from {tool_name}: {e}'
 

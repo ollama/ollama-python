@@ -36,8 +36,6 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 - [gpt-oss-tools.py](gpt-oss-tools.py)
 - [gpt-oss-tools-stream.py](gpt-oss-tools-stream.py)
-- [gpt-oss-tools-browser.py](gpt-oss-tools-browser.py) - Using browser research tools with gpt-oss
-- [gpt-oss-tools-browser-stream.py](gpt-oss-tools-browser-stream.py) - Using browser research tools with gpt-oss, with streaming enabled
 
 ### Web search
 
@@ -48,6 +46,7 @@ export OLLAMA_API_KEY="your_api_key_here"
 ```
 
 - [web-search.py](web-search.py)
+- [web-search-gpt-oss.py](web-search-gpt-oss.py) - Using browser research tools with gpt-oss
 
 #### MCP server
 
