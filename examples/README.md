@@ -39,7 +39,7 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [gpt-oss-tools-browser.py](gpt-oss-tools-browser.py) - Using browser research tools with gpt-oss
 - [gpt-oss-tools-browser-stream.py](gpt-oss-tools-browser-stream.py) - Using browser research tools with gpt-oss, with streaming enabled
 
-### Web search and fetch - Use web search and fetch tools with a model
+### Web search
 
 `OLLAMA_API_KEY` is required. You can get one from [ollama.com/settings/keys](https://ollama.com/settings/keys).
 
