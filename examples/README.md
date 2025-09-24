@@ -41,7 +41,11 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 ### Web search
 
-`OLLAMA_API_KEY` is required. You can get one from [ollama.com/settings/keys](https://ollama.com/settings/keys).
+An API key from Ollama's cloud service is required. You can create one [here](https://ollama.com/settings/keys).
+
+```shell
+export OLLAMA_API_KEY="your_api_key_here"
+```
 
 - [web-search.py](web-search.py)
 
