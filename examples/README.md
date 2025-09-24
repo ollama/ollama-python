@@ -5,6 +5,9 @@ Run the examples in this directory with:
 ```sh
 # Run example
 python3 examples/<example>.py
+
+# or with uv
+uv run examples/<example>.py
 ```
 
 See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md) for full API documentation
@@ -35,6 +38,20 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [gpt-oss-tools-stream.py](gpt-oss-tools-stream.py)
 - [gpt-oss-tools-browser.py](gpt-oss-tools-browser.py) - Using browser research tools with gpt-oss
 - [gpt-oss-tools-browser-stream.py](gpt-oss-tools-browser-stream.py) - Using browser research tools with gpt-oss, with streaming enabled
+
+### Web search and fetch - Use web search and fetch tools with a model
+
+`OLLAMA_API_KEY` is required. You can get one from [ollama.com/settings/keys](https://ollama.com/settings/keys).
+
+- [web-search-fetch.py](web-search-fetch.py)
+
+#### MCP server
+
+```sh
+uv run examples/mcp-web-search-and-fetch.py
+```
+
+- [mcp_web_search_crawl_server.py](mcp_web_search_crawl_server.py)
 
 ### Multimodal with Images - Chat with a multimodal (image chat) model
 
@@ -84,13 +101,3 @@ Requirement: `pip install tqdm`
 ### Thinking (levels) - Choose the thinking level
 
 - [thinking-levels.py](thinking-levels.py)
-
-### Web search and fetch MCP server
-
-- [mcp_web_search_crawl_server.py](mcp_web_search_crawl_server.py)
-
-```sh
-uv run examples/mcp-web-search-and-fetch.py
-```
-
-`OLLAMA_API_KEY` is required. You can get one from [ollama.com/settings/keys](https://ollama.com/settings/keys).
