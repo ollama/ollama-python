@@ -41,12 +41,8 @@ class CrawlClient(Protocol):
   def crawl(self, urls: List[str]): ...
 
 
-# ---- Constants ---------------------------------------------------------------
-
 DEFAULT_VIEW_TOKENS = 1024
 CAPPED_TOOL_CONTENT_LEN = 8000
-
-# ---- Helpers ----------------------------------------------------------------
 
 
 def cap_tool_content(text: str) -> str:
@@ -68,9 +64,6 @@ def _safe_domain(u: str) -> str:
     return u
 
 
-# ---- BrowserState ------------------------------------------------------------
-
-
 class BrowserState:
   def __init__(self, initial_state: Optional[BrowserStateData] = None):
     self._data = initial_state or BrowserStateData(view_tokens=DEFAULT_VIEW_TOKENS)
@@ -80,9 +73,6 @@ class BrowserState:
 
   def set_data(self, data: BrowserStateData) -> None:
     self._data = data
-
-
-# ---- Browser ----------------------------------------------------------------
 
 
 class Browser:
@@ -202,8 +192,6 @@ class Browser:
       body_lines.append(f'L{i}: {page.lines[i]}')
 
     return header + '\n'.join(body_lines)
-
-  # ---- page builders ----
 
   def _build_search_results_page_collection(self, query: str, results: Dict[str, Any]) -> Page:
     page = Page(
@@ -337,8 +325,6 @@ class Browser:
 
     find_page.lines = self._wrap_lines(find_page.text, 80)
     return find_page
-
-  # ---- public API: search / open / find ------------------------------------
 
   def search(self, *, query: str, topn: int = 5) -> Dict[str, Any]:
     if not self._client:

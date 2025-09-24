@@ -11,7 +11,6 @@ def main() -> None:
   client = Client()
   browser = Browser(initial_state=None, client=client)
 
-  # Tool schemas
   browser_search_schema = {
     'type': 'function',
     'function': {
