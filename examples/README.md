@@ -43,15 +43,30 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 
 `OLLAMA_API_KEY` is required. You can get one from [ollama.com/settings/keys](https://ollama.com/settings/keys).
 
-- [web-search-fetch.py](web-search-fetch.py)
+- [web-search.py](web-search.py)
 
 #### MCP server
 
 ```sh
-uv run examples/mcp-web-search-and-fetch.py
+uv run examples/web-search-mcp.py
 ```
 
-- [mcp_web_search_crawl_server.py](mcp_web_search_crawl_server.py)
+Configuration to use with an MCP client:
+
+```json
+{
+  "mcpServers": {
+    "web_search": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "path/to/ollama-python/examples/web-search-mcp.py"],
+      "env": { "OLLAMA_API_KEY": "api-key" }
+    }
+  }
+}
+```
+
+- [web-search-mcp.py](web-search-mcp.py)
 
 ### Multimodal with Images - Chat with a multimodal (image chat) model
 
