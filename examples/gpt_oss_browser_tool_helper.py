@@ -532,5 +532,3 @@ class Browser:
 
     page_text = self._display_page(find_page, new_cursor, 0, -1)
     return {'state': self.get_state(), 'pageText': cap_tool_content(page_text)}
-
-
