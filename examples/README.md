@@ -51,6 +51,8 @@ export OLLAMA_API_KEY="your_api_key_here"
 
 #### MCP server
 
+The MCP server can be used with an MCP client like Cursor, Cline, Codex, Open WebUI, Goose, and more.
+
 ```sh
 uv run examples/web-search-mcp.py
 ```
