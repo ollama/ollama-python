@@ -23,6 +23,7 @@ from ollama import Client
 try:
   # Preferred high-level API (if available)
   from mcp.server.fastmcp import FastMCP  # type: ignore
+
   _FASTMCP_AVAILABLE = True
 except Exception:
   _FASTMCP_AVAILABLE = False
@@ -31,7 +32,6 @@ if not _FASTMCP_AVAILABLE:
   # Fallback to the low-level stdio server API
   from mcp.server import Server  # type: ignore
   from mcp.server.stdio import stdio_server  # type: ignore
-
 
 
 client = Client()
@@ -48,7 +48,7 @@ def _web_fetch_impl(url: str) -> Dict[str, Any]:
 
 
 if _FASTMCP_AVAILABLE:
-  app = FastMCP("ollama-search-fetch")
+  app = FastMCP('ollama-search-fetch')
 
   @app.tool()
   def web_search(query: str, max_results: int = 3) -> Dict[str, Any]:
@@ -79,11 +79,11 @@ if _FASTMCP_AVAILABLE:
 
     return _web_fetch_impl(url=url)
 
-  if __name__ == "__main__":
+  if __name__ == '__main__':
     app.run()
 
 else:
-  server = Server("ollama-search-fetch")  # type: ignore[name-defined]
+  server = Server('ollama-search-fetch')  # type: ignore[name-defined]
 
   @server.tool()  # type: ignore[attr-defined]
   async def web_search(query: str, max_results: int = 3) -> Dict[str, Any]:
@@ -112,6 +112,5 @@ else:
     async with stdio_server() as (read, write):  # type: ignore[name-defined]
       await server.run(read, write)  # type: ignore[attr-defined]
 
-  if __name__ == "__main__":
+  if __name__ == '__main__':
     asyncio.run(_main())
-
