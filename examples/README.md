@@ -66,7 +66,7 @@ Configuration to use with an MCP client:
       "type": "stdio",
       "command": "uv",
       "args": ["run", "path/to/ollama-python/examples/web-search-mcp.py"],
-      "env": { "OLLAMA_API_KEY": "api-key" }
+      "env": { "OLLAMA_API_KEY": "your_api_key_here" }
     }
   }
 }
