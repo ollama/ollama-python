@@ -49,7 +49,7 @@ print('Query: ', query)
 
 messages = [{'role': 'user', 'content': query}]
 while True:
-  response = chat(model='deepseek-v3.1:671b-cloud', messages=messages, tools=[web_search, web_fetch], think=True)
+  response = chat(model='qwen3', messages=messages, tools=[web_search, web_fetch], think=True)
   if response.message.thinking:
     print('Thinking: ')
     print(response.message.thinking + '\n\n')
