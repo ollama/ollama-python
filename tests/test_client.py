@@ -1217,14 +1217,14 @@ def test_client_web_fetch_requires_bearer_auth_header(monkeypatch: pytest.Monkey
 
 def _mock_request_web_search(self, cls, method, url, json=None, **kwargs):
   assert method == 'POST'
-  assert url == 'https://ollama.com/api/web_search'
+  assert url == '/api/web_search'
   assert json is not None and 'query' in json and 'max_results' in json
   return httpxResponse(status_code=200, content='{"results": {}, "success": true}')
 
 
 def _mock_request_web_fetch(self, cls, method, url, json=None, **kwargs):
   assert method == 'POST'
-  assert url == 'https://ollama.com/api/web_fetch'
+  assert url == '/api/web_fetch'
   assert json is not None and 'url' in json
   return httpxResponse(status_code=200, content='{"results": {}, "success": true}')
 
