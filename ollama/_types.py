@@ -18,7 +18,8 @@ from typing_extensions import Annotated, Literal
 
 class SubscriptableBaseModel(BaseModel):
   def __getitem__(self, key: str) -> Any:
-    """
+    """Get an attribute by key.
+
     >>> msg = Message(role='user')
     >>> msg['role']
     'user'
@@ -33,7 +34,8 @@ class SubscriptableBaseModel(BaseModel):
     raise KeyError(key)
 
   def __setitem__(self, key: str, value: Any) -> None:
-    """
+    """Set an attribute by key.
+
     >>> msg = Message(role='user')
     >>> msg['role'] = 'assistant'
     >>> msg['role']
@@ -47,7 +49,8 @@ class SubscriptableBaseModel(BaseModel):
     setattr(self, key, value)
 
   def __contains__(self, key: str) -> bool:
-    """
+    """Return True if the model contains the given key.
+
     >>> msg = Message(role='user')
     >>> 'nonexistent' in msg
     False
@@ -85,7 +88,8 @@ class SubscriptableBaseModel(BaseModel):
     return False
 
   def get(self, key: str, default: Any = None) -> Any:
-    """
+    """Return attribute value for key or default if not present.
+
     >>> msg = Message(role='user')
     >>> msg.get('role')
     'user'
@@ -244,9 +248,7 @@ class BaseGenerateResponse(SubscriptableBaseModel):
 
 
 class GenerateResponse(BaseGenerateResponse):
-  """
-  Response returned by generate requests.
-  """
+  """Response returned by generate requests."""
 
   response: str
   'Response content. When streaming, this contains a fragment of the response.'
@@ -259,12 +261,10 @@ class GenerateResponse(BaseGenerateResponse):
 
 
 class Message(SubscriptableBaseModel):
-  """
-  Chat message.
-  """
+  """Chat message."""
 
   role: str
-  "Assumed role of the message. Response messages has role 'assistant' or 'tool'."
+  'Assumed role of the message. Response messages has role "assistant" or "tool".'
 
   content: Optional[str] = None
   'Content of the message. Response messages contains message fragments when streaming.'
@@ -273,29 +273,24 @@ class Message(SubscriptableBaseModel):
   'Thinking content. Only present when thinking is enabled.'
 
   images: Optional[Sequence[Image]] = None
-  """
-  Optional list of image data for multimodal models.
+  """Optional list of image data for multimodal models.
 
-  Valid input types are:
+    Valid input types are:
 
-  - `str` or path-like object: path to image file
-  - `bytes` or bytes-like object: raw image data
+    - `str` or path-like object: path to image file
+    - `bytes` or bytes-like object: raw image data
 
-  Valid image formats depend on the model. See the model card for more information.
-  """
+    Valid image formats depend on the model. See the model card for more information.
+    """
 
   tool_name: Optional[str] = None
   'Name of the executed tool.'
 
   class ToolCall(SubscriptableBaseModel):
-    """
-    Model tool calls.
-    """
+    """Model tool calls."""
 
     class Function(SubscriptableBaseModel):
-      """
-      Tool call function.
-      """
+      """Tool call function."""
 
       name: str
       'Name of the function.'
@@ -307,9 +302,7 @@ class Message(SubscriptableBaseModel):
     'Function to be called.'
 
   tool_calls: Optional[Sequence[ToolCall]] = None
-  """
-  Tools calls to be made by the model.
-  """
+  """Tools calls to be made by the model."""
 
 
 class Tool(SubscriptableBaseModel):
@@ -362,9 +355,7 @@ class ChatRequest(BaseGenerateRequest):
 
 
 class ChatResponse(BaseGenerateResponse):
-  """
-  Response returned by chat requests.
-  """
+  """Response returned by chat requests."""
 
   message: Message
   'Response message.'
@@ -387,9 +378,7 @@ class EmbedRequest(BaseRequest):
 
 
 class EmbedResponse(BaseGenerateResponse):
-  """
-  Response returned by embed requests.
-  """
+  """Response returned by embed requests."""
 
   embeddings: Sequence[Sequence[float]]
   'Embeddings of the inputs.'
@@ -406,33 +395,29 @@ class EmbeddingsRequest(BaseRequest):
 
 
 class EmbeddingsResponse(SubscriptableBaseModel):
-  """
-  Response returned by embeddings requests.
-  """
+  """Response returned by embeddings requests."""
 
   embedding: Sequence[float]
   'Embedding of the prompt.'
 
 
 class PullRequest(BaseStreamableRequest):
-  """
-  Request to pull the model.
-  """
+  """Request to pull the model."""
 
   insecure: Optional[bool] = None
   'Allow insecure (HTTP) connections.'
 
 
 class PushRequest(BaseStreamableRequest):
-  """
-  Request to pull the model.
-  """
+  """Request to push the model."""
 
   insecure: Optional[bool] = None
   'Allow insecure (HTTP) connections.'
 
 
 class CreateRequest(BaseStreamableRequest):
+  """Request to create a new model."""
+
   @model_serializer(mode='wrap')
   def serialize_model(self, nxt):
     output = nxt(self)
@@ -440,9 +425,6 @@ class CreateRequest(BaseStreamableRequest):
       output['from'] = output.pop('from_')
     return output
 
-  """
-  Request to create a new model.
-  """
   quantize: Optional[str] = None
   from_: Optional[str] = None
   files: Optional[Dict[str, str]] = None
@@ -476,15 +458,11 @@ class ListResponse(SubscriptableBaseModel):
 
 
 class DeleteRequest(BaseRequest):
-  """
-  Request to delete a model.
-  """
+  """Request to delete a model."""
 
 
 class CopyRequest(BaseModel):
-  """
-  Request to copy a model.
-  """
+  """Request to copy a model."""
 
   source: str
   'Source model to copy.'
@@ -504,9 +482,7 @@ class ProgressResponse(StatusResponse):
 
 
 class ShowRequest(BaseRequest):
-  """
-  Request to show model information.
-  """
+  """Request to show model information."""
 
 
 class ShowResponse(SubscriptableBaseModel):
@@ -567,9 +543,7 @@ class WebFetchResponse(SubscriptableBaseModel):
 
 
 class RequestError(Exception):
-  """
-  Common class for request errors.
-  """
+  """Common class for request errors."""
 
   def __init__(self, error: str):
     super().__init__(error)
@@ -578,9 +552,7 @@ class RequestError(Exception):
 
 
 class ResponseError(Exception):
-  """
-  Common class for response errors.
-  """
+  """Common class for response errors."""
 
   def __init__(self, error: str, status_code: int = -1):
     # try to parse content as JSON and extract 'error'

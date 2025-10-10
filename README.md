@@ -189,3 +189,37 @@ except ollama.ResponseError as e:
   if e.status_code == 404:
     ollama.pull(model)
 ```
+
+## Contributing / Linting
+
+
+We use Ruff for linting and formatting. This project uses uv for managing dev tools. Recommended commands:
+
+```sh
+# add ruff to the project dev tools (adds to uv config)
+uv add --dev ruff
+
+# lint
+uv ruff check .
+
+# format in-place
+uv ruff format .
+```
+
+Alternatives: install Ruff globally with `pipx`, `pip`, or Homebrew if you prefer.
+
+Pre-commit hooks are provided. To enable them locally:
+
+```sh
+pip install --upgrade pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+There's also a Makefile with convenient targets:
+
+```sh
+make lint
+make format
+```
+

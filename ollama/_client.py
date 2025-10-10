@@ -86,14 +86,23 @@ class BaseClient:
     headers: Optional[Mapping[str, str]] = None,
     **kwargs,
   ) -> None:
-    """
-    Creates a httpx client. Default parameters are the same as those defined in httpx
+    """Create a httpx client. Default parameters are the same as those defined in httpx.
+
     except for the following:
+    Args:
+      client: The httpx client to use.
+      host: The host URL for the API.
+      follow_redirects: Whether to follow redirects.
+      timeout: The timeout for requests.
+      headers: Headers to include in requests.
+      **kwargs: Additional keyword arguments for the httpx client.
+
+    Defaults:
     - `follow_redirects`: True
     - `timeout`: None
     `kwargs` are passed to the httpx client.
-    """
 
+    """
     headers = {
       k.lower(): v
       for k, v in {
@@ -243,8 +252,7 @@ class Client(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
-    """
-    Create a response using the requested model.
+    """Create a response using the requested model.
 
     Raises `RequestError` if a model is not provided.
 
@@ -252,7 +260,6 @@ class Client(BaseClient):
 
     Returns `GenerateResponse` if `stream` is `False`, otherwise returns a `GenerateResponse` generator.
     """
-
     return self._request(
       GenerateResponse,
       'POST',
@@ -315,38 +322,43 @@ class Client(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
-    """
-    Create a chat response using the requested model.
+    """Create a chat response using the requested model.
 
     Args:
-      tools:
-        A JSON schema as a dict, an Ollama Tool or a Python Function.
-        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
-        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
-      stream: Whether to stream the response.
-      format: The format of the response.
+      model (str): The model to use for the chat.
+      messages (Sequence[Union[Mapping[str, Any], Message]]): A list of messages comprising the conversation.
+      tools (Sequence[Union[Mapping[str, Any], Tool, Callable]]): A JSON schema as a dict, an Ollama Tool or a Python Function. Python
+        functions need to follow Google style docstrings to be converted to an
+        Ollama Tool. For more information, see:
+        https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings.
+      stream (bool): Whether to stream the response.
+      think (Union[bool, Literal["low", "medium", "high"]]): reasoning (on or off) or one of `low`, `medium`, `high` or a boolean.
+      format (Union[Literal["", "json"], JsonSchemaValue]): The format of the response.
+      options (Union[Mapping[str, Any], Options]): Additional options to pass to the model e.g. temperature, top_p, etc.
+      keep_alive (Union[float, str]): Keep the model alive after the request completes for the specified duration.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
-        '''
-        Add two numbers together.
+          '''Add two numbers together.
 
-        Args:
-          a: First number to add
-          b: Second number to add
+    Args:
+              a: First number to add.
+              b: Second number to add.
 
-        Returns:
-          int: The sum of a and b
-        '''
-        return a + b
+    Returns:
+              int: The sum of a and b.
+          '''
+          return a + b
 
       client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
 
-    Raises `RequestError` if a model is not provided.
+    Raises:
+      RequestError: If a model is not provided.
+      ResponseError: If the request could not be fulfilled.
 
-    Raises `ResponseError` if the request could not be fulfilled.
+    Returns:
+      ChatResponse if ``stream`` is ``False``, otherwise returns a ``ChatResponse`` generator.
 
-    Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
     return self._request(
       ChatResponse,
@@ -395,9 +407,7 @@ class Client(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> EmbeddingsResponse:
-    """
-    Deprecated in favor of `embed`.
-    """
+    """Deprecate in favor of `embed`."""
     return self._request(
       EmbeddingsResponse,
       'POST',
@@ -435,10 +445,12 @@ class Client(BaseClient):
     insecure: bool = False,
     stream: bool = False,
   ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
-    """
+    """Pull a model from a remote registry.
+
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
+
     """
     return self._request(
       ProgressResponse,
@@ -477,10 +489,12 @@ class Client(BaseClient):
     insecure: bool = False,
     stream: bool = False,
   ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
-    """
+    """Push a new model to the server.
+
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
+
     """
     return self._request(
       ProgressResponse,
@@ -543,10 +557,12 @@ class Client(BaseClient):
     *,
     stream: bool = False,
   ) -> Union[ProgressResponse, Iterator[ProgressResponse]]:
-    """
+    """Create a new model from the provided files and parameters.
+
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
+
     """
     return self._request(
       ProgressResponse,
@@ -634,17 +650,18 @@ class Client(BaseClient):
     )
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
-    """
-    Performs a web search
+    """Perform a web search.
 
     Args:
-      query: The query to search for
-      max_results: The maximum number of results to return (default: 3)
+        query: The query to search for.
+        max_results: The maximum number of results to return (default: 3).
 
     Returns:
-      WebSearchResponse with the search results
+        A :class:`WebSearchResponse` with the search results.
+
     Raises:
-      ValueError: If OLLAMA_API_KEY environment variable is not set
+        ValueError: If ``OLLAMA_API_KEY`` environment variable is not set.
+
     """
     if not self._client.headers.get('authorization', '').startswith('Bearer '):
       raise ValueError('Authorization header with Bearer token is required for web search')
@@ -660,14 +677,14 @@ class Client(BaseClient):
     )
 
   def web_fetch(self, url: str) -> WebFetchResponse:
-    """
-    Fetches the content of a web page for the provided URL.
+    """Fetch the content of a web page for the provided URL.
 
     Args:
-      url: The URL to fetch
+        url: The URL to fetch.
 
     Returns:
-      WebFetchResponse with the fetched result
+        A :class:`WebFetchResponse` with the fetched result.
+
     """
     if not self._client.headers.get('authorization', '').startswith('Bearer '):
       raise ValueError('Authorization header with Bearer token is required for web fetch')
@@ -751,15 +768,15 @@ class AsyncClient(BaseClient):
     return cls(**(await self._request_raw(*args, **kwargs)).json())
 
   async def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
-    """
-    Performs a web search
+    """Perform a web search.
 
     Args:
-      query: The query to search for
-      max_results: The maximum number of results to return (default: 3)
+        query: The query to search for.
+        max_results: The maximum number of results to return (default: 3).
 
     Returns:
-      WebSearchResponse with the search results
+        A :class:`WebSearchResponse` with the search results.
+
     """
     return await self._request(
       WebSearchResponse,
@@ -772,14 +789,14 @@ class AsyncClient(BaseClient):
     )
 
   async def web_fetch(self, url: str) -> WebFetchResponse:
-    """
-    Fetches the content of a web page for the provided URL.
+    """Fetch the content of a web page for the provided URL.
 
     Args:
-      url: The URL to fetch
+        url: The URL to fetch.
 
     Returns:
-      WebFetchResponse with the fetched result
+        A :class:`WebFetchResponse` with the fetched result.
+
     """
     return await self._request(
       WebFetchResponse,
@@ -845,8 +862,7 @@ class AsyncClient(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
-    """
-    Create a response using the requested model.
+    """Create a response using the requested model.
 
     Raises `RequestError` if a model is not provided.
 
@@ -916,40 +932,47 @@ class AsyncClient(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
-    """
-    Create a chat response using the requested model.
+    """Create a chat response using the specified model.
+
+    This method sends a chat request to the Ollama server, using the given model and input messages.
+    It supports tools, reasoning mode (`think`), custom formatting, and streaming responses.
 
     Args:
-      tools:
-        A JSON schema as a dict, an Ollama Tool or a Python Function.
-        Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
-        For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
-      stream: Whether to stream the response.
-      format: The format of the response.
+        model (str): The name of the model to use for chat.
+        messages (Optional[Sequence[Union[Mapping[str, Any], Message]]]): The conversation history or prompt.
+        tools (Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]]): Optional tools available to the model.
+            Accepts JSON schemas, Ollama `Tool` objects, or Python functions.
+            Python functions must follow Google-style docstrings to be converted automatically.
+            See: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
+        stream (bool): whether to stream the response.
+        think (Optional[Union[bool, Literal["low", "medium", "high"]]]): Enables the model's reasoning mode.
+            Can be set to True for default reasoning or use levels ("low", "medium", "high").
+        format (Optional[Union[str, JsonSchemaValue]]): The output format. Use "json" or a custom schema.
+        options (Optional[Union[Mapping[str, Any], Options]]): Additional model options like temperature or top_k.
+        keep_alive (Optional[Union[float, str]]): Time to keep the model alive in memory (e.g., "5m", 60.0).
 
     Example:
-      def add_two_numbers(a: int, b: int) -> int:
-        '''
-        Add two numbers together.
+        def add_two_numbers(a: int, b: int) -> int:
+          '''Add two numbers together.
 
-        Args:
-          a: First number to add
-          b: Second number to add
+    Args:
+            a: First number to add.
+            b: Second number to add.
 
-        Returns:
-          int: The sum of a and b
-        '''
-        return a + b
+    Returns:
+            int: The sum of a and b.
+          '''
+          return a + b
 
-      await client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
+    Raises:
+        RequestError: If the request is invalid or a required field is missing.
+        ResponseError: If the request could not be fulfilled by the server.
 
-    Raises `RequestError` if a model is not provided.
+    Returns:
+        ChatResponse: If `stream` is False.
+        AsyncIterator[ChatResponse]: If `stream` is True; yields incremental responses.
 
-    Raises `ResponseError` if the request could not be fulfilled.
-
-    Returns `ChatResponse` if `stream` is `False`, otherwise returns an asynchronous `ChatResponse` generator.
     """
-
     return await self._request(
       ChatResponse,
       'POST',
@@ -997,9 +1020,7 @@ class AsyncClient(BaseClient):
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> EmbeddingsResponse:
-    """
-    Deprecated in favor of `embed`.
-    """
+    """Deprecate in favor of `embed`."""
     return await self._request(
       EmbeddingsResponse,
       'POST',
@@ -1037,7 +1058,8 @@ class AsyncClient(BaseClient):
     insecure: bool = False,
     stream: bool = False,
   ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
-    """
+    """Pull a model from remote registry.
+
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
@@ -1079,7 +1101,8 @@ class AsyncClient(BaseClient):
     insecure: bool = False,
     stream: bool = False,
   ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
-    """
+    """Push a model to remote registry.
+
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
@@ -1145,12 +1168,31 @@ class AsyncClient(BaseClient):
     *,
     stream: bool = False,
   ) -> Union[ProgressResponse, AsyncIterator[ProgressResponse]]:
-    """
-    Raises `ResponseError` if the request could not be fulfilled.
+    """Create a new model instance.
 
-    Returns `ProgressResponse` if `stream` is `False`, otherwise returns a `ProgressResponse` generator.
-    """
+    Sends a POST request to the /api/create endpoint with the specified parameters.
+    The response can be streamed or returned as a single object depending on the `stream` flag.
 
+    Args:
+        model (str): The name or path of the model to create.
+        quantize (Optional[str]): The quantization mode to use.
+        from_ (Optional[str]): The base model to use for creating the new model.
+        files (Optional[Dict[str, str]]): Additional files to include.
+        adapters (Optional[Dict[str, str]]): Adapters to use.
+        template (Optional[str]): Template to use for the model.
+        license (Optional[Union[str, List[str]]]): License information.
+        system (Optional[str]): System prompt.
+        parameters (Optional[Union[Mapping[str, Any], Options]]): Model parameters.
+        messages (Optional[Sequence[Union[Mapping[str, Any], Message]]]): Messages for the model.
+        stream (bool): Whether to stream the response.
+
+    Raises:
+        ResponseError: If the request could not be fulfilled.
+
+    Returns:
+        ProgressResponse: If `stream` is `False`, otherwise returns an asynchronous generator of `ProgressResponse`.
+
+    """
     return await self._request(
       ProgressResponse,
       'POST',
@@ -1172,6 +1214,15 @@ class AsyncClient(BaseClient):
     )
 
   async def create_blob(self, path: Union[str, Path]) -> str:
+    """Asynchronously upload a blob from a file path.
+
+    Args:
+        path (Union[str, Path]): The path to the file to upload.
+
+    Returns:
+        str: The digest of the uploaded blob.
+
+    """
     sha256sum = sha256()
     async with await anyio.open_file(path, 'rb') as r:
       while True:
@@ -1249,16 +1300,20 @@ def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Imag
     yield image if isinstance(image, Image) else Image(value=image)
 
 
-def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
+def _copy_messages(
+  messages: Optional[Sequence[Union[Mapping[str, Any], Message]]],
+) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
       {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
     )
 
 
-def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
+def _copy_tools(
+  tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
+) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
-    yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
+    yield (convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool))
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
@@ -1272,7 +1327,8 @@ def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
 
 
 def _parse_host(host: Optional[str]) -> str:
-  """
+  """Parse a host string into a fully-qualified host URL.
+
   >>> _parse_host(None)
   'http://127.0.0.1:11434'
   >>> _parse_host('')
@@ -1334,7 +1390,6 @@ def _parse_host(host: Optional[str]) -> str:
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
   'http://[0001:002:003:0004::1]:56789/path'
   """
-
   host, port = host or '', 11434
   scheme, _, hostport = host.partition('://')
   if not hostport:

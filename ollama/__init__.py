@@ -1,3 +1,8 @@
+"""Ollama Python client package.
+
+Convenience exports for the top-level API.
+"""
+
 from ollama._client import AsyncClient, Client
 from ollama._types import (
   ChatResponse,

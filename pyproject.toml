@@ -65,3 +65,11 @@ ignore = ['FBT001'] # Boolean-typed positional argument in function definition
 
 [tool.pytest.ini_options]
 addopts = ['--doctest-modules']
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5",
+    "pytest-anyio>=0.0.0",
+    "pytest-httpserver>=1.1.1",
+    "ruff>=0.14.0",
+]
