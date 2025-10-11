@@ -30,6 +30,7 @@ default-args = ['ollama', 'tests']
 extra-dependencies = [
     'pytest-anyio',
     'pytest-httpserver',
+    'tox',
 ]
 
 [tool.hatch.envs.hatch-static-analysis]
