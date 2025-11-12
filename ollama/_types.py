@@ -210,6 +210,12 @@ class GenerateRequest(BaseGenerateRequest):
   think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'
 
+  logprobs: Optional[bool] = None
+  'Return log probabilities for generated tokens.'
+
+  top_logprobs: Optional[int] = None
+  'Number of alternative tokens and log probabilities to include per position (0-20).'
+
 
 class BaseGenerateResponse(SubscriptableBaseModel):
   model: Optional[str] = None
@@ -243,6 +249,19 @@ class BaseGenerateResponse(SubscriptableBaseModel):
   'Duration of evaluating inference in nanoseconds.'
 
 
+class TokenLogprob(SubscriptableBaseModel):
+  token: str
+  'Token text.'
+
+  logprob: float
+  'Log probability for the token.'
+
+
+class Logprob(TokenLogprob):
+  top_logprobs: Optional[Sequence[TokenLogprob]] = None
+  'Most likely tokens and their log probabilities.'
+
+
 class GenerateResponse(BaseGenerateResponse):
   """
   Response returned by generate requests.
@@ -256,6 +275,9 @@ class GenerateResponse(BaseGenerateResponse):
 
   context: Optional[Sequence[int]] = None
   'Tokenized history up to the point of the response.'
+
+  logprobs: Optional[Sequence[Logprob]] = None
+  'Log probabilities for generated tokens.'
 
 
 class Message(SubscriptableBaseModel):
@@ -360,6 +382,12 @@ class ChatRequest(BaseGenerateRequest):
   think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'
 
+  logprobs: Optional[bool] = None
+  'Return log probabilities for generated tokens.'
+
+  top_logprobs: Optional[int] = None
+  'Number of alternative tokens and log probabilities to include per position (0-20).'
+
 
 class ChatResponse(BaseGenerateResponse):
   """
@@ -368,6 +396,9 @@ class ChatResponse(BaseGenerateResponse):
 
   message: Message
   'Response message.'
+
+  logprobs: Optional[Sequence[Logprob]] = None
+  'Log probabilities for generated tokens if requested.'
 
 
 class EmbedRequest(BaseRequest):
