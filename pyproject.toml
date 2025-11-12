@@ -37,7 +37,7 @@ dependencies = [ 'ruff>=0.9.1' ]
 config-path = 'none'
 
 [tool.ruff]
-line-length = 999
+line-length = 320 
 indent-width = 2
 
 [tool.ruff.format]
