@@ -50,6 +50,82 @@ for chunk in stream:
   print(chunk['message']['content'], end='', flush=True)
 ```
 
+## Cloud Models
+
+Run larger models by offloading to Ollama’s cloud while keeping your local workflow.
+
+- Supported models: `deepseek-v3.1:671b-cloud`, `gpt-oss:20b-cloud`, `gpt-oss:120b-cloud`, `kimi-k2:1t-cloud`, `qwen3-coder:480b-cloud`, `kimi-k2-thinking` See [Ollama Models - Cloud](https://ollama.com/search?c=cloud) for more information
+
+### Run via local Ollama
+
+1) Sign in (one-time):
+
+```
+ollama signin
+```
+
+2) Pull a cloud model:
+
+```
+ollama pull gpt-oss:120b-cloud
+```
+
+3) Make a request:
+
+```python
+from ollama import Client
+
+client = Client()
+
+messages = [
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+]
+
+for part in client.chat('gpt-oss:120b-cloud', messages=messages, stream=True):
+  print(part.message.content, end='', flush=True)
+```
+
+### Cloud API (ollama.com)
+
+Access cloud models directly by pointing the client at `https://ollama.com`.
+
+1) Create an API key from [ollama.com](https://ollama.com/settings/keys) , then set:
+
+```
+export OLLAMA_API_KEY=your_api_key
+```
+
+2) (Optional) List models available via the API:
+
+```
+curl https://ollama.com/api/tags
+```
+
+3) Generate a response via the cloud API:
+
+```python
+import os
+from ollama import Client
+
+client = Client(
+    host='https://ollama.com',
+    headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
+)
+
+messages = [
+  {
+    'role': 'user',
+    'content': 'Why is the sky blue?',
+  },
+]
+
+for part in client.chat('gpt-oss:120b', messages=messages, stream=True):
+  print(part.message.content, end='', flush=True)
+```
+
 ## Custom client
 A custom client can be created by instantiating `Client` or `AsyncClient` from `ollama`.
 
