@@ -124,6 +124,19 @@ class Client(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.Client, host, **kwargs)
 
+  def close(self) -> None:
+    """Close the underlying HTTP client and release resources."""
+    self._client.close()
+
+  def __enter__(self):
+    """Support usage as a context manager."""
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb):
+    """Ensure the client is closed when exiting the context."""
+    self.close()
+    return False
+
   def _request_raw(self, *args, **kwargs):
     try:
       r = self._client.request(*args, **kwargs)
@@ -701,6 +714,19 @@ class Client(BaseClient):
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
     super().__init__(httpx.AsyncClient, host, **kwargs)
+
+  async def close(self) -> None:
+    """Close the underlying HTTP client and release resources."""
+    await self._client.aclose()
+
+  async def __aenter__(self):
+    """Support usage as an async context manager."""
+    return self
+
+  async def __aexit__(self, exc_type, exc_val, exc_tb):
+    """Ensure the client is closed when exiting the async context."""
+    await self.close()
+    return False
 
   async def _request_raw(self, *args, **kwargs):
     try:
