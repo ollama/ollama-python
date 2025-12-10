@@ -1355,7 +1355,7 @@ def test_client_close():
   assert client._client.is_closed
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_close():
   client = AsyncClient()
   await client.close()
@@ -1370,7 +1370,7 @@ def test_client_context_manager():
   assert client._client.is_closed
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_async_client_context_manager():
   async with AsyncClient() as client:
     assert isinstance(client, AsyncClient)
