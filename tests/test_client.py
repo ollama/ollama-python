@@ -1347,3 +1347,33 @@ def test_client_explicit_bearer_header_overrides_env(monkeypatch: pytest.MonkeyP
   client = Client(headers={'Authorization': 'Bearer explicit-token'})
   assert client._client.headers['authorization'] == 'Bearer explicit-token'
   client.web_search('override check')
+
+
+def test_client_close():
+  client = Client()
+  client.close()
+  assert client._client.is_closed
+
+
+@pytest.mark.anyio
+async def test_async_client_close():
+  client = AsyncClient()
+  await client.close()
+  assert client._client.is_closed
+
+
+def test_client_context_manager():
+  with Client() as client:
+    assert isinstance(client, Client)
+    assert not client._client.is_closed
+
+  assert client._client.is_closed
+
+
+@pytest.mark.anyio
+async def test_async_client_context_manager():
+  async with AsyncClient() as client:
+    assert isinstance(client, AsyncClient)
+    assert not client._client.is_closed
+
+  assert client._client.is_closed
