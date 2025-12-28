@@ -1,6 +1,7 @@
 import contextlib
 import ipaddress
 import json
+import logging
 import os
 import platform
 import sys
@@ -25,6 +26,11 @@ from typing import (
 
 import anyio
 from pydantic.json_schema import JsonSchemaValue
+
+# Set httpx logger to WARNING level to suppress verbose HTTP request logs at INFO level.
+# Users who want to see these logs can set the level back to INFO or DEBUG in their application.
+# See: https://github.com/ollama/ollama-python/issues/539
+logging.getLogger('httpx').setLevel(logging.WARNING)
 
 from ollama._utils import convert_function_to_tool
 
