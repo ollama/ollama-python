@@ -459,13 +459,16 @@ def test_client_generate_images(httpserver: HTTPServer):
   )
 
   client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as temp:
+  with tempfile.NamedTemporaryFile(delete=False) as temp:
     temp.write(PNG_BYTES)
     temp.flush()
-    response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+    temp_name = temp.name
+  try:
+    response = client.generate('dummy', 'Why is the sky blue?', images=[temp_name])
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
+  finally:
+    os.unlink(temp_name)
 
 
 def test_client_generate_format_json(httpserver: HTTPServer):
@@ -740,20 +743,26 @@ def test_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as blob:
-    response = client.create_blob(blob.name)
+  with tempfile.NamedTemporaryFile(delete=False) as blob:
+    blob_name = blob.name
+  try:
+    response = client.create_blob(blob_name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  finally:
+    os.unlink(blob_name)
 
 
 def test_client_create_blob_exists(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
   client = Client(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as blob:
-    response = client.create_blob(blob.name)
+  with tempfile.NamedTemporaryFile(delete=False) as blob:
+    blob_name = blob.name
+  try:
+    response = client.create_blob(blob_name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  finally:
+    os.unlink(blob_name)
 
 
 def test_client_delete(httpserver: HTTPServer):
@@ -945,13 +954,16 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
   )
 
   client = AsyncClient(httpserver.url_for('/'))
-
-  with tempfile.NamedTemporaryFile() as temp:
+  with tempfile.NamedTemporaryFile(delete=False) as temp:
     temp.write(PNG_BYTES)
     temp.flush()
-    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+    temp_name = temp.name
+  try:
+    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp_name])
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
+  finally:
+    os.unlink(temp_name)
 
 
 async def test_async_client_pull(httpserver: HTTPServer):
@@ -1118,9 +1130,13 @@ async def test_async_client_create_blob(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = await client.create_blob(blob.name)
+  with tempfile.NamedTemporaryFile(delete=False) as blob:
+    blob_name = blob.name
+  try:
+    response = await client.create_blob(blob_name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  finally:
+    os.unlink(blob_name)
 
 
 async def test_async_client_create_blob_exists(httpserver: HTTPServer):
@@ -1128,9 +1144,13 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = await client.create_blob(blob.name)
+  with tempfile.NamedTemporaryFile(delete=False) as blob:
+    blob_name = blob.name
+  try:
+    response = await client.create_blob(blob_name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  finally:
+    os.unlink(blob_name)
 
 
 async def test_async_client_delete(httpserver: HTTPServer):
