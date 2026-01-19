@@ -88,3 +88,30 @@ def convert_function_to_tool(func: Callable) -> Tool:
   )
 
   return Tool.model_validate(tool)
+
+def _get_parameters(parameters: list):
+    properties_dict = {}
+    for param_item in parameters:
+        for key, value in param_item.items():
+            properties_dict[key] = {
+                "type": value.get("type"),
+                "description": value.get("description")
+            }
+    return properties_dict
+
+def create_function_tool(tool_name: str, description: str, parameter_list: list, required_parameters: list):
+    properties = _get_parameters(parameter_list)
+    
+    tool_definition = {
+            'type': 'function',
+            'function': {
+                'name': tool_name,
+                'description': description,
+                'parameters': {
+                    'type': 'object',
+                    'properties': properties,
+                    'required': required_parameters
+                }
+            }
+        }
+    return tool_definition
