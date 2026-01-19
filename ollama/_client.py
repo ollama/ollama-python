@@ -189,6 +189,7 @@ class Client(BaseClient):
             raise ResponseError(e.response.text, e.response.status_code) from None
 
           for line in r.iter_lines():
+            if not line: continue
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
@@ -770,6 +771,7 @@ class AsyncClient(BaseClient):
             raise ResponseError(e.response.text, e.response.status_code) from None
 
           async for line in r.aiter_lines():
+            if not line: continue
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
