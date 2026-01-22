@@ -78,6 +78,13 @@ Configuration to use with an MCP client:
 - [multimodal-chat.py](multimodal-chat.py)
 - [multimodal-generate.py](multimodal-generate.py)
 
+### Image Generation (Experimental) - Generate images with a model
+
+> **Note:** Image generation is experimental and currently only available on macOS.
+
+- [generate-image.py](generate-image.py)
+- [generate-image-stream.py](generate-image-stream.py) - Streamed progress
+
 ### Structured Outputs - Generate structured outputs with a model
 
 - [structured-outputs.py](structured-outputs.py)
