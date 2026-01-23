@@ -15,4 +15,4 @@ for response in generate(model='x/z-image-turbo', prompt=prompt, stream=True):
     print('\nImage saved to output.png')
   elif response.total:
     # Progress update
-    print(f'Progress: {response.completed}/{response.total}', end='\r')
+    print(f'Progress: {response.completed or 0}/{response.total}', end='\r')
