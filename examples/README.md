@@ -83,7 +83,6 @@ Configuration to use with an MCP client:
 > **Note:** Image generation is experimental and currently only available on macOS.
 
 - [generate-image.py](generate-image.py)
-- [generate-image-stream.py](generate-image-stream.py) - Streamed progress
 
 ### Structured Outputs - Generate structured outputs with a model
 
