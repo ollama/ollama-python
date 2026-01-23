@@ -250,7 +250,6 @@ ollama.embed(model='gemma3', input=['The sky is blue because of rayleigh scatter
 ollama.ps()
 ```
 
-
 ## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.

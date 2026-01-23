@@ -217,6 +217,9 @@ class Client(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -238,6 +241,9 @@ class Client(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> Iterator[GenerateResponse]: ...
 
   def generate(
@@ -258,6 +264,9 @@ class Client(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
     """
     Create a response using the requested model.
@@ -289,6 +298,9 @@ class Client(BaseClient):
         images=list(_copy_images(images)) if images else None,
         options=options,
         keep_alive=keep_alive,
+        width=width,
+        height=height,
+        steps=steps,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
@@ -838,6 +850,9 @@ class AsyncClient(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -859,6 +874,9 @@ class AsyncClient(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> AsyncIterator[GenerateResponse]: ...
 
   async def generate(
@@ -879,6 +897,9 @@ class AsyncClient(BaseClient):
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    steps: Optional[int] = None,
   ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
     """
     Create a response using the requested model.
@@ -909,6 +930,9 @@ class AsyncClient(BaseClient):
         images=list(_copy_images(images)) if images else None,
         options=options,
         keep_alive=keep_alive,
+        width=width,
+        height=height,
+        steps=steps,
       ).model_dump(exclude_none=True),
       stream=stream,
     )

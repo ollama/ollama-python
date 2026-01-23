@@ -216,6 +216,16 @@ class GenerateRequest(BaseGenerateRequest):
   top_logprobs: Optional[int] = None
   'Number of alternative tokens and log probabilities to include per position (0-20).'
 
+  # Experimental image generation parameters
+  width: Optional[int] = None
+  'Width of the generated image in pixels (for image generation models).'
+
+  height: Optional[int] = None
+  'Height of the generated image in pixels (for image generation models).'
+
+  steps: Optional[int] = None
+  'Number of diffusion steps (for image generation models).'
+
 
 class BaseGenerateResponse(SubscriptableBaseModel):
   model: Optional[str] = None
@@ -267,7 +277,7 @@ class GenerateResponse(BaseGenerateResponse):
   Response returned by generate requests.
   """
 
-  response: str
+  response: Optional[str] = None
   'Response content. When streaming, this contains a fragment of the response.'
 
   thinking: Optional[str] = None
@@ -278,6 +288,17 @@ class GenerateResponse(BaseGenerateResponse):
 
   logprobs: Optional[Sequence[Logprob]] = None
   'Log probabilities for generated tokens.'
+
+  # Image generation response fields
+  image: Optional[str] = None
+  'Base64-encoded generated image data (for image generation models).'
+
+  # Streaming progress fields (for image generation)
+  completed: Optional[int] = None
+  'Number of completed steps (for image generation streaming).'
+
+  total: Optional[int] = None
+  'Total number of steps (for image generation streaming).'
 
 
 class Message(SubscriptableBaseModel):
