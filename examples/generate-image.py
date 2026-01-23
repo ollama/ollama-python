@@ -7,7 +7,7 @@ from ollama import generate
 prompt = 'a sunset over mountains'
 print(f'Prompt: {prompt}')
 
-for response in generate(model='x/z-image-turbo', prompt=prompt):
+for response in generate(model='x/z-image-turbo', prompt=prompt, stream=True):
   if response.image:
     # Final response contains the image
     with open('output.png', 'wb') as f:
