@@ -1,5 +1,5 @@
-from ollama import ChatResponse, chat
-
+from ollama import ChatResponse, chat, create_function_tool
+from ollama import get_ollama_tool_description
 
 def add_two_numbers(a: int, b: int) -> int:
   """
@@ -26,6 +26,11 @@ def subtract_two_numbers(a: int, b: int) -> int:
   # The cast is necessary as returned tool call arguments don't always conform exactly to schema
   return int(a) - int(b)
 
+def multiply_two_numbers(a: int, b: int) -> int:
+  """
+  Multiply two numbers
+  """
+  return int(a) * int(b)
 
 # Tools can still be manually defined and passed into chat
 subtract_two_numbers_tool = {
@@ -44,18 +49,28 @@ subtract_two_numbers_tool = {
   },
 }
 
-messages = [{'role': 'user', 'content': 'What is three plus one?'}]
-print('Prompt:', messages[0]['content'])
+# A simple way to define tools manually, even though it seems long
+multiply_two_numbers_tool = create_function_tool(tool_name="multiply_two_numbers", 
+                                                 description="Multiply two numbers", 
+                                                 parameter_list=[{"a": {"type": "integer", "description": "The first number"}, 
+                                                                  "b": {"type": "integer", "description": "The second number"}}], 
+                                                 required_parameters=["a", "b"])
+
+messages = [
+  {'role': 'system', 'content': f'You are a helpful assistant, with access to these tools: {get_ollama_tool_description()}'}, #usage example for the get_ollama_tool_description function
+  {'role': 'user', 'content': 'What is three plus one? and Search the web for what is ollama'}]
+print('Prompt:', messages[1]['content'])
 
 available_functions = {
   'add_two_numbers': add_two_numbers,
   'subtract_two_numbers': subtract_two_numbers,
+  'multiply_two_numbers': multiply_two_numbers,
 }
 
 response: ChatResponse = chat(
   'llama3.1',
   messages=messages,
-  tools=[add_two_numbers, subtract_two_numbers_tool],
+  tools=[add_two_numbers, subtract_two_numbers_tool, multiply_two_numbers_tool],
 )
 
 if response.message.tool_calls:

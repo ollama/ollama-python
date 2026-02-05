@@ -256,3 +256,30 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+def test_create_function_tool():
+    from ollama._utils import create_function_tool
+    tool = create_function_tool(
+        tool_name="my_tool",
+        description="desc",
+        parameter_list=[{"foo": {"type": "string", "description": "bar"}}],
+        required_parameters=["foo"]
+    )
+    assert tool["type"] == "function"
+    assert tool["function"]["name"] == "my_tool"
+    assert tool["function"]["description"] == "desc"
+    assert tool["function"]["parameters"]["properties"]["foo"]["type"] == "string"
+    assert tool["function"]["parameters"]["properties"]["foo"]["description"] == "bar"
+    assert tool["function"]["parameters"]["required"] == ["foo"]
+
+def test_get_parameters():
+    params = [
+        {"param1": {"type": "string", "description": "desc1"}},
+        {"param2": {"type": "integer", "description": "desc2"}},
+    ]
+    from ollama._utils import _get_parameters
+    result = _get_parameters(params)
+    assert result == {
+        "param1": {"type": "string", "description": "desc1"},
+        "param2": {"type": "integer", "description": "desc2"},
+    }
