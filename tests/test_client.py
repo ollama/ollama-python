@@ -134,7 +134,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
 
   it = iter(['I ', "don't ", 'know.'])
   for part in response:
-    assert part['message']['role'] in 'assistant'
+    assert part['message']['role'] == 'assistant'
     assert part['message']['content'] == next(it)
 
 
