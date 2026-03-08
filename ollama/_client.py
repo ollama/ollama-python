@@ -319,6 +319,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> ChatResponse: ...
 
   @overload
@@ -335,6 +336,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> Iterator[ChatResponse]: ...
 
   def chat(
@@ -350,6 +352,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
@@ -361,6 +364,8 @@ class Client(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      max_tool_calls: If set to a positive int, automatically execute tool calls in a loop
+        up to this many iterations. None (default) disables auto-execution.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -376,7 +381,11 @@ class Client(BaseClient):
         '''
         return a + b
 
-      client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
+      # Manual tool handling:
+      client.chat(model='qwen3.5:4b', tools=[add_two_numbers], messages=[...])
+
+      # Auto tool execution (max 10 iterations):
+      client.chat(model='qwen3.5:4b', tools=[add_two_numbers], messages=[...], max_tool_calls=10)
 
     Raises `RequestError` if a model is not provided.
 
@@ -384,24 +393,47 @@ class Client(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns a `ChatResponse` generator.
     """
-    return self._request(
-      ChatResponse,
-      'POST',
-      '/api/chat',
-      json=ChatRequest(
-        model=model,
-        messages=list(_copy_messages(messages)),
-        tools=list(_copy_tools(tools)),
+    # MARK: standard path (no auto tool execution)
+    if stream or not max_tool_calls:
+      return self._request(
+        ChatResponse,
+        'POST',
+        '/api/chat',
+        json=ChatRequest(
+          model=model,
+          messages=list(_copy_messages(messages)),
+          tools=list(_copy_tools(tools)),
+          stream=stream,
+          think=think,
+          logprobs=logprobs,
+          top_logprobs=top_logprobs,
+          format=format,
+          options=options,
+          keep_alive=keep_alive,
+        ).model_dump(exclude_none=True),
         stream=stream,
-        think=think,
-        logprobs=logprobs,
-        top_logprobs=top_logprobs,
-        format=format,
-        options=options,
-        keep_alive=keep_alive,
-      ).model_dump(exclude_none=True),
-      stream=stream,
-    )
+      )
+
+    # MARK: auto tool execution loop
+    tool_map = {f.__name__: f for f in (tools or []) if callable(f)}
+    msgs = list(messages or [])
+
+    for _ in range(max_tool_calls):
+      response = self._request(
+        ChatResponse, 'POST', '/api/chat',
+        json=ChatRequest(
+          model=model, messages=list(_copy_messages(msgs)), tools=list(_copy_tools(tools)),
+          stream=False, think=think, format=format, options=options, keep_alive=keep_alive,
+        ).model_dump(exclude_none=True), stream=False,
+      )
+      if not response.message.tool_calls:
+        return response
+      msgs.append(response.message)
+      for tc in response.message.tool_calls:
+        output = _exec_tool(tool_map, tc)
+        msgs.append({'role': 'tool', 'content': output, 'tool_name': tc.function.name})
+
+    raise RuntimeError(f'Tool calling exceeded {max_tool_calls} iterations')
 
   def embed(
     self,
@@ -951,6 +983,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> ChatResponse: ...
 
   @overload
@@ -967,6 +1000,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> AsyncIterator[ChatResponse]: ...
 
   async def chat(
@@ -982,6 +1016,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    max_tool_calls: Optional[int] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
@@ -993,6 +1028,8 @@ class AsyncClient(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      max_tool_calls: If set to a positive int, automatically execute tool calls in a loop
+        up to this many iterations. None (default) disables auto-execution.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -1008,7 +1045,11 @@ class AsyncClient(BaseClient):
         '''
         return a + b
 
-      await client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
+      # Manual tool handling:
+      await client.chat(model='qwen3.5:4b', tools=[add_two_numbers], messages=[...])
+
+      # Auto tool execution (max 10 iterations):
+      await client.chat(model='qwen3.5:4b', tools=[add_two_numbers], messages=[...], max_tool_calls=10)
 
     Raises `RequestError` if a model is not provided.
 
@@ -1016,25 +1057,47 @@ class AsyncClient(BaseClient):
 
     Returns `ChatResponse` if `stream` is `False`, otherwise returns an asynchronous `ChatResponse` generator.
     """
-
-    return await self._request(
-      ChatResponse,
-      'POST',
-      '/api/chat',
-      json=ChatRequest(
-        model=model,
-        messages=list(_copy_messages(messages)),
-        tools=list(_copy_tools(tools)),
+    # MARK: standard path (no auto tool execution)
+    if stream or not max_tool_calls:
+      return await self._request(
+        ChatResponse,
+        'POST',
+        '/api/chat',
+        json=ChatRequest(
+          model=model,
+          messages=list(_copy_messages(messages)),
+          tools=list(_copy_tools(tools)),
+          stream=stream,
+          think=think,
+          logprobs=logprobs,
+          top_logprobs=top_logprobs,
+          format=format,
+          options=options,
+          keep_alive=keep_alive,
+        ).model_dump(exclude_none=True),
         stream=stream,
-        think=think,
-        logprobs=logprobs,
-        top_logprobs=top_logprobs,
-        format=format,
-        options=options,
-        keep_alive=keep_alive,
-      ).model_dump(exclude_none=True),
-      stream=stream,
-    )
+      )
+
+    # MARK: auto tool execution loop
+    tool_map = {f.__name__: f for f in (tools or []) if callable(f)}
+    msgs = list(messages or [])
+
+    for _ in range(max_tool_calls):
+      response = await self._request(
+        ChatResponse, 'POST', '/api/chat',
+        json=ChatRequest(
+          model=model, messages=list(_copy_messages(msgs)), tools=list(_copy_tools(tools)),
+          stream=False, think=think, format=format, options=options, keep_alive=keep_alive,
+        ).model_dump(exclude_none=True), stream=False,
+      )
+      if not response.message.tool_calls:
+        return response
+      msgs.append(response.message)
+      for tc in response.message.tool_calls:
+        output = _exec_tool(tool_map, tc)
+        msgs.append({'role': 'tool', 'content': output, 'tool_name': tc.function.name})
+
+    raise RuntimeError(f'Tool calling exceeded {max_tool_calls} iterations')
 
   async def embed(
     self,
@@ -1328,6 +1391,15 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
 def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
+
+
+def _exec_tool(tool_map: dict, tc: Message.ToolCall) -> str:
+  """Execute a tool call, return result as string."""
+  fn = tool_map.get(tc.function.name)
+  if not fn:
+    return json.dumps({'error': f'Tool {tc.function.name} not found'})
+  output = fn(**tc.function.arguments)
+  return output if isinstance(output, str) else json.dumps(output, default=str)
 
 
 def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
