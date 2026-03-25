@@ -1,3 +1,5 @@
+from importlib.metadata import version as _get_version
+
 from ollama._client import AsyncClient, Client
 from ollama._types import (
   ChatResponse,
@@ -19,6 +21,11 @@ from ollama._types import (
   WebSearchResponse,
 )
 
+try:
+  __version__ = _get_version('ollama')
+except Exception:
+  __version__ = '0.0.0'
+
 __all__ = [
   'AsyncClient',
   'ChatResponse',
@@ -39,6 +46,7 @@ __all__ = [
   'Tool',
   'WebFetchResponse',
   'WebSearchResponse',
+  '__version__',
 ]
 
 _client = Client()
