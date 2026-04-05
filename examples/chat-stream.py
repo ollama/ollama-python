@@ -1,3 +1,15 @@
+"""Streaming chat response.
+
+Prints tokens as they are generated instead of waiting for the full
+response, providing a real-time typing effect.
+
+Prerequisites:
+    ollama pull gemma3
+
+Usage:
+    python chat-stream.py
+"""
+
 from ollama import chat
 
 messages = [

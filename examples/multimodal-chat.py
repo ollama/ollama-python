@@ -1,3 +1,15 @@
+"""Multimodal chat with image input.
+
+Sends an image alongside a text prompt, allowing the model to describe
+or answer questions about the image content.
+
+Prerequisites:
+    ollama pull gemma3
+
+Usage:
+    python multimodal-chat.py
+"""
+
 from ollama import chat
 
 # from pathlib import Path

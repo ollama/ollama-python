@@ -1,3 +1,15 @@
+"""Tool calling (function calling) with Ollama.
+
+Demonstrates how to define Python functions as tools that the model can
+invoke, dispatch the calls, and feed results back into the conversation.
+
+Prerequisites:
+    ollama pull llama3.1
+
+Usage:
+    python tools.py
+"""
+
 from ollama import ChatResponse, chat
 
 

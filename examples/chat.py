@@ -1,3 +1,14 @@
+"""Basic chat completion.
+
+Sends a single user message and prints the model's response.
+
+Prerequisites:
+    ollama pull gemma3
+
+Usage:
+    python chat.py
+"""
+
 from ollama import chat
 
 messages = [

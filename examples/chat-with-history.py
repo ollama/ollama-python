@@ -1,3 +1,15 @@
+"""Multi-turn chat with conversation history.
+
+Sends multiple messages in sequence, maintaining context across turns
+so the model can reference earlier parts of the conversation.
+
+Prerequisites:
+    ollama pull gemma3
+
+Usage:
+    python chat-with-history.py
+"""
+
 from ollama import chat
 
 messages = [

@@ -1,3 +1,16 @@
+"""Structured JSON output with Pydantic validation.
+
+Forces the model to return JSON conforming to a Pydantic schema,
+then validates the response automatically.
+
+Prerequisites:
+    pip install pydantic
+    ollama pull llama3.1:8b
+
+Usage:
+    python structured-outputs.py
+"""
+
 from pydantic import BaseModel
 
 from ollama import chat
