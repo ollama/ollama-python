@@ -664,6 +664,16 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
+
+  def exists(self, model: str) -> bool:
+    """Check if a model is available locally."""
+    try:
+      self.show(model)
+      return True
+    except ResponseError:
+      return False
+
+
   def ps(self) -> ProcessResponse:
     return self._request(
       ProcessResponse,
@@ -1304,6 +1314,16 @@ class AsyncClient(BaseClient):
         model=model,
       ).model_dump(exclude_none=True),
     )
+
+
+  async def exists(self, model: str) -> bool:
+    """Check if a model is available locally."""
+    try:
+      await self.show(model)
+      return True
+    except ResponseError:
+      return False
+
 
   async def ps(self) -> ProcessResponse:
     return await self._request(
