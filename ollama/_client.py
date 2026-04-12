@@ -629,6 +629,18 @@ class Client(BaseClient):
       '/api/tags',
     )
 
+  def exists(self, model: str) -> bool:
+    """Check if a model is available locally.
+
+    Args:
+      model: The model name to check (e.g. 'llama3.1:8b').
+
+    Returns:
+      True if the model exists locally, False otherwise.
+    """
+    models = self.list().models or []
+    return any(m.model == model for m in models)
+
   def delete(self, model: str) -> StatusResponse:
     r = self._request_raw(
       'DELETE',
@@ -1269,6 +1281,19 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/tags',
     )
+
+  async def exists(self, model: str) -> bool:
+    """Check if a model is available locally.
+
+    Args:
+      model: The model name to check (e.g. 'llama3.1:8b').
+
+    Returns:
+      True if the model exists locally, False otherwise.
+    """
+    resp = await self.list()
+    models = resp.models or []
+    return any(m.model == model for m in models)
 
   async def delete(self, model: str) -> StatusResponse:
     r = await self._request_raw(

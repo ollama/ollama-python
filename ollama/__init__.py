@@ -52,6 +52,7 @@ push = _client.push
 create = _client.create
 delete = _client.delete
 list = _client.list
+exists = _client.exists
 copy = _client.copy
 show = _client.show
 ps = _client.ps
