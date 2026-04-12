@@ -562,6 +562,8 @@ class ShowRequest(BaseRequest):
 
 
 class ShowResponse(SubscriptableBaseModel):
+  model_config = ConfigDict(populate_by_name=True)
+
   modified_at: Optional[datetime] = None
 
   template: Optional[str] = None
@@ -572,7 +574,7 @@ class ShowResponse(SubscriptableBaseModel):
 
   details: Optional[ModelDetails] = None
 
-  modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
+  modelinfo: Optional[Mapping[str, Any]] = Field(default=None, alias='model_info')
 
   parameters: Optional[str] = None
 

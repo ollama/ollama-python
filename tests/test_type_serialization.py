@@ -92,3 +92,35 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+def test_show_response_without_model_info():
+  """ShowResponse should accept responses that omit model_info (e.g. cloud models).
+
+  Regression test for https://github.com/ollama/ollama-python/issues/607
+  """
+  from ollama._types import ShowResponse
+
+  # model_info completely absent from response
+  resp = ShowResponse()
+  assert resp.modelinfo is None
+
+  resp = ShowResponse(template='{{ .Prompt }}')
+  assert resp.modelinfo is None
+  assert resp.template == '{{ .Prompt }}'
+
+
+def test_show_response_with_model_info_alias():
+  """ShowResponse should accept model_info via its alias."""
+  from ollama._types import ShowResponse
+
+  resp = ShowResponse(model_info={'general.architecture': 'llama'})
+  assert resp.modelinfo == {'general.architecture': 'llama'}
+
+
+def test_show_response_with_modelinfo_field_name():
+  """ShowResponse should accept modelinfo via its Python field name."""
+  from ollama._types import ShowResponse
+
+  resp = ShowResponse(modelinfo={'general.architecture': 'llama'})
+  assert resp.modelinfo == {'general.architecture': 'llama'}
