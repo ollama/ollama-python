@@ -634,9 +634,6 @@ class Client(BaseClient):
       'GET',
       '/api/version'
     )
-    if r.status_code != 200:
-      raise Exception(f"Request failed: {r.status_code}")
-
     return r.json().get('version', '')
 
   def delete(self, model: str) -> StatusResponse:
@@ -1285,10 +1282,6 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/version',
     )
-
-    if r.status_code != 200:
-      raise Exception(f"Request failed: {r.status_code}")
-    
     return r.json().get('version', '')
   
 
