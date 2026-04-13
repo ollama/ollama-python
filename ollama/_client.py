@@ -628,6 +628,16 @@ class Client(BaseClient):
       'GET',
       '/api/tags',
     )
+  
+  def version(self) -> str:
+    r = self._request_raw(
+      'GET',
+      '/api/version'
+    )
+    if r.status_code != 200:
+      raise Exception(f"Request failed: {r.status_code}")
+
+    return r.json().get('version', '')
 
   def delete(self, model: str) -> StatusResponse:
     r = self._request_raw(
@@ -1269,6 +1279,18 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/tags',
     )
+
+  async def version(self) -> str:
+    r = await self._request_raw(
+      'GET',
+      '/api/version',
+    )
+
+    if r.status_code != 200:
+      raise Exception(f"Request failed: {r.status_code}")
+    
+    return r.json().get('version', '')
+  
 
   async def delete(self, model: str) -> StatusResponse:
     r = await self._request_raw(
