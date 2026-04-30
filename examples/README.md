@@ -26,6 +26,11 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [generate-stream.py](generate-stream.py) - Streamed outputs
 - [fill-in-middle.py](fill-in-middle.py) - Given a prefix and suffix, fill in the middle
 
+### Logprobs - Inspect token probabilities
+
+- [chat-logprobs.py](chat-logprobs.py) - Chat with logprobs and top alternatives
+- [generate-logprobs.py](generate-logprobs.py) - Generate with logprobs and top alternatives
+
 ### Tools/Function Calling - Call a function with a model
 
 - [tools.py](tools.py) - Simple example of Tools/Function Calling
