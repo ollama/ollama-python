@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional, Protocol, Tuple
 from urllib.parse import urlparse
 
@@ -212,7 +212,7 @@ class Browser:
       text='',
       lines=[],
       links={},
-      fetched_at=datetime.utcnow(),
+      fetched_at=datetime.now(timezone.utc),
     )
 
     tb = []
@@ -246,7 +246,7 @@ class Browser:
       text='',
       lines=[],
       links={},
-      fetched_at=datetime.utcnow(),
+      fetched_at=datetime.now(timezone.utc),
     )
 
     link_fmt = f'【{link_idx}†{result.title}】\n'
@@ -275,7 +275,7 @@ class Browser:
       text='',
       lines=[],
       links={},
-      fetched_at=datetime.utcnow(),
+      fetched_at=datetime.now(timezone.utc),
     )
 
     for url, url_results in fetch_response.get('results', {}).items():
@@ -306,7 +306,7 @@ class Browser:
       text='',
       lines=[],
       links={},
-      fetched_at=datetime.utcnow(),
+      fetched_at=datetime.now(timezone.utc),
     )
 
     max_results = 50
@@ -442,7 +442,7 @@ class Browser:
           text='',
           lines=[],
           links={},
-          fetched_at=datetime.utcnow(),
+          fetched_at=datetime.now(timezone.utc),
         )
         available = sorted(page.links.keys())
         available_list = ', '.join(map(str, available)) if available else '(none)'
