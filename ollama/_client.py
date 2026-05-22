@@ -664,6 +664,28 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
+
+  def exists(self, model: str) -> bool:
+    """
+    Check whether a model is available locally.
+
+    Args:
+      model: Name of the model to check (e.g. 'llama3.2' or 'llama3.2:latest').
+
+    Returns:
+      True if the model is present locally, False otherwise.
+
+    Example::
+
+      if not client.exists('llama3.2'):
+          client.pull('llama3.2')
+    """
+    try:
+      self.show(model)
+      return True
+    except ResponseError:
+      return False
+
   def ps(self) -> ProcessResponse:
     return self._request(
       ProcessResponse,
@@ -1304,6 +1326,28 @@ class AsyncClient(BaseClient):
         model=model,
       ).model_dump(exclude_none=True),
     )
+
+
+  async def exists(self, model: str) -> bool:
+    """
+    Check whether a model is available locally.
+
+    Args:
+      model: Name of the model to check (e.g. 'llama3.2' or 'llama3.2:latest').
+
+    Returns:
+      True if the model is present locally, False otherwise.
+
+    Example::
+
+      if not await client.exists('llama3.2'):
+          await client.pull('llama3.2')
+    """
+    try:
+      await self.show(model)
+      return True
+    except ResponseError:
+      return False
 
   async def ps(self) -> ProcessResponse:
     return await self._request(
