@@ -1,3 +1,4 @@
+successfully downloaded text file (SHA: 96529d630ff7a59b36b34bde5fd4ede7725c5ab4)
 import contextlib
 import json
 from base64 import b64decode, b64encode
@@ -334,6 +335,9 @@ class Message(SubscriptableBaseModel):
     """
     Model tool calls.
     """
+
+    id: Optional[str] = None
+    'ID of the tool call, when provided by the model/server.'
 
     class Function(SubscriptableBaseModel):
       """
