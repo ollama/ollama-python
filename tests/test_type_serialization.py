@@ -1,10 +1,11 @@
+successfully downloaded text file (SHA: f458cd23da2a4e195e4cb28f61e934cfb79a2c46)
 import tempfile
 from base64 import b64encode
 from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import CreateRequest, Image, Message
 
 
 def test_image_serialization_bytes():
@@ -92,3 +93,36 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+def test_message_tool_call_id_preserved():
+  # Server responses include an 'id' on each tool call. Ensure it is parsed and kept.
+  message = Message.model_validate(
+    {
+      'role': 'assistant',
+      'content': '',
+      'tool_calls': [
+        {
+          'id': 'call_p7o2gz50',
+          'function': {'name': 'test_function', 'arguments': {'param1': 'test1', 'param2': 123}},
+        }
+      ],
+    }
+  )
+  assert message.tool_calls is not None
+  assert message.tool_calls[0].id == 'call_p7o2gz50'
+  assert message.tool_calls[0].function.name == 'test_function'
+
+
+def test_message_tool_call_id_defaults_to_none():
+  # When the server omits 'id', the field should default to None (backwards compatible).
+  message = Message.model_validate(
+    {
+      'role': 'assistant',
+      'tool_calls': [
+        {'function': {'name': 'test_function', 'arguments': {}}},
+      ],
+    }
+  )
+  assert message.tool_calls is not None
+  assert message.tool_calls[0].id is None
