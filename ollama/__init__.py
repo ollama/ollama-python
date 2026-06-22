@@ -15,6 +15,7 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  VersionResponse,
   WebFetchResponse,
   WebSearchResponse,
 )
@@ -37,6 +38,7 @@ __all__ = [
   'ShowResponse',
   'StatusResponse',
   'Tool',
+  'VersionResponse',
   'WebFetchResponse',
   'WebSearchResponse',
 ]
@@ -55,5 +57,7 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+version = _client.version
+check_blob = _client.check_blob
 web_search = _client.web_search
 web_fetch = _client.web_fetch

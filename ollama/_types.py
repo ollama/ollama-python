@@ -654,3 +654,12 @@ class ResponseError(Exception):
 
   def __str__(self) -> str:
     return f'{self.error} (status code: {self.status_code})'
+
+
+class VersionResponse(SubscriptableBaseModel):
+  """
+  Response from the version endpoint.
+  """
+
+  version: str
+  'Server version string.'
