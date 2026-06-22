@@ -845,6 +845,23 @@ def test_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+def test_client_create_with_modelfile(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'modelfile': 'FROM llama3\nSYSTEM You are mario.',
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+
+  response = client.create('dummy', modelfile='FROM llama3\nSYSTEM You are mario.')
+  assert response['status'] == 'success'
+
+
 def test_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
@@ -877,6 +894,48 @@ def test_client_copy(httpserver: HTTPServer):
   client = Client(httpserver.url_for('/api/copy'))
   response = client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+def test_client_list(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/tags',
+    method='GET',
+  ).respond_with_json({
+    'models': [
+      {
+        'name': 'gemma3:latest',
+        'model': 'gemma3:latest',
+        'modified_at': '2025-05-10T08:06:48.639712Z',
+        'size': 123456789,
+        'digest': 'sha256:1234567890abcdef',
+        'details': {
+          'parent_model': '',
+          'format': 'gguf',
+          'family': 'gemma',
+          'families': ['gemma'],
+          'parameter_size': '9B',
+          'quantization_level': 'Q4_K_M',
+        },
+        'remote_model': 'gemma3',
+        'remote_host': 'https://ollama.com',
+        'capabilities': ['chat', 'completion'],
+      }
+    ]
+  })
+
+  client = Client(httpserver.url_for('/'))
+  response = client.list()
+  
+  assert len(response['models']) == 1
+  model = response['models'][0]
+  assert model['name'] == 'gemma3:latest'
+  assert model['model'] == 'gemma3:latest'
+  assert model['size'] == 123456789
+  assert model['digest'] == 'sha256:1234567890abcdef'
+  assert model['details']['family'] == 'gemma'
+  assert model['remote_model'] == 'gemma3'
+  assert model['remote_host'] == 'https://ollama.com'
+  assert model['capabilities'] == ['chat', 'completion']
 
 
 async def test_async_client_chat(httpserver: HTTPServer):
@@ -1222,6 +1281,23 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+async def test_async_client_create_with_modelfile(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'modelfile': 'FROM llama3\nSYSTEM You are mario.',
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+
+  response = await client.create('dummy', modelfile='FROM llama3\nSYSTEM You are mario.')
+  assert response['status'] == 'success'
+
+
 async def test_async_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
@@ -1254,6 +1330,48 @@ async def test_async_client_copy(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+async def test_async_client_list(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/tags',
+    method='GET',
+  ).respond_with_json({
+    'models': [
+      {
+        'name': 'gemma3:latest',
+        'model': 'gemma3:latest',
+        'modified_at': '2025-05-10T08:06:48.639712Z',
+        'size': 123456789,
+        'digest': 'sha256:1234567890abcdef',
+        'details': {
+          'parent_model': '',
+          'format': 'gguf',
+          'family': 'gemma',
+          'families': ['gemma'],
+          'parameter_size': '9B',
+          'quantization_level': 'Q4_K_M',
+        },
+        'remote_model': 'gemma3',
+        'remote_host': 'https://ollama.com',
+        'capabilities': ['chat', 'completion'],
+      }
+    ]
+  })
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.list()
+  
+  assert len(response['models']) == 1
+  model = response['models'][0]
+  assert model['name'] == 'gemma3:latest'
+  assert model['model'] == 'gemma3:latest'
+  assert model['size'] == 123456789
+  assert model['digest'] == 'sha256:1234567890abcdef'
+  assert model['details']['family'] == 'gemma'
+  assert model['remote_model'] == 'gemma3'
+  assert model['remote_host'] == 'https://ollama.com'
+  assert model['capabilities'] == ['chat', 'completion']
 
 
 def test_headers():
