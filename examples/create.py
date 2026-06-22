@@ -1,10 +1,15 @@
 from ollama import Client
 
 client = Client()
+
+modelfile = '''
+FROM gemma3
+SYSTEM You are mario from Super Mario Bros.
+'''
+
 response = client.create(
   model='my-assistant',
-  from_='gemma3',
-  system='You are mario from Super Mario Bros.',
+  modelfile=modelfile,
   stream=False,
 )
 print(response.status)
