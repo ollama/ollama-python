@@ -3,6 +3,7 @@ import json
 import os
 import re
 import tempfile
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
@@ -792,6 +793,117 @@ def test_client_create_with_blob(httpserver: HTTPServer):
     assert response['status'] == 'success'
 
 
+def test_client_create_uploads_file_paths(httpserver: HTTPServer, tmp_path):
+  content = b'gguf model content'
+  model_path = tmp_path / 'model.gguf'
+  model_path.write_bytes(content)
+  digest = f'sha256:{sha256(content).hexdigest()}'
+
+  def upload_handler(request: Request):
+    assert request.get_data() == content
+    return Response(status=201)
+
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='POST',
+  ).respond_with_handler(upload_handler)
+
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'files': {'model.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.create('dummy', files={'model.gguf': model_path})
+
+  assert response['status'] == 'success'
+
+
+def test_client_create_uploads_file_path_strings(httpserver: HTTPServer, tmp_path):
+  content = b'safetensors content'
+  model_path = tmp_path / 'model.safetensors'
+  model_path.write_bytes(content)
+  digest = f'sha256:{sha256(content).hexdigest()}'
+
+  def upload_handler(request: Request):
+    assert request.get_data() == content
+    return Response(status=200)
+
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='POST',
+  ).respond_with_handler(upload_handler)
+
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'files': {'model.safetensors': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.create('dummy', files={'model.safetensors': str(model_path)})
+
+  assert response['status'] == 'success'
+
+
+def test_client_create_uploads_adapter_paths(httpserver: HTTPServer, tmp_path):
+  content = b'lora adapter content'
+  adapter_path = tmp_path / 'adapter.gguf'
+  adapter_path.write_bytes(content)
+  digest = f'sha256:{sha256(content).hexdigest()}'
+
+  def upload_handler(request: Request):
+    assert request.get_data() == content
+    return Response(status=201)
+
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='POST',
+  ).respond_with_handler(upload_handler)
+
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'adapters': {'adapter.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.create('dummy', adapters={'adapter.gguf': adapter_path})
+
+  assert response['status'] == 'success'
+
+
+def test_client_create_keeps_digest_values(httpserver: HTTPServer):
+  digest = 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'files': {'model.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.create('dummy', files={'model.gguf': digest})
+
+  assert response['status'] == 'success'
+
+
 def test_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
@@ -845,6 +957,23 @@ def test_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+def test_client_create_with_modelfile(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'modelfile': 'FROM llama3\nSYSTEM You are mario.',
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = Client(httpserver.url_for('/'))
+
+  response = client.create('dummy', modelfile='FROM llama3\nSYSTEM You are mario.')
+  assert response['status'] == 'success'
+
+
 def test_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
@@ -877,6 +1006,48 @@ def test_client_copy(httpserver: HTTPServer):
   client = Client(httpserver.url_for('/api/copy'))
   response = client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+def test_client_list(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/tags',
+    method='GET',
+  ).respond_with_json({
+    'models': [
+      {
+        'name': 'gemma3:latest',
+        'model': 'gemma3:latest',
+        'modified_at': '2025-05-10T08:06:48.639712Z',
+        'size': 123456789,
+        'digest': 'sha256:1234567890abcdef',
+        'details': {
+          'parent_model': '',
+          'format': 'gguf',
+          'family': 'gemma',
+          'families': ['gemma'],
+          'parameter_size': '9B',
+          'quantization_level': 'Q4_K_M',
+        },
+        'remote_model': 'gemma3',
+        'remote_host': 'https://ollama.com',
+        'capabilities': ['chat', 'completion'],
+      }
+    ]
+  })
+
+  client = Client(httpserver.url_for('/'))
+  response = client.list()
+
+  assert len(response['models']) == 1
+  model = response['models'][0]
+  assert model['name'] == 'gemma3:latest'
+  assert model['model'] == 'gemma3:latest'
+  assert model['size'] == 123456789
+  assert model['digest'] == 'sha256:1234567890abcdef'
+  assert model['details']['family'] == 'gemma'
+  assert model['remote_model'] == 'gemma3'
+  assert model['remote_host'] == 'https://ollama.com'
+  assert model['capabilities'] == ['chat', 'completion']
 
 
 async def test_async_client_chat(httpserver: HTTPServer):
@@ -1169,6 +1340,86 @@ async def test_async_client_create_with_blob(httpserver: HTTPServer):
     assert response['status'] == 'success'
 
 
+async def test_async_client_create_uploads_file_paths(httpserver: HTTPServer, tmp_path):
+  content = b'gguf model content'
+  model_path = tmp_path / 'model.gguf'
+  model_path.write_bytes(content)
+  digest = f'sha256:{sha256(content).hexdigest()}'
+
+  def upload_handler(request: Request):
+    assert request.get_data() == content
+    return Response(status=201)
+
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='POST',
+  ).respond_with_handler(upload_handler)
+
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'files': {'model.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.create('dummy', files={'model.gguf': model_path})
+
+  assert response['status'] == 'success'
+
+
+async def test_async_client_create_uploads_adapter_paths(httpserver: HTTPServer, tmp_path):
+  content = b'lora adapter content'
+  adapter_path = tmp_path / 'adapter.gguf'
+  adapter_path.write_bytes(content)
+  digest = f'sha256:{sha256(content).hexdigest()}'
+
+  def upload_handler(request: Request):
+    assert request.get_data() == content
+    return Response(status=201)
+
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='POST',
+  ).respond_with_handler(upload_handler)
+
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'adapters': {'adapter.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.create('dummy', adapters={'adapter.gguf': adapter_path})
+
+  assert response['status'] == 'success'
+
+
+async def test_async_client_create_keeps_digest_values(httpserver: HTTPServer):
+  digest = 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'files': {'model.gguf': digest},
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.create('dummy', files={'model.gguf': digest})
+
+  assert response['status'] == 'success'
+
+
 async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/create',
@@ -1222,6 +1473,23 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+async def test_async_client_create_with_modelfile(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/create',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'modelfile': 'FROM llama3\nSYSTEM You are mario.',
+      'stream': False,
+    },
+  ).respond_with_json({'status': 'success'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+
+  response = await client.create('dummy', modelfile='FROM llama3\nSYSTEM You are mario.')
+  assert response['status'] == 'success'
+
+
 async def test_async_client_create_blob(httpserver: HTTPServer):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
@@ -1254,6 +1522,48 @@ async def test_async_client_copy(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+async def test_async_client_list(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/tags',
+    method='GET',
+  ).respond_with_json({
+    'models': [
+      {
+        'name': 'gemma3:latest',
+        'model': 'gemma3:latest',
+        'modified_at': '2025-05-10T08:06:48.639712Z',
+        'size': 123456789,
+        'digest': 'sha256:1234567890abcdef',
+        'details': {
+          'parent_model': '',
+          'format': 'gguf',
+          'family': 'gemma',
+          'families': ['gemma'],
+          'parameter_size': '9B',
+          'quantization_level': 'Q4_K_M',
+        },
+        'remote_model': 'gemma3',
+        'remote_host': 'https://ollama.com',
+        'capabilities': ['chat', 'completion'],
+      }
+    ]
+  })
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.list()
+
+  assert len(response['models']) == 1
+  model = response['models'][0]
+  assert model['name'] == 'gemma3:latest'
+  assert model['model'] == 'gemma3:latest'
+  assert model['size'] == 123456789
+  assert model['digest'] == 'sha256:1234567890abcdef'
+  assert model['details']['family'] == 'gemma'
+  assert model['remote_model'] == 'gemma3'
+  assert model['remote_host'] == 'https://ollama.com'
+  assert model['capabilities'] == ['chat', 'completion']
 
 
 def test_headers():
@@ -1486,3 +1796,71 @@ async def test_async_client_context_manager():
     assert not client._client.is_closed
 
   assert client._client.is_closed
+
+
+def test_client_version(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/version',
+    method='GET',
+  ).respond_with_json({'version': '0.12.6'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.version()
+  assert response['version'] == '0.12.6'
+  assert response.version == '0.12.6'
+
+
+async def test_async_client_version(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/version',
+    method='GET',
+  ).respond_with_json({'version': '0.12.6'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.version()
+  assert response['version'] == '0.12.6'
+  assert response.version == '0.12.6'
+
+
+def test_client_check_blob_exists(httpserver: HTTPServer):
+  digest = 'sha256:' + 'a' * 64
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='HEAD',
+  ).respond_with_response(Response(status=200))
+
+  client = Client(httpserver.url_for('/'))
+  assert client.check_blob(digest) is True
+
+
+def test_client_check_blob_missing(httpserver: HTTPServer):
+  digest = 'sha256:' + 'b' * 64
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='HEAD',
+  ).respond_with_response(Response(status=404))
+
+  client = Client(httpserver.url_for('/'))
+  assert client.check_blob(digest) is False
+
+
+async def test_async_client_check_blob_exists(httpserver: HTTPServer):
+  digest = 'sha256:' + 'a' * 64
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='HEAD',
+  ).respond_with_response(Response(status=200))
+
+  client = AsyncClient(httpserver.url_for('/'))
+  assert (await client.check_blob(digest)) is True
+
+
+async def test_async_client_check_blob_missing(httpserver: HTTPServer):
+  digest = 'sha256:' + 'b' * 64
+  httpserver.expect_ordered_request(
+    f'/api/blobs/{digest}',
+    method='HEAD',
+  ).respond_with_response(Response(status=404))
+
+  client = AsyncClient(httpserver.url_for('/'))
+  assert (await client.check_blob(digest)) is False

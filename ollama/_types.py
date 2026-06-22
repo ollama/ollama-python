@@ -497,6 +497,7 @@ class CreateRequest(BaseStreamableRequest):
   """
   quantize: Optional[str] = None
   from_: Optional[str] = None
+  modelfile: Optional[str] = None
   files: Optional[Dict[str, str]] = None
   adapters: Optional[Dict[str, str]] = None
   template: Optional[str] = None
@@ -517,11 +518,15 @@ class ModelDetails(SubscriptableBaseModel):
 
 class ListResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
+    name: Optional[str] = None
     model: Optional[str] = None
     modified_at: Optional[datetime] = None
     digest: Optional[str] = None
     size: Optional[ByteSize] = None
     details: Optional[ModelDetails] = None
+    remote_model: Optional[str] = None
+    remote_host: Optional[str] = None
+    capabilities: Optional[Sequence[str]] = None
 
   models: Sequence[Model]
   'List of models.'
@@ -649,3 +654,12 @@ class ResponseError(Exception):
 
   def __str__(self) -> str:
     return f'{self.error} (status code: {self.status_code})'
+
+
+class VersionResponse(SubscriptableBaseModel):
+  """
+  Response from the version endpoint.
+  """
+
+  version: str
+  'Server version string.'

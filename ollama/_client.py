@@ -67,6 +67,7 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  VersionResponse,
   WebFetchRequest,
   WebFetchResponse,
   WebSearchRequest,
@@ -74,6 +75,88 @@ from ollama._types import (
 )
 
 T = TypeVar('T')
+BlobPath = Union[str, PathLike]
+
+SHA256_DIGEST_PREFIX = 'sha256:'
+
+
+def _is_sha256_digest(value: str) -> bool:
+  if not value.startswith(SHA256_DIGEST_PREFIX):
+    return False
+
+  digest = value[len(SHA256_DIGEST_PREFIX) :]
+  return len(digest) == 64 and all(c in '0123456789abcdefABCDEF' for c in digest)
+
+
+def _is_existing_path(value: BlobPath) -> bool:
+  try:
+    return Path(value).is_file()
+  except (OSError, TypeError, ValueError):
+    return False
+
+
+def _sha256_digest(path: BlobPath) -> str:
+  sha256sum = sha256()
+  with open(path, 'rb') as r:
+    while True:
+      chunk = r.read(32 * 1024)
+      if not chunk:
+        break
+      sha256sum.update(chunk)
+
+  return f'{SHA256_DIGEST_PREFIX}{sha256sum.hexdigest()}'
+
+
+async def _async_sha256_digest(path: BlobPath) -> str:
+  sha256sum = sha256()
+  async with await anyio.open_file(path, 'rb') as r:
+    while True:
+      chunk = await r.read(32 * 1024)
+      if not chunk:
+        break
+      sha256sum.update(chunk)
+
+  return f'{SHA256_DIGEST_PREFIX}{sha256sum.hexdigest()}'
+
+
+def _resolve_blob_map(
+  blobs: Optional[Mapping[str, BlobPath]],
+  upload: Callable[[BlobPath], str],
+) -> Optional[Dict[str, str]]:
+  if not blobs:
+    return None
+
+  resolved = {}
+  for name, value in blobs.items():
+    value_str = os.fspath(value)
+    if _is_sha256_digest(value_str):
+      resolved[name] = value_str
+    elif _is_existing_path(value):
+      resolved[name] = upload(value)
+    else:
+      resolved[name] = value_str
+
+  return resolved
+
+
+async def _async_resolve_blob_map(
+  blobs: Optional[Mapping[str, BlobPath]],
+  upload: Callable[[BlobPath], Any],
+) -> Optional[Dict[str, str]]:
+  if not blobs:
+    return None
+
+  resolved = {}
+  for name, value in blobs.items():
+    value_str = os.fspath(value)
+    if _is_sha256_digest(value_str):
+      resolved[name] = value_str
+    elif _is_existing_path(value):
+      resolved[name] = await upload(value)
+    else:
+      resolved[name] = value_str
+
+  return resolved
 
 
 class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncContextManager):
@@ -93,6 +176,7 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
     - `follow_redirects`: True
     - `timeout`: None
     `kwargs` are passed to the httpx client.
+
     """
 
     headers = {
@@ -538,8 +622,9 @@ class Client(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -555,8 +640,9 @@ class Client(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -571,8 +657,9 @@ class Client(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -595,8 +682,9 @@ class Client(BaseClient):
         stream=stream,
         quantize=quantize,
         from_=from_,
-        files=files,
-        adapters=adapters,
+        modelfile=modelfile,
+        files=_resolve_blob_map(files, self.create_blob),
+        adapters=_resolve_blob_map(adapters, self.create_blob),
         license=license,
         template=template,
         system=system,
@@ -606,16 +694,8 @@ class Client(BaseClient):
       stream=stream,
     )
 
-  def create_blob(self, path: Union[str, Path]) -> str:
-    sha256sum = sha256()
-    with open(path, 'rb') as r:
-      while True:
-        chunk = r.read(32 * 1024)
-        if not chunk:
-          break
-        sha256sum.update(chunk)
-
-    digest = f'sha256:{sha256sum.hexdigest()}'
+  def create_blob(self, path: BlobPath) -> str:
+    digest = _sha256_digest(path)
 
     with open(path, 'rb') as r:
       self._request_raw('POST', f'/api/blobs/{digest}', content=r)
@@ -670,6 +750,34 @@ class Client(BaseClient):
       'GET',
       '/api/ps',
     )
+
+  def version(self) -> VersionResponse:
+    """
+    Retrieve the server version.
+
+    Returns `VersionResponse` with the running Ollama server version string.
+    """
+    return self._request(
+      VersionResponse,
+      'GET',
+      '/api/version',
+    )
+
+  def check_blob(self, digest: str) -> bool:
+    """
+    Check whether a blob with the given digest already exists on the server.
+
+    Uses `HEAD /api/blobs/:digest` to avoid uploading data that is already present.
+
+    Returns `True` if the blob exists, `False` if it does not.
+    """
+    try:
+      r = self._request_raw('HEAD', f'/api/blobs/{digest}')
+      return r.status_code == 200
+    except ResponseError as e:
+      if e.status_code == 404:
+        return False
+      raise
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
@@ -1171,8 +1279,9 @@ class AsyncClient(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -1188,8 +1297,9 @@ class AsyncClient(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -1204,8 +1314,9 @@ class AsyncClient(BaseClient):
     model: str,
     quantize: Optional[str] = None,
     from_: Optional[str] = None,
-    files: Optional[Dict[str, str]] = None,
-    adapters: Optional[Dict[str, str]] = None,
+    modelfile: Optional[str] = None,
+    files: Optional[Mapping[str, BlobPath]] = None,
+    adapters: Optional[Mapping[str, BlobPath]] = None,
     template: Optional[str] = None,
     license: Optional[Union[str, List[str]]] = None,
     system: Optional[str] = None,
@@ -1229,8 +1340,9 @@ class AsyncClient(BaseClient):
         stream=stream,
         quantize=quantize,
         from_=from_,
-        files=files,
-        adapters=adapters,
+        modelfile=modelfile,
+        files=await _async_resolve_blob_map(files, self.create_blob),
+        adapters=await _async_resolve_blob_map(adapters, self.create_blob),
         license=license,
         template=template,
         system=system,
@@ -1240,16 +1352,8 @@ class AsyncClient(BaseClient):
       stream=stream,
     )
 
-  async def create_blob(self, path: Union[str, Path]) -> str:
-    sha256sum = sha256()
-    async with await anyio.open_file(path, 'rb') as r:
-      while True:
-        chunk = await r.read(32 * 1024)
-        if not chunk:
-          break
-        sha256sum.update(chunk)
-
-    digest = f'sha256:{sha256sum.hexdigest()}'
+  async def create_blob(self, path: BlobPath) -> str:
+    digest = await _async_sha256_digest(path)
 
     async def upload_bytes():
       async with await anyio.open_file(path, 'rb') as r:
@@ -1311,6 +1415,34 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/ps',
     )
+
+  async def version(self) -> VersionResponse:
+    """
+    Retrieve the server version.
+
+    Returns `VersionResponse` with the running Ollama server version string.
+    """
+    return await self._request(
+      VersionResponse,
+      'GET',
+      '/api/version',
+    )
+
+  async def check_blob(self, digest: str) -> bool:
+    """
+    Check whether a blob with the given digest already exists on the server.
+
+    Uses `HEAD /api/blobs/:digest` to avoid uploading data that is already present.
+
+    Returns `True` if the blob exists, `False` if it does not.
+    """
+    try:
+      r = await self._request_raw('HEAD', f'/api/blobs/{digest}')
+      return r.status_code == 200
+    except ResponseError as e:
+      if e.status_code == 404:
+        return False
+      raise
 
 
 def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
