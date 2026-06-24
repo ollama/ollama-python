@@ -1353,9 +1353,9 @@ def _parse_host(host: Optional[str]) -> str:
   >>> _parse_host('1.2.3.4:56789')
   'http://1.2.3.4:56789'
   >>> _parse_host('http://1.2.3.4')
-  'http://1.2.3.4:80'
+  'http://1.2.3.4'
   >>> _parse_host('https://1.2.3.4')
-  'https://1.2.3.4:443'
+  'https://1.2.3.4'
   >>> _parse_host('https://1.2.3.4:56789')
   'https://1.2.3.4:56789'
   >>> _parse_host('example.com')
@@ -1363,9 +1363,9 @@ def _parse_host(host: Optional[str]) -> str:
   >>> _parse_host('example.com:56789')
   'http://example.com:56789'
   >>> _parse_host('http://example.com')
-  'http://example.com:80'
+  'http://example.com'
   >>> _parse_host('https://example.com')
-  'https://example.com:443'
+  'https://example.com'
   >>> _parse_host('https://example.com:56789')
   'https://example.com:56789'
   >>> _parse_host('example.com/')
@@ -1378,6 +1378,8 @@ def _parse_host(host: Optional[str]) -> str:
   'http://example.com:56789/path'
   >>> _parse_host('https://example.com:56789/path')
   'https://example.com:56789/path'
+  >>> _parse_host('https://example.com/path')
+  'https://example.com/path'
   >>> _parse_host('example.com:56789/path/')
   'http://example.com:56789/path'
   >>> _parse_host('[0001:002:003:0004::1]')
@@ -1385,9 +1387,9 @@ def _parse_host(host: Optional[str]) -> str:
   >>> _parse_host('[0001:002:003:0004::1]:56789')
   'http://[0001:002:003:0004::1]:56789'
   >>> _parse_host('http://[0001:002:003:0004::1]')
-  'http://[0001:002:003:0004::1]:80'
+  'http://[0001:002:003:0004::1]'
   >>> _parse_host('https://[0001:002:003:0004::1]')
-  'https://[0001:002:003:0004::1]:443'
+  'https://[0001:002:003:0004::1]'
   >>> _parse_host('https://[0001:002:003:0004::1]:56789')
   'https://[0001:002:003:0004::1]:56789'
   >>> _parse_host('[0001:002:003:0004::1]/')
@@ -1400,22 +1402,21 @@ def _parse_host(host: Optional[str]) -> str:
   'http://[0001:002:003:0004::1]:56789/path'
   >>> _parse_host('https://[0001:002:003:0004::1]:56789/path')
   'https://[0001:002:003:0004::1]:56789/path'
+  >>> _parse_host('https://[0001:002:003:0004::1]/path')
+  'https://[0001:002:003:0004::1]/path'
   >>> _parse_host('[0001:002:003:0004::1]:56789/path/')
   'http://[0001:002:003:0004::1]:56789/path'
   """
 
-  host, port = host or '', 11434
+  host, default_port = host or '', 11434
   scheme, _, hostport = host.partition('://')
+  has_scheme = bool(hostport)
   if not hostport:
     scheme, hostport = 'http', host
-  elif scheme == 'http':
-    port = 80
-  elif scheme == 'https':
-    port = 443
 
   split = urllib.parse.urlsplit(f'{scheme}://{hostport}')
   host = split.hostname or '127.0.0.1'
-  port = split.port or port
+  port = split.port
 
   try:
     if isinstance(ipaddress.ip_address(host), ipaddress.IPv6Address):
@@ -1425,6 +1426,18 @@ def _parse_host(host: Optional[str]) -> str:
     ...
 
   if path := split.path.strip('/'):
+    if port is None:
+      if has_scheme:
+        return f'{scheme}://{host}/{path}'
+
+      port = default_port
+
     return f'{scheme}://{host}:{port}/{path}'
+
+  if port is None:
+    if has_scheme:
+      return f'{scheme}://{host}'
+
+    port = default_port
 
   return f'{scheme}://{host}:{port}'
