@@ -466,6 +466,11 @@ def test_client_generate_images(httpserver: HTTPServer):
     response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
+  
+  try:
+    os.remove(temp.name)
+  except FileNotFoundError:
+    pass
 
 
 def test_client_generate_format_json(httpserver: HTTPServer):
@@ -854,6 +859,11 @@ def test_client_create_blob(httpserver: HTTPServer):
     response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
+  try:
+    os.remove(blob.name)
+  except FileNotFoundError:
+    pass
+
 
 def test_client_create_blob_exists(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
@@ -863,6 +873,11 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile(delete=False) as blob:
     response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  
+  try:
+    os.remove(blob.name)
+  except FileNotFoundError:
+    pass
 
 
 def test_client_delete(httpserver: HTTPServer):
@@ -1062,6 +1077,10 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
 
+  try:
+    os.remove(temp.name)
+  except FileNotFoundError:
+    pass
 
 async def test_async_client_pull(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
@@ -1231,6 +1250,10 @@ async def test_async_client_create_blob(httpserver: HTTPServer):
     response = await client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
+  try:
+    os.remove(blob.name)
+  except FileNotFoundError:
+    pass
 
 async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
@@ -1240,7 +1263,11 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile(delete=False) as blob:
     response = await client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-
+  
+  try:
+    os.remove(blob.name)
+  except FileNotFoundError:
+    pass
 
 async def test_async_client_delete(httpserver: HTTPServer):
   httpserver.expect_ordered_request(PrefixPattern('/api/delete'), method='DELETE').respond_with_response(Response(status=200))
