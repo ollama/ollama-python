@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import CreateRequest, Image, ResponseError
 
 
 def test_image_serialization_bytes():
@@ -92,3 +92,15 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+def test_response_error_uses_json_object_error_field():
+  error = ResponseError('{"error": "model not found"}', 404)
+  assert error.error == 'model not found'
+  assert str(error) == 'model not found (status code: 404)'
+
+
+def test_response_error_preserves_non_object_json_body():
+  error = ResponseError('"server unavailable"', 503)
+  assert error.error == '"server unavailable"'
+  assert str(error) == '"server unavailable" (status code: 503)'
