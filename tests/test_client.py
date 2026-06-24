@@ -138,6 +138,31 @@ def test_client_chat_stream(httpserver: HTTPServer):
     assert part['message']['content'] == next(it)
 
 
+def test_client_chat_stream_skips_blank_lines(httpserver: HTTPServer):
+  def stream_handler(_: Request):
+    def generate():
+      yield '\n'
+      yield json.dumps({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'ok'}}) + '\n'
+      yield '\n'
+
+    return Response(generate())
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'ping'}],
+      'tools': [],
+      'stream': True,
+    },
+  ).respond_with_handler(stream_handler)
+
+  client = Client(httpserver.url_for('/'))
+  response = list(client.chat('dummy', messages=[{'role': 'user', 'content': 'ping'}], stream=True))
+  assert [part['message']['content'] for part in response] == ['ok']
+
+
 @pytest.mark.parametrize('message_format', ('dict', 'pydantic_model'))
 @pytest.mark.parametrize('file_style', ('path', 'bytes'))
 def test_client_chat_images(httpserver: HTTPServer, message_format: str, file_style: str, tmp_path):
@@ -943,6 +968,32 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
   async for part in response:
     assert part['message']['role'] == 'assistant'
     assert part['message']['content'] == next(it)
+
+
+async def test_async_client_chat_stream_skips_blank_lines(httpserver: HTTPServer):
+  def stream_handler(_: Request):
+    def generate():
+      yield '\n'
+      yield json.dumps({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'ok'}}) + '\n'
+      yield '\n'
+
+    return Response(generate())
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'ping'}],
+      'tools': [],
+      'stream': True,
+    },
+  ).respond_with_handler(stream_handler)
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'ping'}], stream=True)
+  parts = [part async for part in response]
+  assert [part['message']['content'] for part in parts] == ['ok']
 
 
 async def test_async_client_chat_images(httpserver: HTTPServer):
