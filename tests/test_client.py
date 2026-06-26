@@ -441,7 +441,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
     assert part['response'] == next(it)
 
 
-def test_client_generate_images(httpserver: HTTPServer):
+def test_client_generate_images(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -460,10 +460,12 @@ def test_client_generate_images(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as temp:
+  # Create a Temporary file path outide local scope .
+  temp_img = tmp_path / "test.png"
+  with open(temp_img, "wb") as temp:
     temp.write(PNG_BYTES)
     temp.flush()
-    response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+  response = client.generate('dummy', 'Why is the sky blue?', images=[str(temp_img)])
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
 
@@ -774,7 +776,7 @@ def userhomedir():
     os.environ['HOME'] = home
 
 
-def test_client_create_with_blob(httpserver: HTTPServer):
+def test_client_create_with_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
@@ -787,12 +789,15 @@ def test_client_create_with_blob(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False):
-    response = client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
+  # Create a Temporary file path outide local scope .
+  temp_file = tmp_path / "test.gguf"
+  with open(temp_file, "wb") as f:
+    f.flush()
+  response = client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
     assert response['status'] == 'success'
 
 
-def test_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
+def test_client_create_with_parameters_roundtrip(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
@@ -845,23 +850,29 @@ def test_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-def test_client_create_blob(httpserver: HTTPServer):
+def test_client_create_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as blob:
-    response = client.create_blob(blob.name)
+  # Create a Temporary file path outide local scope .
+  temp_blob = tmp_path / "blob.bin"
+  with open(temp_blob, "wb") as blob:
+    blob.flush()
+  response = client.create_blob(str(temp_blob))
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-def test_client_create_blob_exists(httpserver: HTTPServer):
+def test_client_create_blob_exists(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as blob:
-    response = client.create_blob(blob.name)
+  # Create a Temporary file path outide local scope .
+  temp_blob = tmp_path / "blob.bin"
+  with open(temp_blob, "wb") as blob:
+    blob.flush()
+  response = client.create_blob(str(temp_blob))
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
@@ -1036,7 +1047,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
     assert part['response'] == next(it)
 
 
-async def test_async_client_generate_images(httpserver: HTTPServer):
+async def test_async_client_generate_images(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -1055,10 +1066,12 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as temp:
+  # Create a Temporary file path outide local scope .
+  temp_img = tmp_path / "test.png"
+  with open(temp_img, "wb") as temp:
     temp.write(PNG_BYTES)
     temp.flush()
-    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
+  response = await client.generate('dummy', 'Why is the sky blue?', images=[str(temp_img)])
     assert response['model'] == 'dummy'
     assert response['response'] == 'Because it is.'
 
@@ -1151,7 +1164,7 @@ async def test_async_client_push_stream(httpserver: HTTPServer):
     assert part['status'] == next(it)
 
 
-async def test_async_client_create_with_blob(httpserver: HTTPServer):
+async def test_async_client_create_with_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
@@ -1164,12 +1177,15 @@ async def test_async_client_create_with_blob(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False):
-    response = await client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
+  # Create a Temporary file path outide local scope .
+  temp_file = tmp_path / "test.gguf"
+  with open(temp_file, "wb") as f:
+    f.flush()
+  response = await client.create('dummy', files={'test.gguf': 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'})
     assert response['status'] == 'success'
 
 
-async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPServer):
+async def test_async_client_create_with_parameters_roundtrip(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/create',
     method='POST',
@@ -1222,23 +1238,29 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-async def test_async_client_create_blob(httpserver: HTTPServer):
+async def test_async_client_create_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as blob:
-    response = await client.create_blob(blob.name)
+  # Create a Temporary file path outide local scope .
+  temp_blob = tmp_path / "blob.bin"
+  with open(temp_blob, "wb") as blob:
+    blob.flush()
+  response = await client.create_blob(str(temp_blob))
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-async def test_async_client_create_blob_exists(httpserver: HTTPServer):
+async def test_async_client_create_blob_exists(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile(delete=False) as blob:
-    response = await client.create_blob(blob.name)
+  # Create a Temporary file path outide local scope .
+  temp_blob = tmp_path / "blob.bin"
+  with open(temp_blob, "wb") as blob:
+    blob.flush()
+  response = await client.create_blob(str(temp_blob))
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 

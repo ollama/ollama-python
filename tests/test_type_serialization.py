@@ -31,19 +31,23 @@ def test_image_serialization_plain_string():
   assert img.model_dump() == 'not a path or base64'  # Should return as-is
 
 
-def test_image_serialization_path():
-  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+def test_image_serialization_path(tmp_path):
+  # Create a Temporary file path outide local scope .
+  temp_file_path = tmp_path / "temp.txt"
+  with open(temp_file_path, "wb") as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
-    img = Image(value=Path(temp_file.name))
+    img = Image(value=temp_file_path)
     assert img.model_dump() == b64encode(b'test file content').decode()
 
 
-def test_image_serialization_string_path():
-  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+def test_image_serialization_string_path(tmp_path):
+  # Create a Temporary file path outide local scope .
+  temp_file_path = tmp_path / "temp.txt"
+  with open(temp_file_path, "wb") as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
-    img = Image(value=temp_file.name)
+    img = Image(value=str(temp_file_path))
     assert img.model_dump() == b64encode(b'test file content').decode()
 
   with pytest.raises(ValueError):
