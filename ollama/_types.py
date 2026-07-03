@@ -4,6 +4,7 @@ from base64 import b64decode, b64encode
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from pydantic import model_validator 
 
 from pydantic import (
   BaseModel,
@@ -353,6 +354,53 @@ class Message(SubscriptableBaseModel):
   """
   Tools calls to be made by the model.
   """
+  @model_validator(mode='before')
+  @classmethod
+  def handle_embedded_cloud_tool_calls(cls, data: Any) -> Any:
+    """
+    Intercepts raw dictionaries before Pydantic parsing to handle text-embedded tool calls.
+    """
+    import re
+    import json
+
+    if not isinstance(data, dict):
+        return data
+
+    content_str = data.get("content")
+    if content_str and "<|call|>" in content_str:
+        # Match a JSON block {...} right before the special token
+        match = re.search(r'(\{.*?\})<\|call\|>', content_str)
+        
+        if match:
+            try:
+                raw_json_str = match.group(1)
+                parsed_json = json.loads(raw_json_str)
+                
+                # Pull the function name and arguments
+                func_name = parsed_json.get("task") or parsed_json.get("result_name") or "unknown_tool"
+                func_args = parsed_json.get("params", {})
+                
+                # Structure it exactly like the Message.ToolCall format
+                synthesized_tool_call = {
+                    "function": {
+                        "name": func_name,
+                        "arguments": func_args
+                    }
+                }
+                
+                # Ensure the tool_calls list exists and append the new tool
+                if not data.get("tool_calls"):
+                    data["tool_calls"] = []
+                data["tool_calls"].append(synthesized_tool_call)
+                
+                # Update content to hide backend JSON code from the user
+                data["content"] = content_str.replace(match.group(0), "").strip()
+                
+            except json.JSONDecodeError:
+                pass
+
+    return data
+
 
 
 class Tool(SubscriptableBaseModel):
