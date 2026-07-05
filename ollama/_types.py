@@ -175,7 +175,7 @@ class Image(BaseModel):
         pass
 
       # String might be a file path, but might not exist
-      if self.value.split('.')[-1] in ('png', 'jpg', 'jpeg', 'webp'):
+      if self.value.split('.')[-1].lower() in ('png', 'jpg', 'jpeg', 'webp'):
         raise ValueError(f'File {self.value} does not exist')
 
       try:

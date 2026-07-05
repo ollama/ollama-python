@@ -55,6 +55,19 @@ def test_image_serialization_string_path():
     img.model_dump()
 
 
+@pytest.mark.parametrize('extension', ['PNG', 'JPG', 'JPEG', 'WEBP'])
+def test_image_serialization_string_path_uppercase_extension(extension):
+  # A non-existent path with an uppercase image extension must be rejected the
+  # same way its lowercase counterpart is, rather than being treated as base64.
+  with pytest.raises(ValueError, match='does not exist'):
+    Image(value=f'some_path/that/does/not/exist.{extension}').model_dump()
+
+  # A bare filename with an uppercase extension can be valid base64, so without a
+  # case-insensitive check it is silently accepted instead of raising.
+  with pytest.raises(ValueError, match='does not exist'):
+    Image(value=f'PHOTO.{extension}').model_dump()
+
+
 def test_create_request_serialization():
   request = CreateRequest(model='test-model', from_='base-model', quantize='q4_0', files={'file1': 'content1'}, adapters={'adapter1': 'content1'}, template='test template', license='MIT', system='test system', parameters={'param1': 'value1'})
 
