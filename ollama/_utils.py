@@ -73,9 +73,14 @@ def convert_function_to_tool(func: Callable) -> Tool:
       schema['required'].remove(k)
       types.discard('null')
 
+    # Emit a single type as a string and multiple types as a JSON-Schema array.
+    # A comma-joined string (e.g. 'integer, string') is parsed by the server as one
+    # invalid type name, silently dropping the constraint. Sorting also makes the
+    # output deterministic across runs since types is a set.
+    sorted_types = sorted(types)
     schema['properties'][k] = {
       'description': parsed_docstring[k],
-      'type': ', '.join(types),
+      'type': sorted_types if len(sorted_types) > 1 else ''.join(sorted_types),
     }
 
   tool = Tool(

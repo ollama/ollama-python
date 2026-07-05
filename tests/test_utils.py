@@ -98,8 +98,10 @@ def test_function_with_all_types():
   if sys.version_info >= (3, 10):
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
     assert tool['function']['parameters']['properties']['w']['type'] == 'object'
-    assert {x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')} == {'string', 'integer'}
-    assert tool['function']['parameters']['properties']['v']['type'] != 'null'
+    # A multi-type parameter must be a JSON array, not a comma-joined string, so the
+    # server parses each type instead of one invalid 'integer, string' type name.
+    assert isinstance(tool['function']['parameters']['properties']['v']['type'], list)
+    assert tool['function']['parameters']['properties']['v']['type'] == ['integer', 'string']
     assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
   else:
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
