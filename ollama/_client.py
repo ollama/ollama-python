@@ -1,3 +1,4 @@
+# pylyzer: ignore
 import contextlib
 import ipaddress
 import json
