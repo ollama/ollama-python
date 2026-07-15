@@ -53,9 +53,23 @@ available_functions = {
 
 async def main():
   client = ollama.AsyncClient()
-
+  # --- Auto tool execution (max_tool_calls) ---
+  # When max_tool_calls is set, tools are executed automatically in a loop.
+  # The model calls tools, results are fed back, and the final response is returned.
+  print('\n--- Auto tool execution ---')
   response: ChatResponse = await client.chat(
-    'llama3.1',
+    'qwen3.5:4b',
+    messages=messages,
+    tools=[add_two_numbers, subtract_two_numbers_tool],
+    max_tool_calls=10
+  )
+  print('Response:', response.message.content)
+
+  # --- Manual tool handling ---
+  # Without max_tool_calls, tool calls are returned for you to handle manually.
+  print('\n--- Manual tool handling ---')
+  response: ChatResponse = await client.chat(
+    'qwen3.5:4b',
     messages=messages,
     tools=[add_two_numbers, subtract_two_numbers_tool],
   )
@@ -79,7 +93,7 @@ async def main():
     messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})
 
     # Get final response from model with function outputs
-    final_response = await client.chat('llama3.1', messages=messages)
+    final_response = await client.chat('qwen3.5:4b', messages=messages)
     print('Final response:', final_response.message.content)
 
   else:
