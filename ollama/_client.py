@@ -1404,7 +1404,7 @@ def _parse_host(host: Optional[str]) -> str:
   'http://[0001:002:003:0004::1]:56789/path'
   """
 
-  host, port = host or '', 11434
+  host, port = (host or '').strip(), 11434
   scheme, _, hostport = host.partition('://')
   if not hostport:
     scheme, hostport = 'http', host
