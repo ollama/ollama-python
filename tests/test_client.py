@@ -1,4 +1,5 @@
 import base64
+import inspect
 import json
 import os
 import re
@@ -1486,3 +1487,13 @@ async def test_async_client_context_manager():
     assert not client._client.is_closed
 
   assert client._client.is_closed
+
+
+def test_generate_think_annotation_matches_chat():
+  # The `think` parameter accepts bool or the 'low'/'medium'/'high' string levels.
+  # Client.generate must keep the same annotation as Client.chat and
+  # AsyncClient.generate so passing a string level does not raise a false type
+  # error (regression guard for the sync generate overloads/implementation).
+  expected = inspect.signature(Client.chat).parameters['think'].annotation
+  assert inspect.signature(Client.generate).parameters['think'].annotation == expected
+  assert inspect.signature(AsyncClient.generate).parameters['think'].annotation == expected
