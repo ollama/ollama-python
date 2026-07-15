@@ -32,6 +32,9 @@ extra-dependencies = [
     'pytest-httpserver',
 ]
 
+[[tool.hatch.envs.hatch-test.matrix]]
+python = ["3.10", "3.11", "3.12", "3.13"]
+
 [tool.hatch.envs.hatch-static-analysis]
 dependencies = [ 'ruff>=0.9.1' ]
 config-path = 'none'
