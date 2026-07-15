@@ -670,6 +670,9 @@ class Client(BaseClient):
       'GET',
       '/api/ps',
     )
+  def version(self) -> str:
+    response = self._request_raw('GET', '/api/version')
+    return response.json().get('version', '')
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
@@ -1311,6 +1314,9 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/ps',
     )
+  async def version(self) -> str:
+    response = await self._request_raw('GET', '/api/version')
+    return response.json().get('version', '')
 
 
 def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
