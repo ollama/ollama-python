@@ -1,4 +1,5 @@
 import contextlib
+import inspect
 import ipaddress
 import json
 import os
@@ -93,7 +94,17 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
     - `follow_redirects`: True
     - `timeout`: None
     `kwargs` are passed to the httpx client.
+
+    Args:
+      client: Either a httpx.Client/AsyncClient class, or an instance
     """
+
+    if not inspect.isclass(client):
+      assert follow_redirects is True, 'Cannot provide `follow_redirects` with custom client instance'
+      assert timeout is None, 'Cannot provide `timeout` with custom client instance'
+      assert not kwargs, 'Cannot provide additional kwargs with custom client instance'
+      self._client = client
+      return
 
     headers = {
       k.lower(): v
@@ -128,8 +139,8 @@ CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollam
 
 
 class Client(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.Client, host, **kwargs)
+  def __init__(self, host: Optional[str] = None, *, client: Optional[httpx.Client] = None, **kwargs) -> None:
+    super().__init__(client or httpx.Client, host, **kwargs)
 
   def close(self):
     self._client.close()
@@ -721,8 +732,8 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.AsyncClient, host, **kwargs)
+  def __init__(self, host: Optional[str] = None, *, client: Optional[httpx.AsyncClient] = None, **kwargs) -> None:
+    super().__init__(client or httpx.AsyncClient, host, **kwargs)
 
   async def close(self):
     await self._client.aclose()
