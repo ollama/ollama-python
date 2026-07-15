@@ -664,6 +664,32 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
+  def exists(self, model: str) -> bool:
+    """
+    Check whether a model is available locally.
+
+    This is a convenience wrapper around :meth:`show` that returns a
+    plain ``bool`` instead of raising :class:`ResponseError` when the
+    model is not found, making it suitable for use in ``if`` statements
+    without exception-based control flow.
+
+    Args:
+      model: The name of the model to check (e.g. ``"llama3.1:8b"``).
+
+    Returns:
+      ``True`` if the model exists locally, ``False`` otherwise.
+
+    Example::
+
+      if not ollama.exists("llama3.1:8b"):
+          ollama.pull("llama3.1:8b")
+    """
+    try:
+      self.show(model)
+      return True
+    except ResponseError:
+      return False
+
   def ps(self) -> ProcessResponse:
     return self._request(
       ProcessResponse,
@@ -1304,6 +1330,29 @@ class AsyncClient(BaseClient):
         model=model,
       ).model_dump(exclude_none=True),
     )
+
+  async def exists(self, model: str) -> bool:
+    """
+    Check whether a model is available locally.
+
+    Async variant of :meth:`Client.exists`.
+
+    Args:
+      model: The name of the model to check (e.g. ``"llama3.1:8b"``).
+
+    Returns:
+      ``True`` if the model exists locally, ``False`` otherwise.
+
+    Example::
+
+      if not await client.exists("llama3.1:8b"):
+          await client.pull("llama3.1:8b")
+    """
+    try:
+      await self.show(model)
+      return True
+    except ResponseError:
+      return False
 
   async def ps(self) -> ProcessResponse:
     return await self._request(
