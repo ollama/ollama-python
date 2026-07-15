@@ -638,7 +638,9 @@ class ResponseError(Exception):
     # try to parse content as JSON and extract 'error'
     # fallback to raw content if JSON parsing fails
     with contextlib.suppress(json.JSONDecodeError):
-      error = json.loads(error).get('error', error)
+      parsed_error = json.loads(error)
+      if isinstance(parsed_error, dict):
+        error = parsed_error.get('error', error)
 
     super().__init__(error)
     self.error = error
