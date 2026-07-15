@@ -117,10 +117,16 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
       **kwargs,
     )
 
-  def __exit__(self, exc_type, exc_val, exc_tb):
+  def __enter__(self) -> "BaseClient":
+    return self
+
+  def __exit__(self, exc_type, exc_val, exc_tb) -> None:
     self.close()
 
-  async def __aexit__(self, exc_type, exc_val, exc_tb):
+  async def __aenter__(self) -> "BaseClient":
+    return self
+
+  async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
     await self.close()
 
 
