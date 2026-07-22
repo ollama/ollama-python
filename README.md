@@ -33,6 +33,17 @@ print(response.message.content)
 
 See [_types.py](ollama/_types.py) for more information on the response types.
 
+## Examples
+
+See the examples in [`examples/`](examples/) for additional usage patterns, including:
+
+- chat (with and without streaming)
+- chat with history
+- tools / function calling
+- structured outputs
+- multimodal and image generation
+- embeddings and model management
+
 ## Streaming responses
 
 Response streaming can be enabled by setting `stream=True`.
