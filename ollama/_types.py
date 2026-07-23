@@ -346,6 +346,9 @@ class Message(SubscriptableBaseModel):
       arguments: Mapping[str, Any]
       'Arguments of the function.'
 
+    id: Optional[str] = None
+    'Identifier of the tool call, when provided by the server.'
+
     function: Function
     'Function to be called.'
 
