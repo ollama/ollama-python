@@ -4,7 +4,19 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import CreateRequest, Image, Message
+
+
+def test_subscriptable_model_get_returns_default_for_unset_field():
+  message = Message(role='user')
+
+  assert 'content' not in message
+  assert message.get('content', 'fallback') == 'fallback'
+
+  message.content = None
+
+  assert 'content' in message
+  assert message.get('content', 'fallback') is None
 
 
 def test_image_serialization_bytes():
