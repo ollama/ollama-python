@@ -670,6 +670,12 @@ class Client(BaseClient):
       'GET',
       '/api/ps',
     )
+  def exists(self, model: str) -> bool:
+    try:
+        self.show(model)
+        return True
+    except Exception:
+        return False
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """

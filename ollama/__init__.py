@@ -58,6 +58,7 @@ show = _client.show
 ps = _client.ps
 web_search = _client.web_search
 web_fetch = _client.web_fetch
+exists = _client.exists
 
 
 try:
