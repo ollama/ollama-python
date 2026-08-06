@@ -334,6 +334,7 @@ class Message(SubscriptableBaseModel):
     """
     Model tool calls.
     """
+    id: Optional[str] = None
 
     class Function(SubscriptableBaseModel):
       """
