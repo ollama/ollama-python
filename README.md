@@ -250,6 +250,26 @@ ollama.embed(model='gemma3', input=['The sky is blue because of rayleigh scatter
 ollama.ps()
 ```
 
+### GPU Selection
+
+`generate()` and `chat()` accept a `num_gpu` argument (number of model layers to offload to the GPU), merged into `options` alongside any other options you pass:
+
+```python
+ollama.generate(model='gemma3', prompt='Why is the sky blue?', num_gpu=1)
+```
+
+For hard isolation across multiple GPUs on a shared server (e.g. pinning separate notebooks/processes to different physical GPUs), run one `ollama serve` process per GPU, each with its own `CUDA_VISIBLE_DEVICES`, and point a separate `Client(host=...)` at each:
+
+```python
+# Terminal 1: CUDA_VISIBLE_DEVICES=0 OLLAMA_HOST=127.0.0.1:11434 ollama serve
+# Terminal 2: CUDA_VISIBLE_DEVICES=1 OLLAMA_HOST=127.0.0.1:11435 ollama serve
+
+from ollama import Client
+
+gpu0_client = Client(host='http://127.0.0.1:11434')
+gpu1_client = Client(host='http://127.0.0.1:11435')
+```
+
 ## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.

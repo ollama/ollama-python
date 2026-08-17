@@ -100,6 +100,58 @@ def test_client_chat_with_logprobs(httpserver: HTTPServer):
   assert response['logprobs'][0]['top_logprobs'][1]['token'] == 'Hi'
 
 
+def test_client_chat_with_num_gpu(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'tools': [],
+      'stream': False,
+      'options': {'num_gpu': 2},
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hello',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], num_gpu=2)
+  assert response['message']['content'] == 'Hello'
+
+
+def test_client_chat_with_num_gpu_merges_options(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'tools': [],
+      'stream': False,
+      'options': {'temperature': 0.5, 'num_gpu': 2},
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hello',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], options={'temperature': 0.5}, num_gpu=2)
+  assert response['message']['content'] == 'Hello'
+
+
 def test_client_chat_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
     def generate():
@@ -329,6 +381,29 @@ def test_client_generate(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
   response = client.generate('dummy', 'Why is the sky blue?')
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
+
+
+def test_client_generate_with_num_gpu(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'stream': False,
+      'options': {'num_gpu': 1},
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'Because it is.',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Why is the sky blue?', num_gpu=1)
   assert response['model'] == 'dummy'
   assert response['response'] == 'Because it is.'
 

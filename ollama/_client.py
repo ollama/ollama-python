@@ -220,6 +220,7 @@ class Client(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -244,6 +245,7 @@ class Client(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> Iterator[GenerateResponse]: ...
 
   def generate(
@@ -267,9 +269,16 @@ class Client(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> Union[GenerateResponse, Iterator[GenerateResponse]]:
     """
     Create a response using the requested model.
+
+    Args:
+      num_gpu: Number of layers to offload to the GPU. Merged into `options`.
+        For hard isolation across multiple GPUs, run a separate `ollama serve`
+        per GPU (each with its own `CUDA_VISIBLE_DEVICES`) and point a separate
+        `Client(host=...)` at each.
 
     Raises `RequestError` if a model is not provided.
 
@@ -296,7 +305,7 @@ class Client(BaseClient):
         raw=raw,
         format=format,
         images=list(_copy_images(images)) if images else None,
-        options=options,
+        options=_merge_options(options, num_gpu=num_gpu),
         keep_alive=keep_alive,
         width=width,
         height=height,
@@ -319,6 +328,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> ChatResponse: ...
 
   @overload
@@ -335,6 +345,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> Iterator[ChatResponse]: ...
 
   def chat(
@@ -350,6 +361,7 @@ class Client(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
@@ -361,6 +373,10 @@ class Client(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      num_gpu: Number of layers to offload to the GPU. Merged into `options`.
+        For hard isolation across multiple GPUs, run a separate `ollama serve`
+        per GPU (each with its own `CUDA_VISIBLE_DEVICES`) and point a separate
+        `Client(host=...)` at each.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -397,7 +413,7 @@ class Client(BaseClient):
         logprobs=logprobs,
         top_logprobs=top_logprobs,
         format=format,
-        options=options,
+        options=_merge_options(options, num_gpu=num_gpu),
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
@@ -853,6 +869,7 @@ class AsyncClient(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> GenerateResponse: ...
 
   @overload
@@ -877,6 +894,7 @@ class AsyncClient(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> AsyncIterator[GenerateResponse]: ...
 
   async def generate(
@@ -900,9 +918,16 @@ class AsyncClient(BaseClient):
     width: Optional[int] = None,
     height: Optional[int] = None,
     steps: Optional[int] = None,
+    num_gpu: Optional[int] = None,
   ) -> Union[GenerateResponse, AsyncIterator[GenerateResponse]]:
     """
     Create a response using the requested model.
+
+    Args:
+      num_gpu: Number of layers to offload to the GPU. Merged into `options`.
+        For hard isolation across multiple GPUs, run a separate `ollama serve`
+        per GPU (each with its own `CUDA_VISIBLE_DEVICES`) and point a separate
+        `Client(host=...)` at each.
 
     Raises `RequestError` if a model is not provided.
 
@@ -928,7 +953,7 @@ class AsyncClient(BaseClient):
         raw=raw,
         format=format,
         images=list(_copy_images(images)) if images else None,
-        options=options,
+        options=_merge_options(options, num_gpu=num_gpu),
         keep_alive=keep_alive,
         width=width,
         height=height,
@@ -951,6 +976,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> ChatResponse: ...
 
   @overload
@@ -967,6 +993,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> AsyncIterator[ChatResponse]: ...
 
   async def chat(
@@ -982,6 +1009,7 @@ class AsyncClient(BaseClient):
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
+    num_gpu: Optional[int] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
     """
     Create a chat response using the requested model.
@@ -993,6 +1021,10 @@ class AsyncClient(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      num_gpu: Number of layers to offload to the GPU. Merged into `options`.
+        For hard isolation across multiple GPUs, run a separate `ollama serve`
+        per GPU (each with its own `CUDA_VISIBLE_DEVICES`) and point a separate
+        `Client(host=...)` at each.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -1030,7 +1062,7 @@ class AsyncClient(BaseClient):
         logprobs=logprobs,
         top_logprobs=top_logprobs,
         format=format,
-        options=options,
+        options=_merge_options(options, num_gpu=num_gpu),
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
@@ -1311,6 +1343,12 @@ class AsyncClient(BaseClient):
       'GET',
       '/api/ps',
     )
+
+
+def _merge_options(options: Optional[Union[Mapping[str, Any], Options]], **overrides: Any) -> Optional[Dict[str, Any]]:
+  merged = options.model_dump(exclude_none=True) if isinstance(options, Options) else dict(options or {})
+  merged.update({k: v for k, v in overrides.items() if v is not None})
+  return merged or None
 
 
 def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
