@@ -127,3 +127,7 @@ Requirement: `pip install tqdm`
 ### Thinking (levels) - Choose the thinking level
 
 - [thinking-levels.py](thinking-levels.py)
+
+### Hybrid RAG - Zero-cloud dual-engine retrieval with SQLite FTS5 and embeddings
+
+- [hybrid-rag.py](hybrid-rag.py) - Dual-engine hybrid search with SQLite FTS5 (BM25), embeddings, and Reciprocal Rank Fusion (RRF)
