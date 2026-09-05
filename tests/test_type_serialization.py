@@ -1,10 +1,52 @@
+import json
 import tempfile
 from base64 import b64encode
 from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, Image, Tool
+
+
+def test_tool_nested_properties_serialization():
+  parameters = {
+    'type': 'object',
+    'properties': {
+      'address': {
+        'type': 'object',
+        'description': 'Delivery address',
+        'properties': {
+          'location': {
+            'type': 'object',
+            'properties': {'city': {'type': 'string', 'enum': ['London', 'Paris']}},
+          },
+          'lines': {'type': 'array', 'items': {'type': 'string'}},
+        },
+      },
+    },
+  }
+  tool = Tool(function=Tool.Function(name='deliver', parameters=parameters))
+  assert tool.function.parameters.model_dump(exclude_none=True) == parameters
+  assert isinstance(tool.function.parameters.properties['address'].properties['location'].properties['city'], Tool.Function.Parameters.Property)
+
+  request = ChatRequest(model='test-model', tools=[tool])
+  assert request.model_dump(exclude_none=True)['tools'][0]['function']['parameters'] == parameters
+  assert json.loads(request.model_dump_json(exclude_none=True))['tools'][0]['function']['parameters'] == parameters
+
+
+def test_tool_flat_properties_serialization():
+  parameters = {
+    'type': 'object',
+    '$defs': {'Label': {'type': 'string'}},
+    'required': ['name'],
+    'properties': {
+      'name': {'type': ['string', 'null'], 'description': 'Name', 'enum': ['a', 'b', None]},
+      'labels': {'type': 'array', 'items': {'$ref': '#/$defs/Label'}},
+      'empty': {'type': 'object', 'properties': {}},
+    },
+  }
+  request = ChatRequest(model='test-model', tools=[{'function': {'name': 'label', 'parameters': parameters}}])
+  assert request.model_dump(exclude_none=True)['tools'][0]['function']['parameters'] == parameters
 
 
 def test_image_serialization_bytes():
