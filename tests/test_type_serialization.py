@@ -105,3 +105,37 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+def test_list_response_preserves_name_and_model():
+  """/api/tags returns both name and model; neither should be dropped."""
+  from ollama._types import ListResponse
+
+  payload = {
+    'models': [
+      {
+        'name': 'llama3.2:latest',
+        'model': 'llama3.2:latest',
+        'modified_at': '2025-05-04T17:37:44.706015396-07:00',
+        'size': 2019393189,
+        'digest': 'abc123',
+        'details': {
+          'parent_model': '',
+          'format': 'gguf',
+          'family': 'llama',
+          'families': ['llama'],
+          'parameter_size': '3.2B',
+          'quantization_level': 'Q4_K_M',
+        },
+      }
+    ]
+  }
+
+  response = ListResponse.model_validate(payload)
+  model = response.models[0]
+  assert model.name == 'llama3.2:latest'
+  assert model.model == 'llama3.2:latest'
+  assert model['name'] == 'llama3.2:latest'
+  dumped = model.model_dump()
+  assert dumped['name'] == 'llama3.2:latest'
+  assert dumped['model'] == 'llama3.2:latest'
