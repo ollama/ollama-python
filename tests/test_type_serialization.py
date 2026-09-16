@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import CreateRequest, Image, Message
 
 
 def test_image_serialization_bytes():
@@ -29,6 +29,22 @@ def test_image_serialization_long_base64_string():
 def test_image_serialization_plain_string():
   img = Image(value='not a path or base64')
   assert img.model_dump() == 'not a path or base64'  # Should return as-is
+
+
+def test_tool_call_id_round_trips():
+  # The server sends an `id` on each tool call (e.g. "call_p7o2gz50"); it must survive parsing.
+  message = Message(
+    role='assistant',
+    tool_calls=[{'id': 'call_p7o2gz50', 'function': {'name': 'test_function', 'arguments': {'param1': 'test1'}}}],
+  )
+  assert message.tool_calls[0].id == 'call_p7o2gz50'
+  assert message.tool_calls[0].function.name == 'test_function'
+  assert message.model_dump()['tool_calls'][0]['id'] == 'call_p7o2gz50'
+
+
+def test_tool_call_id_defaults_to_none():
+  message = Message(role='assistant', tool_calls=[{'function': {'name': 'f', 'arguments': {}}}])
+  assert message.tool_calls[0].id is None
 
 
 def test_image_serialization_path():
