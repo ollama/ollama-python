@@ -15,7 +15,7 @@ def print_logprobs(logprobs: Iterable[dict], label: str) -> None:
 
 
 response = ollama.generate(
-  model='gemma3',
+  model='gemma4',
   prompt='hi! be concise.',
   logprobs=True,
   top_logprobs=3,

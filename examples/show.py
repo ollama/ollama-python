@@ -1,6 +1,6 @@
 from ollama import ShowResponse, show
 
-response: ShowResponse = show('gemma3')
+response: ShowResponse = show('gemma4')
 print('Model Information:')
 print(f'Modified at:   {response.modified_at}')
 print(f'Template:      {response.template}')
