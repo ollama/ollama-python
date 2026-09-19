@@ -8,13 +8,14 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from httpx import ConnectError, MockTransport
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
 from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
-from ollama._types import Image, Message
+from ollama._types import Image, Message, ResponseError
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -1336,6 +1337,68 @@ def test_client_connection_error():
     client.generate('model', 'prompt')
   with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
     client.show('model')
+
+
+@pytest.fixture
+def disconnected_transport():
+  def handler(request):
+    raise ConnectError('connection refused', request=request)
+
+  return MockTransport(handler)
+
+
+@pytest.mark.parametrize('method', ['chat', 'generate', 'pull', 'push', 'create'])
+@pytest.mark.parametrize('stream', [False, True])
+def test_client_connection_error_streaming_parity(disconnected_transport, method, stream):
+  client = Client(transport=disconnected_transport)
+  try:
+    with pytest.raises(ConnectionError) as exc_info:
+      response = getattr(client, method)('model', stream=stream)
+      if stream:
+        list(response)
+    assert str(exc_info.value) == CONNECTION_ERROR_MESSAGE
+  finally:
+    client.close()
+
+
+@pytest.mark.parametrize('method', ['chat', 'generate', 'pull', 'push', 'create'])
+@pytest.mark.parametrize('stream', [False, True])
+async def test_async_client_connection_error_streaming_parity(disconnected_transport, method, stream):
+  client = AsyncClient(transport=disconnected_transport)
+  try:
+    with pytest.raises(ConnectionError) as exc_info:
+      response = await getattr(client, method)('model', stream=stream)
+      if stream:
+        async for _ in response:
+          pass
+    assert str(exc_info.value) == CONNECTION_ERROR_MESSAGE
+  finally:
+    await client.close()
+
+
+@pytest.mark.parametrize('status_code', [200, 500])
+def test_client_stream_response_error(status_code):
+  transport = MockTransport(lambda request: httpxResponse(status_code, json={'error': 'model failed'}))
+  client = Client(transport=transport)
+  try:
+    with pytest.raises(ResponseError, match='model failed') as exc_info:
+      list(client.generate('model', stream=True))
+    assert exc_info.value.status_code == (-1 if status_code == 200 else status_code)
+  finally:
+    client.close()
+
+
+@pytest.mark.parametrize('status_code', [200, 500])
+async def test_async_client_stream_response_error(status_code):
+  transport = MockTransport(lambda request: httpxResponse(status_code, json={'error': 'model failed'}))
+  client = AsyncClient(transport=transport)
+  try:
+    with pytest.raises(ResponseError, match='model failed') as exc_info:
+      async for _ in await client.generate('model', stream=True):
+        pass
+    assert exc_info.value.status_code == (-1 if status_code == 200 else status_code)
+  finally:
+    await client.close()
 
 
 async def test_async_client_connection_error():
