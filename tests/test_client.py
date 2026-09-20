@@ -1490,10 +1490,41 @@ async def test_async_client_context_manager():
 
 
 def test_generate_think_annotation_matches_chat():
-  # The `think` parameter accepts bool or the 'low'/'medium'/'high' string levels.
-  # Client.generate must keep the same annotation as Client.chat and
-  # AsyncClient.generate so passing a string level does not raise a false type
-  # error (regression guard for the sync generate overloads/implementation).
+  # The `think` parameter accepts bool or string thinking levels (e.g. 'low', 'medium', 'high', 'xhigh', 'max').
+  # Client.generate must keep the same annotation as Client.chat,
+  # AsyncClient.chat, and AsyncClient.generate so passing a string level does not
+  # raise a false type error (regression guard for the sync generate overloads/implementation).
   expected = inspect.signature(Client.chat).parameters['think'].annotation
   assert inspect.signature(Client.generate).parameters['think'].annotation == expected
+  assert inspect.signature(AsyncClient.chat).parameters['think'].annotation == expected
   assert inspect.signature(AsyncClient.generate).parameters['think'].annotation == expected
+
+
+def test_client_chat_with_think_level(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'qwen3.8:27b',
+      'messages': [{'role': 'user', 'content': 'Hello'}],
+      'tools': [],
+      'stream': False,
+      'think': 'xhigh',
+    },
+  ).respond_with_json(
+    {
+      'model': 'qwen3.8:27b',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hi there.',
+        'thinking': 'Thinking deeply...',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('qwen3.8:27b', messages=[{'role': 'user', 'content': 'Hello'}], think='xhigh')
+  assert response['model'] == 'qwen3.8:27b'
+  assert response['message']['content'] == 'Hi there.'
+  assert response['message']['thinking'] == 'Thinking deeply...'
+
