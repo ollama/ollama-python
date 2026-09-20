@@ -1490,10 +1490,28 @@ async def test_async_client_context_manager():
 
 
 def test_generate_think_annotation_matches_chat():
-  # The `think` parameter accepts bool or the 'low'/'medium'/'high' string levels.
+  # The `think` parameter accepts bool or the 'low'/'medium'/'high'/'max' string levels.
   # Client.generate must keep the same annotation as Client.chat and
   # AsyncClient.generate so passing a string level does not raise a false type
   # error (regression guard for the sync generate overloads/implementation).
   expected = inspect.signature(Client.chat).parameters['think'].annotation
   assert inspect.signature(Client.generate).parameters['think'].annotation == expected
   assert inspect.signature(AsyncClient.generate).parameters['think'].annotation == expected
+
+
+def test_think_max_level_accepted():
+  # The 'max' think level must be accepted by all generate/chat methods without
+  # raising a type error (mirrors the Go ThinkValue which accepts 'max').
+  import typing
+
+  for method in (Client.generate, Client.chat, AsyncClient.generate, AsyncClient.chat):
+    annotation = typing.get_type_hints(method).get('think')
+    args = typing.get_args(annotation)
+    # Flatten nested Unions/Literals to find the literal values
+    literals = set()
+    for arg in args:
+      if arg is bool or arg is bool:
+        continue
+      sub = typing.get_args(arg)
+      literals.update(sub)
+    assert 'max' in literals, f'{method.__qualname__} think annotation missing max: {literals}'
