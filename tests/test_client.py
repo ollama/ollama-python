@@ -880,6 +880,19 @@ def test_client_copy(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+def test_client_ping(httpserver: HTTPServer):
+  httpserver.expect_ordered_request('/', method='GET').respond_with_response(Response('Ollama is running', status=200))
+  client = Client(httpserver.url_for('/'))
+  response = client.ping()
+  assert response == 'Ollama is running'
+
+
+def test_client_ping_connection_error():
+  client = Client('http://localhost:1')
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
+    client.ping()
+
+
 async def test_async_client_chat(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -1255,6 +1268,19 @@ async def test_async_client_copy(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+async def test_async_client_ping(httpserver: HTTPServer):
+  httpserver.expect_ordered_request('/', method='GET').respond_with_response(Response('Ollama is running', status=200))
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.ping()
+  assert response == 'Ollama is running'
+
+
+async def test_async_client_ping_connection_error():
+  client = AsyncClient('http://localhost:1')
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
+    await client.ping()
 
 
 def test_headers():

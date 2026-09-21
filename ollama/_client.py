@@ -670,6 +670,10 @@ class Client(BaseClient):
       'GET',
       '/api/ps',
     )
+  
+  def ping(self) -> str:
+    r = self._request_raw('GET', '/')
+    return r.text
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
@@ -1305,6 +1309,10 @@ class AsyncClient(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
+  async def ping(self) -> str:
+    r = await self._request_raw('GET', '/')
+    return r.text
+  
   async def ps(self) -> ProcessResponse:
     return await self._request(
       ProcessResponse,
