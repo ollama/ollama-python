@@ -1,3 +1,4 @@
+import importlib.metadata
 from ollama._client import AsyncClient, Client
 from ollama._types import (
   ChatResponse,
@@ -19,7 +20,12 @@ from ollama._types import (
   WebSearchResponse,
 )
 
+try:
+  __version__ = importlib.metadata.version('ollama')
+except importlib.metadata.PackageNotFoundError:
+  __version__ = 'unknown'
 __all__ = [
+  '__version__',
   'AsyncClient',
   'ChatResponse',
   'Client',
