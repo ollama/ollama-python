@@ -1321,7 +1321,7 @@ def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Imag
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v is not None},
     )
 
 
