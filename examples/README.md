@@ -127,3 +127,7 @@ Requirement: `pip install tqdm`
 ### Thinking (levels) - Choose the thinking level
 
 - [thinking-levels.py](thinking-levels.py)
+
+### Simple Agent - A simple agent that can execute bash
+
+- [simple-agent.py](simple-agent.py)
