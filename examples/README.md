@@ -102,6 +102,10 @@ Configuration to use with an MCP client:
 
 - [ps.py](ps.py)
 
+### GPU Selection - Offload a request to the GPU with num_gpu
+
+- [gpu-selection.py](gpu-selection.py)
+
 ### Ollama Pull - Pull a model from Ollama
 
 Requirement: `pip install tqdm`
