@@ -349,6 +349,7 @@ class Client(BaseClient):
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
+    tool_choice: Optional[Literal['auto', 'none', 'required']] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
     """
@@ -396,6 +397,7 @@ class Client(BaseClient):
         think=think,
         logprobs=logprobs,
         top_logprobs=top_logprobs,
+        tool_choice=tool_choice,
         format=format,
         options=options,
         keep_alive=keep_alive,
@@ -670,6 +672,12 @@ class Client(BaseClient):
       'GET',
       '/api/ps',
     )
+  def exists(self, model: str) -> bool:
+    try:
+        self.show(model)
+        return True
+    except Exception:
+        return False
 
   def web_search(self, query: str, max_results: int = 3) -> WebSearchResponse:
     """
