@@ -54,6 +54,7 @@ delete = _client.delete
 list = _client.list
 copy = _client.copy
 show = _client.show
+exists = _client.exists
 ps = _client.ps
 web_search = _client.web_search
 web_fetch = _client.web_fetch
