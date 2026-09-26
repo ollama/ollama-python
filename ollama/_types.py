@@ -384,6 +384,28 @@ class Tool(SubscriptableBaseModel):
   function: Optional[Function] = None
 
 
+
+class ToolChoiceFunction(SubscriptableBaseModel):
+  """
+  Forces the model to call a specific tool by name.
+
+  Example::
+
+    tool_choice=ToolChoiceFunction(function=ToolChoiceFunction.Function(name='get_weather'))
+  """
+
+  class Function(SubscriptableBaseModel):
+    name: str
+    'Name of the function to call.'
+
+  type: Literal['function'] = 'function'
+  function: Function
+  'The function to force the model to call.'
+
+
+ToolChoice = Union[Literal['none', 'auto', 'required'], ToolChoiceFunction]
+
+
 class ChatRequest(BaseGenerateRequest):
   @model_serializer(mode='wrap')
   def serialize_model(self, nxt):
@@ -399,6 +421,9 @@ class ChatRequest(BaseGenerateRequest):
 
   tools: Optional[Sequence[Tool]] = None
   'Tools to use for the chat.'
+
+  tool_choice: Optional[ToolChoice] = None
+  """Controls which tool the model calls: 'none', 'auto', 'required', or ToolChoiceFunction."""
 
   think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'

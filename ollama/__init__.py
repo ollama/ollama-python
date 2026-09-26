@@ -15,6 +15,8 @@ from ollama._types import (
   ShowResponse,
   StatusResponse,
   Tool,
+  ToolChoice,
+  ToolChoiceFunction,
   WebFetchResponse,
   WebSearchResponse,
 )
@@ -37,6 +39,8 @@ __all__ = [
   'ShowResponse',
   'StatusResponse',
   'Tool',
+  'ToolChoice',
+  'ToolChoiceFunction',
   'WebFetchResponse',
   'WebSearchResponse',
 ]
