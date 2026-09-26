@@ -334,6 +334,7 @@ class Message(SubscriptableBaseModel):
     """
     Model tool calls.
     """
+    id: Optional[str] = None
 
     class Function(SubscriptableBaseModel):
       """
@@ -399,6 +400,9 @@ class ChatRequest(BaseGenerateRequest):
 
   tools: Optional[Sequence[Tool]] = None
   'Tools to use for the chat.'
+
+  tool_choice: Optional[str] = None
+  'Controls which tool the model should use. Options: "auto", "none", "required".'
 
   think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None
   'Enable thinking mode (for thinking models).'
@@ -572,7 +576,7 @@ class ShowResponse(SubscriptableBaseModel):
 
   details: Optional[ModelDetails] = None
 
-  modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
+  modelinfo: Optional[Mapping[str, Any]] = Field(default=None, alias='model_info')
 
   parameters: Optional[str] = None
 
