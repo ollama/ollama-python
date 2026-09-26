@@ -16,6 +16,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
     return parsed_docstring
 
   key = str(hash(doc_string))
+  args_lines = []
   for line in doc_string.splitlines():
     lowered_line = line.lower().strip()
     if lowered_line.startswith('args:'):
@@ -26,11 +27,18 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
     else:
       # maybe change to a list and join later
       parsed_docstring[key] += f'{line.strip()}\n'
+      if key == 'args':
+        args_lines.append(line)
 
   last_key = None
-  for line in parsed_docstring['args'].splitlines():
-    line = line.strip()
-    if ':' in line:
+  last_indent = 0
+  for raw_line in args_lines:
+    line = raw_line.strip()
+    indent = len(raw_line) - len(raw_line.lstrip())
+    # A line indented deeper than the current argument continues its description,
+    # even if it contains a colon (a URL, "e.g.: ...", a time).
+    is_continuation = last_key is not None and indent > last_indent
+    if ':' in line and not is_continuation:
       # Split the line on either:
       # 1. A parenthetical expression like (integer) - captured in group 1
       # 2. A colon :
@@ -39,6 +47,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
       arg_name = parts[0].strip()
       last_key = arg_name
+      last_indent = indent
 
       # Get the description - will be in parts[1] if parenthetical or parts[-1] if after colon
       arg_description = parts[-1].strip()
