@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, Optional, Sequence, Set, Tuple, Union
 
 from ollama._utils import convert_function_to_tool
 
@@ -256,3 +256,21 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_function_with_string_annotations():
+  # Annotations are strings under `from __future__ import annotations`, or when quoted.
+  def get_weather(city: 'str', unit: "Literal['celsius', 'fahrenheit']", days: 'Optional[int]' = None) -> 'str':
+    """
+    Get the weather for a city.
+    Args:
+        city: The city
+        unit: The unit
+        days: Number of days
+    """
+
+  tool = convert_function_to_tool(get_weather).model_dump()
+  assert tool['function']['parameters']['properties']['city']['type'] == 'string'
+  assert tool['function']['parameters']['properties']['unit']['type'] == 'string'
+  assert tool['function']['parameters']['properties']['days']['type'] == 'integer'
+  assert tool['function']['parameters']['required'] == ['city', 'unit']
