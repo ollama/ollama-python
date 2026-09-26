@@ -1,4 +1,5 @@
 from ollama._client import AsyncClient, Client
+from importlib.metadata import version, PackageNotFoundError
 from ollama._types import (
   ChatResponse,
   EmbeddingsResponse,
@@ -57,3 +58,10 @@ show = _client.show
 ps = _client.ps
 web_search = _client.web_search
 web_fetch = _client.web_fetch
+exists = _client.exists
+
+
+try:
+    __version__ = version("ollama")
+except PackageNotFoundError:
+    __version__ = "unknown"
