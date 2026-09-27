@@ -517,7 +517,12 @@ class ModelDetails(SubscriptableBaseModel):
 
 class ListResponse(SubscriptableBaseModel):
   class Model(SubscriptableBaseModel):
+    name: Optional[str] = None
+    'Name of the model as returned by /api/tags.'
+
     model: Optional[str] = None
+    'Model name (same as name in current Ollama API responses).'
+
     modified_at: Optional[datetime] = None
     digest: Optional[str] = None
     size: Optional[ByteSize] = None
