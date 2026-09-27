@@ -574,6 +574,9 @@ class ShowResponse(SubscriptableBaseModel):
 
   modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
 
+  projector_info: Optional[Mapping[str, Any]] = None
+  'Projector metadata for multimodal models (when present in /api/show).'
+
   parameters: Optional[str] = None
 
   capabilities: Optional[List[str]] = None

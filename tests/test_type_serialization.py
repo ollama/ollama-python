@@ -105,3 +105,30 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+def test_show_response_preserves_projector_info():
+  """/api/show may include projector_info for multimodal models."""
+  from ollama._types import ShowResponse
+
+  payload = {
+    'modelfile': 'FROM llava',
+    'template': '{{ .Prompt }}',
+    'parameters': 'num_ctx 4096',
+    'details': {
+      'parent_model': '',
+      'format': 'gguf',
+      'family': 'llama',
+      'families': ['llama'],
+      'parameter_size': '7B',
+      'quantization_level': 'Q4_0',
+    },
+    'model_info': {'general.architecture': 'llama'},
+    'projector_info': {'clip.projection_dim': 768},
+    'capabilities': ['completion', 'vision'],
+  }
+
+  response = ShowResponse.model_validate(payload)
+  assert response.projector_info == {'clip.projection_dim': 768}
+  dumped = response.model_dump()
+  assert dumped['projector_info'] == {'clip.projection_dim': 768}
