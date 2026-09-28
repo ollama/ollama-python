@@ -1,6 +1,6 @@
 import ollama
 
-# Requires a System One-enabled server and the local nimble model.
+# Requires Ollama v0.35.0 or later and the local nimble model.
 response = ollama.systemone(
   model='nimble',
   state={'ticket': 'I was charged twice. Please refund the extra payment.'},

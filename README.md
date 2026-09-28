@@ -274,9 +274,9 @@ response = ollama.systemone(
 print(response.answers['team'])
 ```
 
-System One requires an Ollama server build that implements `POST /v1/systemone`
-and a compatible local model such as `nimble`. It returns one JSON response;
-streaming and cloud models are not supported.
+System One uses `POST /v1/systemone` and requires Ollama v0.35.0 or later with a
+compatible local model such as `nimble`. It returns one JSON response; streaming
+and cloud models are not supported.
 
 `state` and question `instructions` accept text, JSON objects, or arrays. Questions
 are evaluated in their supplied order:
