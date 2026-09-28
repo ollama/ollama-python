@@ -66,6 +66,10 @@ from ollama._types import (
   ShowRequest,
   ShowResponse,
   StatusResponse,
+  SystemOneContent,
+  SystemOneQuestion,
+  SystemOneRequest,
+  SystemOneResponse,
   Tool,
   WebFetchRequest,
   WebFetchResponse,
@@ -401,6 +405,29 @@ class Client(BaseClient):
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
+    )
+
+  def systemone(
+    self,
+    model: str,
+    state: SystemOneContent,
+    questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> SystemOneResponse:
+    """Score choice, noul, and score questions with a local System One model.
+
+    Returns one JSON response. Streaming is not supported.
+    """
+    return self._request(
+      SystemOneResponse,
+      'POST',
+      '/v1/systemone',
+      json=SystemOneRequest(
+        model=model,
+        state=state,
+        questions=questions,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
 
   def embed(
@@ -1034,6 +1061,29 @@ class AsyncClient(BaseClient):
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
+    )
+
+  async def systemone(
+    self,
+    model: str,
+    state: SystemOneContent,
+    questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
+    keep_alive: Optional[Union[float, str]] = None,
+  ) -> SystemOneResponse:
+    """Score choice, noul, and score questions with a local System One model.
+
+    Returns one JSON response. Streaming is not supported.
+    """
+    return await self._request(
+      SystemOneResponse,
+      'POST',
+      '/v1/systemone',
+      json=SystemOneRequest(
+        model=model,
+        state=state,
+        questions=questions,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
 
   async def embed(

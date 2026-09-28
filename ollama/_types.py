@@ -618,6 +618,76 @@ class WebFetchResponse(SubscriptableBaseModel):
   links: Optional[Sequence[str]] = None
 
 
+SystemOneContent = Union[str, Dict[str, Any], List[Any]]
+"""Text or JSON object/array rendered as text by System One."""
+
+
+class SystemOneChoiceQuestion(SubscriptableBaseModel):
+  type: Literal['choice'] = 'choice'
+  instructions: SystemOneContent
+  criteria: Dict[str, Optional[str]]
+  'Ordered choices; a null description uses the choice key.'
+
+
+class SystemOneNoulQuestion(SubscriptableBaseModel):
+  type: Literal['noul'] = 'noul'
+  instructions: SystemOneContent
+  criteria: Optional[Dict[Literal['false', 'true'], str]] = None
+
+
+class SystemOneScoreQuestion(SubscriptableBaseModel):
+  type: Literal['score'] = 'score'
+  instructions: SystemOneContent
+  criteria: List[str]
+  'Descriptions ordered from lowest to highest score.'
+
+
+SystemOneQuestion = Annotated[Union[SystemOneChoiceQuestion, SystemOneNoulQuestion, SystemOneScoreQuestion], Field(discriminator='type')]
+
+
+class SystemOneRequest(SubscriptableBaseModel):
+  model: str
+  state: SystemOneContent
+  questions: Dict[str, SystemOneQuestion]
+  keep_alive: Optional[Union[float, str]] = None
+
+
+class SystemOneNoulAnswer(SubscriptableBaseModel):
+  type: Literal['noul']
+  noul: float
+  'Probability of true.'
+
+
+class SystemOneChoiceAnswer(SubscriptableBaseModel):
+  type: Literal['choice']
+  choice: str
+  probabilities: Dict[str, float]
+  confidence: float
+
+
+class SystemOneScoreAnswer(SubscriptableBaseModel):
+  type: Literal['score']
+  score: float
+  'Expected zero-based score, which may be fractional.'
+  legend: Dict[str, str]
+  probabilities: Dict[str, float]
+  confidence: float
+
+
+SystemOneAnswer = Annotated[Union[SystemOneNoulAnswer, SystemOneChoiceAnswer, SystemOneScoreAnswer], Field(discriminator='type')]
+
+
+class SystemOneUsage(SubscriptableBaseModel):
+  input_tokens: int
+  output_tokens: int
+
+
+class SystemOneResponse(SubscriptableBaseModel):
+  model: str
+  answers: Dict[str, SystemOneAnswer]
+  usage: SystemOneUsage
+
+
 class RequestError(Exception):
   """
   Common class for request errors.

@@ -255,6 +255,47 @@ ollama.embed(model='gemma4', input=['The sky is blue because of rayleigh scatter
 ollama.ps()
 ```
 
+### System One
+
+```python
+import ollama
+
+response = ollama.systemone(
+  model='nimble',
+  state='Our checkout has returned 500 errors since 9am.',
+  questions={
+    'team': {
+      'type': 'choice',
+      'instructions': 'Which team should handle this ticket?',
+      'criteria': {'billing': 'Payments and refunds', 'technical': 'Software errors'},
+    },
+  },
+)
+print(response.answers['team'])
+```
+
+System One requires an Ollama server build that implements `POST /v1/systemone`
+and a compatible local model such as `nimble`. It returns one JSON response;
+streaming and cloud models are not supported.
+
+`state` and question `instructions` accept text, JSON objects, or arrays. Questions
+are evaluated in their supplied order:
+
+- `choice`: 2–26 option keys mapped to descriptions; `None` uses the key as its description.
+- `noul`: probability of true, with optional `{"false": "No", "true": "Yes"}` descriptions.
+- `score`: 2–26 descriptions ordered lowest to highest; returns a potentially fractional, zero-based score.
+
+Responses contain `model`, `answers`, and `usage.input_tokens` / `usage.output_tokens`.
+Confidence measures probability concentration, not calibrated correctness.
+Token usage comes from the server; output tokens are not necessarily zero.
+Optional `keep_alive` accepts seconds or a duration string. Requests use the client's
+existing host, headers, and HTTP error handling. The server validates its body and
+model context limits without truncating input.
+
+Available as `ollama.systemone`, `Client.systemone`, and `await AsyncClient.systemone`.
+Question and answer types, including `SystemOneResponse`, are exported from `ollama`.
+See [the combined question example](examples/systemone.py).
+
 ## Errors
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
