@@ -1527,4 +1527,3 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
-

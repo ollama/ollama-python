@@ -122,4 +122,3 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
-
