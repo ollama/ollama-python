@@ -828,7 +828,12 @@ class AsyncClient(BaseClient):
 
     Returns:
       WebSearchResponse with the search results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web search')
+
     return await self._request(
       WebSearchResponse,
       'POST',
@@ -849,6 +854,9 @@ class AsyncClient(BaseClient):
     Returns:
       WebFetchResponse with the fetched result
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web fetch')
+
     return await self._request(
       WebFetchResponse,
       'POST',
