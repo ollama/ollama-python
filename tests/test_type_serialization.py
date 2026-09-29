@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
 
 
 def test_image_serialization_bytes():
@@ -105,3 +105,20 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+@pytest.mark.parametrize('level', ['low', 'medium', 'high', 'xhigh', 'max'])
+def test_think_model_defined_levels_serialization(level):
+  chat_req = ChatRequest(model='test-model', messages=[{'role': 'user', 'content': 'hi'}], think=level)
+  assert chat_req.think == level
+  assert chat_req.model_dump(exclude_none=True)['think'] == level
+
+  gen_req = GenerateRequest(model='test-model', think=level)
+  assert gen_req.think == level
+  assert gen_req.model_dump(exclude_none=True)['think'] == level
+
+
+def test_think_boolean_serialization():
+  assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
+  assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
+  assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
