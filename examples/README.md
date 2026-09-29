@@ -127,3 +127,7 @@ Requirement: `pip install tqdm`
 ### Thinking (levels) - Choose the thinking level
 
 - [thinking-levels.py](thinking-levels.py)
+
+### System One - Score typed questions
+
+- [systemone.py](systemone.py) - Choice, boolean probability, and rubric score questions
