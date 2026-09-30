@@ -4,10 +4,13 @@ import json
 import os
 import re
 import tempfile
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
 import pytest
+from httpx import MockTransport
+from httpx import Request as httpxRequest
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
@@ -20,6 +23,35 @@ PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAA
 PNG_BYTES = base64.b64decode(PNG_BASE64)
 
 pytestmark = pytest.mark.anyio
+
+
+class Answer(Enum):
+  yes = 'yes'
+  no = 'no'
+
+
+@pytest.mark.parametrize('method', ['chat', 'generate'])
+def test_client_accepts_enum_response_format(method: str):
+  def respond(request: httpxRequest) -> httpxResponse:
+    assert request.url.path == f'/api/{method}'
+    assert json.loads(request.content)['format'] == {'enum': ['yes', 'no'], 'title': 'Answer', 'type': 'string'}
+    return httpxResponse(200, json={'model': 'dummy', 'message': {'role': 'assistant', 'content': '"yes"'}} if method == 'chat' else {'model': 'dummy', 'response': '"yes"'})
+
+  with Client(transport=MockTransport(respond)) as client:
+    response = getattr(client, method)(model='dummy', format=Answer)
+  assert response.model == 'dummy'
+
+
+@pytest.mark.parametrize('method', ['chat', 'generate'])
+async def test_async_client_accepts_enum_response_format(method: str):
+  def respond(request: httpxRequest) -> httpxResponse:
+    assert request.url.path == f'/api/{method}'
+    assert json.loads(request.content)['format'] == {'enum': ['yes', 'no'], 'title': 'Answer', 'type': 'string'}
+    return httpxResponse(200, json={'model': 'dummy', 'message': {'role': 'assistant', 'content': '"yes"'}} if method == 'chat' else {'model': 'dummy', 'response': '"yes"'})
+
+  async with AsyncClient(transport=MockTransport(respond)) as client:
+    response = await getattr(client, method)(model='dummy', format=Answer)
+  assert response.model == 'dummy'
 
 
 @pytest.fixture
