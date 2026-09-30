@@ -1,6 +1,6 @@
 # Ollama Python Library
 
-The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
+The Ollama Python library provides the easiest way to integrate Python 3.10+ projects with [Ollama](https://github.com/ollama/ollama).
 
 ## Prerequisites
 

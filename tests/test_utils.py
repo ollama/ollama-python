@@ -1,6 +1,5 @@
 import json
-import sys
-from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
+from typing import Any, Dict, List, Union
 
 from ollama._utils import convert_function_to_tool
 
@@ -45,77 +44,36 @@ def test_function_with_no_args():
 
 
 def test_function_with_all_types():
-  if sys.version_info >= (3, 10):
-
-    def all_types(
-      x: int,
-      y: str,
-      z: list[int],
-      w: dict[str, int],
-      v: int | str | None,
-    ) -> int | dict[str, int] | str | list[int] | None:
-      """
-      A function with all types.
-      Args:
-          x (integer): The first number
-          y (string): The second number
-          z (array): The third number
-          w (object): The fourth number
-          v (integer | string | None): The fifth number
-      """
-  else:
-
-    def all_types(
-      x: int,
-      y: str,
-      z: Sequence,
-      w: Mapping[str, int],
-      d: Dict[str, int],
-      s: Set[int],
-      t: Tuple[int, str],
-      l: List[int],  # noqa: E741
-      o: Union[int, None],
-    ) -> Union[Mapping[str, int], str, None]:
-      """
-      A function with all types.
-      Args:
-          x (integer): The first number
-          y (string): The second number
-          z (array): The third number
-          w (object): The fourth number
-          d (object): The fifth number
-          s (array): The sixth number
-          t (array): The seventh number
-          l (array): The eighth number
-          o (integer | None): The ninth number
-      """
+  def all_types(
+    x: int,
+    y: str,
+    z: list[int],
+    w: dict[str, int],
+    v: int | str | None,
+  ) -> int | dict[str, int] | str | list[int] | None:
+    """
+    A function with all types.
+    Args:
+        x (integer): The first number
+        y (string): The second number
+        z (array): The third number
+        w (object): The fourth number
+        v (integer | string | None): The fifth number
+    """
 
   tool_json = convert_function_to_tool(all_types).model_dump_json()
   tool = json.loads(tool_json)
   assert tool['function']['parameters']['properties']['x']['type'] == 'integer'
   assert tool['function']['parameters']['properties']['y']['type'] == 'string'
 
-  if sys.version_info >= (3, 10):
-    assert tool['function']['parameters']['properties']['z']['type'] == 'array'
-    assert tool['function']['parameters']['properties']['w']['type'] == 'object'
-    assert {x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')} == {'string', 'integer'}
-    assert tool['function']['parameters']['properties']['v']['type'] != 'null'
-    assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
-  else:
-    assert tool['function']['parameters']['properties']['z']['type'] == 'array'
-    assert tool['function']['parameters']['properties']['w']['type'] == 'object'
-    assert tool['function']['parameters']['properties']['d']['type'] == 'object'
-    assert tool['function']['parameters']['properties']['s']['type'] == 'array'
-    assert tool['function']['parameters']['properties']['t']['type'] == 'array'
-    assert tool['function']['parameters']['properties']['l']['type'] == 'array'
-    assert tool['function']['parameters']['properties']['o']['type'] == 'integer'
-    assert tool['function']['parameters']['properties']['o']['type'] != 'null'
-    assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w', 'd', 's', 't', 'l']
+  assert tool['function']['parameters']['properties']['z']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['w']['type'] == 'object'
+  assert {x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')} == {'string', 'integer'}
+  assert tool['function']['parameters']['properties']['v']['type'] != 'null'
+  assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
 
 
 def test_function_docstring_parsing():
-  from typing import Any, Dict, List
-
   def func_with_complex_docs(x: int, y: List[str]) -> Dict[str, Any]:
     """
     Test function with complex docstring.
