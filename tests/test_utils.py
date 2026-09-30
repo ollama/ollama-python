@@ -256,3 +256,48 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_function_with_default_values_not_required():
+  """Parameters with default values should be optional, not required.
+
+  Regression test: previously a parameter like `units: str = "celsius"`
+  was incorrectly included in the `required` list even though Python
+  treats it as optional. See OpenAI tool schema spec.
+  """
+
+  def get_weather(city: str, units: str = 'celsius', detailed: bool = False) -> str:
+    """Get the current weather for a city.
+    Args:
+        city: The city to look up.
+        units: Temperature units (celsius or fahrenheit).
+        detailed: Whether to return a detailed report.
+    """
+    return f'{city}: 20 {units}'
+
+  tool = convert_function_to_tool(get_weather).model_dump()
+  required = tool['function']['parameters']['required']
+
+  # Only `city` (no default) should be required.
+  assert required == ['city'], f'expected [city], got {required}'
+
+  # All three params should still appear in properties with descriptions.
+  properties = tool['function']['parameters']['properties']
+  assert set(properties.keys()) == {'city', 'units', 'detailed'}
+  assert properties['units']['description'] == 'Temperature units (celsius or fahrenheit).'
+  assert properties['detailed']['type'] == 'boolean'
+
+
+def test_function_with_all_defaults_has_empty_required():
+  def all_optional(a: int = 1, b: str = 'x') -> str:
+    """All optional.
+    Args:
+        a: first
+        b: second
+    """
+    return f'{a}{b}'
+
+  tool = convert_function_to_tool(all_optional).model_dump()
+  required = tool['function']['parameters']['required']
+  # An empty required list is acceptable; some pydantic versions omit the key.
+  assert not required, f'expected no required params, got {required}'
