@@ -5,6 +5,7 @@ import os
 import platform
 import sys
 import urllib.parse
+from enum import Enum
 from hashlib import sha256
 from os import PathLike
 from pathlib import Path
@@ -217,7 +218,7 @@ class Client(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -241,7 +242,7 @@ class Client(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -264,7 +265,7 @@ class Client(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -320,7 +321,7 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -336,7 +337,7 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Iterator[ChatResponse]: ...
@@ -351,7 +352,7 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, Iterator[ChatResponse]]:
@@ -873,7 +874,7 @@ class AsyncClient(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -897,7 +898,7 @@ class AsyncClient(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -920,7 +921,7 @@ class AsyncClient(BaseClient):
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: Optional[bool] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -975,7 +976,7 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> ChatResponse: ...
@@ -991,7 +992,7 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> AsyncIterator[ChatResponse]: ...
@@ -1006,7 +1007,7 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
-    format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
+    format: Optional[Union[Literal['', 'json'], JsonSchemaValue, Type[Enum]]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
   ) -> Union[ChatResponse, AsyncIterator[ChatResponse]]:
