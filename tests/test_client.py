@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
-from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
+from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools, _parse_host
 from ollama._types import Image, Message
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
@@ -25,6 +25,22 @@ pytestmark = pytest.mark.anyio
 @pytest.fixture
 def anyio_backend():
   return 'asyncio'
+
+
+@pytest.mark.parametrize(
+  ('host', 'expected'),
+  [
+    ('example.com', 'http://example.com:11434'),
+    ('http://example.com', 'http://example.com'),
+    ('https://example.com', 'https://example.com'),
+    ('https://example.com/path', 'https://example.com/path'),
+    ('http://[0001:002:003:0004::1]', 'http://[0001:002:003:0004::1]'),
+    ('https://[0001:002:003:0004::1]', 'https://[0001:002:003:0004::1]'),
+    ('https://[0001:002:003:0004::1]/path', 'https://[0001:002:003:0004::1]/path'),
+  ],
+)
+def test_parse_host_default_ports(host: str, expected: str):
+  assert _parse_host(host) == expected
 
 
 class PrefixPattern(URIPattern):
