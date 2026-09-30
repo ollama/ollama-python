@@ -1,4 +1,5 @@
 import tempfile
+import os
 from base64 import b64encode
 from pathlib import Path
 
@@ -32,20 +33,30 @@ def test_image_serialization_plain_string():
 
 
 def test_image_serialization_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
+  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
     img = Image(value=Path(temp_file.name))
     assert img.model_dump() == b64encode(b'test file content').decode()
 
+  try:
+    os.remove(temp_file.name)
+  except FileNotFoundError:
+    pass
+
 
 def test_image_serialization_string_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
+  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
     img = Image(value=temp_file.name)
     assert img.model_dump() == b64encode(b'test file content').decode()
 
+  try:
+    os.remove(temp_file.name)
+  except FileNotFoundError:
+    pass
+  
   with pytest.raises(ValueError):
     img = Image(value='some_path/that/does/not/exist.png')
     img.model_dump()
