@@ -1,6 +1,6 @@
 import json
 import sys
-from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
+from typing import Dict, List, Literal, Mapping, Sequence, Set, Tuple, Union
 
 from ollama._utils import convert_function_to_tool
 
@@ -42,6 +42,17 @@ def test_function_with_no_args():
   assert tool['function']['name'] == 'simple_func'
   assert tool['function']['description'] == 'A simple function with no arguments.'
   assert tool['function']['parameters']['properties'] == {}
+
+
+def test_function_preserves_parameter_schema_constraints():
+  def process(ids: list[int], mode: Literal['fast', 'safe']): ...
+
+  properties = convert_function_to_tool(process).model_dump()['function']['parameters']['properties']
+
+  assert properties['ids']['type'] == 'array'
+  assert properties['ids']['items'] == {'type': 'integer'}
+  assert properties['mode']['type'] == 'string'
+  assert properties['mode']['enum'] == ['fast', 'safe']
 
 
 def test_function_with_all_types():
