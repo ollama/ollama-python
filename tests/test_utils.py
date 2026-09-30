@@ -230,6 +230,20 @@ def test_function_with_no_types():
   assert tool['function']['parameters']['properties']['b']['type'] == 'string'
 
 
+def test_function_with_varargs():
+  def func_with_varargs(x: int, *args, **kwargs) -> int:
+    """
+    A function with varargs.
+    Args:
+        x: The first number
+    """
+    return x
+
+  tool = convert_function_to_tool(func_with_varargs).model_dump()
+  assert set(tool['function']['parameters']['properties']) == {'x'}
+  assert tool['function']['parameters']['required'] == ['x']
+
+
 def test_function_with_parentheses():
   def func_with_parentheses(a: int, b: int) -> int:
     """

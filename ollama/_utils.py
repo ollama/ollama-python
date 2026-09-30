@@ -60,7 +60,7 @@ def convert_function_to_tool(func: Callable) -> Tool:
     func.__name__,
     (pydantic.BaseModel,),
     {
-      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items()},
+      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items() if v.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)},
       '__signature__': inspect.signature(func),
       '__doc__': parsed_docstring[doc_string_hash],
     },
