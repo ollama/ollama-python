@@ -62,6 +62,31 @@ def test_client_chat(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
+def test_client_chat_preserves_empty_message_content(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': ''}],
+      'tools': [],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'empty received',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': ''}])
+  assert response['message']['content'] == 'empty received'
+
+
 def test_client_chat_with_logprobs(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
