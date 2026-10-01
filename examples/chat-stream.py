@@ -7,5 +7,5 @@ messages = [
   },
 ]
 
-for part in chat('gemma3', messages=messages, stream=True):
+for part in chat('gemma4', messages=messages, stream=True):
   print(part['message']['content'], end='', flush=True)

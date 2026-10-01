@@ -7,5 +7,5 @@ messages = [
   },
 ]
 
-response = chat('gemma3', messages=messages)
+response = chat('gemma4', messages=messages)
 print(response['message']['content'])

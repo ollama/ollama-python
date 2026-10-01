@@ -5,7 +5,7 @@ The Ollama Python library provides the easiest way to integrate Python 3.8+ proj
 ## Prerequisites
 
 - [Ollama](https://ollama.com/download) should be installed and running
-- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull gemma3`
+- Pull a model to use with the library: `ollama pull <model>` e.g. `ollama pull gemma4`
   - See [Ollama.com](https://ollama.com/search) for more information on the models available.
 
 ## Install
@@ -20,12 +20,15 @@ pip install ollama
 from ollama import chat
 from ollama import ChatResponse
 
-response: ChatResponse = chat(model='gemma3', messages=[
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
-])
+response: ChatResponse = chat(
+  model='gemma4',
+  messages=[
+    {
+      'role': 'user',
+      'content': 'Why is the sky blue?',
+    },
+  ],
+)
 print(response['message']['content'])
 # or access fields directly from the response object
 print(response.message.content)
@@ -41,9 +44,9 @@ Response streaming can be enabled by setting `stream=True`.
 from ollama import chat
 
 stream = chat(
-    model='gemma3',
-    messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
-    stream=True,
+  model='gemma4',
+  messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
+  stream=True,
 )
 
 for chunk in stream:
@@ -110,10 +113,7 @@ curl https://ollama.com/api/tags
 import os
 from ollama import Client
 
-client = Client(
-    host='https://ollama.com',
-    headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')}
-)
+client = Client(host='https://ollama.com', headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')})
 
 messages = [
   {
@@ -133,16 +133,17 @@ All extra keyword arguments are passed into the [`httpx.Client`](https://www.pyt
 
 ```python
 from ollama import Client
-client = Client(
-  host='http://localhost:11434',
-  headers={'x-some-header': 'some-value'}
+
+client = Client(host='http://localhost:11434', headers={'x-some-header': 'some-value'})
+response = client.chat(
+  model='gemma4',
+  messages=[
+    {
+      'role': 'user',
+      'content': 'Why is the sky blue?',
+    },
+  ],
 )
-response = client.chat(model='gemma3', messages=[
-  {
-    'role': 'user',
-    'content': 'Why is the sky blue?',
-  },
-])
 ```
 
 ## Async client
@@ -153,9 +154,11 @@ The `AsyncClient` class is used to make asynchronous requests. It can be configu
 import asyncio
 from ollama import AsyncClient
 
+
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  response = await AsyncClient().chat(model='gemma3', messages=[message])
+  response = await AsyncClient().chat(model='gemma4', messages=[message])
+
 
 asyncio.run(chat())
 ```
@@ -166,10 +169,12 @@ Setting `stream=True` modifies functions to return a Python asynchronous generat
 import asyncio
 from ollama import AsyncClient
 
+
 async def chat():
   message = {'role': 'user', 'content': 'Why is the sky blue?'}
-  async for part in await AsyncClient().chat(model='gemma3', messages=[message], stream=True):
+  async for part in await AsyncClient().chat(model='gemma4', messages=[message], stream=True):
     print(part['message']['content'], end='', flush=True)
+
 
 asyncio.run(chat())
 ```
@@ -181,13 +186,13 @@ The Ollama Python library's API is designed around the [Ollama REST API](https:/
 ### Chat
 
 ```python
-ollama.chat(model='gemma3', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
+ollama.chat(model='gemma4', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 ```
 
 ### Generate
 
 ```python
-ollama.generate(model='gemma3', prompt='Why is the sky blue?')
+ollama.generate(model='gemma4', prompt='Why is the sky blue?')
 ```
 
 ### List
@@ -199,49 +204,49 @@ ollama.list()
 ### Show
 
 ```python
-ollama.show('gemma3')
+ollama.show('gemma4')
 ```
 
 ### Create
 
 ```python
-ollama.create(model='example', from_='gemma3', system="You are Mario from Super Mario Bros.")
+ollama.create(model='example', from_='gemma4', system='You are Mario from Super Mario Bros.')
 ```
 
 ### Copy
 
 ```python
-ollama.copy('gemma3', 'user/gemma3')
+ollama.copy('gemma4', 'user/gemma4')
 ```
 
 ### Delete
 
 ```python
-ollama.delete('gemma3')
+ollama.delete('gemma4')
 ```
 
 ### Pull
 
 ```python
-ollama.pull('gemma3')
+ollama.pull('gemma4')
 ```
 
 ### Push
 
 ```python
-ollama.push('user/gemma3')
+ollama.push('user/gemma4')
 ```
 
 ### Embed
 
 ```python
-ollama.embed(model='gemma3', input='The sky is blue because of rayleigh scattering')
+ollama.embed(model='gemma4', input='The sky is blue because of rayleigh scattering')
 ```
 
 ### Embed (batch)
 
 ```python
-ollama.embed(model='gemma3', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
+ollama.embed(model='gemma4', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
 ```
 
 ### Ps
@@ -249,6 +254,47 @@ ollama.embed(model='gemma3', input=['The sky is blue because of rayleigh scatter
 ```python
 ollama.ps()
 ```
+
+### System One
+
+```python
+import ollama
+
+response = ollama.systemone(
+  model='nimble',
+  state='Our checkout has returned 500 errors since 9am.',
+  questions={
+    'team': {
+      'type': 'choice',
+      'instructions': 'Which team should handle this ticket?',
+      'criteria': {'billing': 'Payments and refunds', 'technical': 'Software errors'},
+    },
+  },
+)
+print(response.answers['team'])
+```
+
+System One uses `POST /v1/systemone` and requires Ollama v0.35.0 or later with a
+compatible local model such as `nimble`. It returns one JSON response; streaming
+and cloud models are not supported.
+
+`state` and question `instructions` accept text, JSON objects, or arrays. Questions
+are evaluated in their supplied order:
+
+- `choice`: 2–26 option keys mapped to descriptions; `None` uses the key as its description.
+- `noul`: probability of true, with optional `{"false": "No", "true": "Yes"}` descriptions.
+- `score`: 2–26 descriptions ordered lowest to highest; returns a potentially fractional, zero-based score.
+
+Responses contain `model`, `answers`, and `usage.input_tokens` / `usage.output_tokens`.
+Confidence measures probability concentration, not calibrated correctness.
+Token usage comes from the server; output tokens are not necessarily zero.
+Optional `keep_alive` accepts seconds or a duration string. Requests use the client's
+existing host, headers, and HTTP error handling. The server validates its body and
+model context limits without truncating input.
+
+Available as `ollama.systemone`, `Client.systemone`, and `await AsyncClient.systemone`.
+Question and answer types, including `SystemOneResponse`, are exported from `ollama`.
+See [the combined question example](examples/systemone.py).
 
 ## Errors
 

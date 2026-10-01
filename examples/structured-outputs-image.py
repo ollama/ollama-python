@@ -33,7 +33,7 @@ if not path.exists():
 
 # Set up chat as usual
 response = chat(
-  model='gemma3',
+  model='gemma4',
   format=ImageDescription.model_json_schema(),  # Pass in the schema for the response
   messages=[
     {

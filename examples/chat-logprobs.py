@@ -22,7 +22,7 @@ messages = [
 ]
 
 response = ollama.chat(
-  model='gemma3',
+  model='gemma4',
   messages=messages,
   logprobs=True,
   top_logprobs=3,
