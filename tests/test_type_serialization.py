@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image, Tool
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,17 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_chat_request_dump_with_tools_missing_function_or_parameters():
+  req = ChatRequest(model='test-model', tools=[Tool(function=Tool.Function(name='f')), Tool()])
+  assert req.model_dump()['tools'][0]['function']['name'] == 'f'
+  assert req.model_dump(exclude_none=True)['tools'][0]['function'] == {'name': 'f'}
+  assert 'tools' in req.model_dump_json()
+
+
+def test_chat_request_renames_defs_for_tool_parameters():
+  tool = Tool(function=Tool.Function(name='f', parameters=Tool.Function.Parameters(defs={'A': {'type': 'string'}})))
+  params = ChatRequest(model='test-model', tools=[tool]).model_dump()['tools'][0]['function']['parameters']
+  assert params['$defs'] == {'A': {'type': 'string'}}
+  assert 'defs' not in params
