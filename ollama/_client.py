@@ -1301,15 +1301,21 @@ class AsyncClient(BaseClient):
 
     digest = f'sha256:{sha256sum.hexdigest()}'
 
-    async def upload_bytes():
-      async with await anyio.open_file(path, 'rb') as r:
+    r = await anyio.open_file(path, 'rb')
+    try:
+
+      async def upload_bytes():
         while True:
           chunk = await r.read(32 * 1024)
           if not chunk:
             break
           yield chunk
 
-    await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
+    finally:
+      # Closing the local file must complete even when the upload is cancelled.
+      with anyio.CancelScope(shield=True):
+        await r.aclose()
 
     return digest
 
