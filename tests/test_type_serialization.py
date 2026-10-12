@@ -4,7 +4,30 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, ChatResponse, CreateRequest, GenerateRequest, Image
+
+
+@pytest.mark.parametrize('index', [0, 2])
+def test_chat_response_preserves_tool_call_function_index(index):
+  message = {'role': 'assistant', 'tool_calls': [{'function': {'index': index, 'name': 'lookup', 'arguments': {'city': 'London'}}}]}
+  response = ChatResponse(message=message)
+  function = response.message.tool_calls[0].function
+
+  assert function.index == index
+  assert function['index'] == index
+  assert response.model_dump(exclude_none=True)['message'] == message
+
+  request = ChatRequest(model='test-model', messages=[response.message])
+  assert request.model_dump(exclude_none=True)['messages'] == [message]
+  assert ChatRequest.model_validate_json(request.model_dump_json(exclude_none=True)).model_dump(exclude_none=True)['messages'] == [message]
+
+
+def test_chat_response_without_tool_call_function_index():
+  message = {'role': 'assistant', 'tool_calls': [{'function': {'name': 'lookup', 'arguments': {}}}]}
+  response = ChatResponse(message=message)
+
+  assert getattr(response.message.tool_calls[0].function, 'index', None) is None
+  assert response.model_dump(exclude_none=True)['message'] == message
 
 
 def test_image_serialization_bytes():

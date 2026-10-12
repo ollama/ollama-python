@@ -1273,6 +1273,43 @@ def test_headers():
   assert client._client.headers['content-type'] == 'application/json'
 
 
+@pytest.fixture
+def tool_call_index_server(httpserver: HTTPServer, stream: bool):
+  calls = [{'function': {'index': index, 'name': 'lookup', 'arguments': {'city': city}}} for index, city in enumerate(['London', 'Paris'])]
+  request = httpserver.expect_request('/api/chat', method='POST')
+  if stream:
+    chunks = [{'message': {'role': 'assistant', 'tool_calls': [call]}, 'done': False} for call in calls]
+    chunks.append({'message': {'role': 'assistant', 'content': ''}, 'done': True})
+    request.respond_with_data(''.join(json.dumps(chunk) + '\n' for chunk in chunks), content_type='application/x-ndjson')
+  else:
+    request.respond_with_json({'message': {'role': 'assistant', 'tool_calls': calls}, 'done': True})
+  return httpserver
+
+
+@pytest.mark.parametrize('stream', [False, True])
+def test_client_chat_tool_call_function_index(tool_call_index_server: HTTPServer, stream: bool):
+  with Client(tool_call_index_server.url_for('/')) as client:
+    response = client.chat('model', stream=stream)
+    responses = list(response) if stream else [response]
+
+  calls = [call for response in responses for call in response.message.tool_calls or []]
+  assert [call.function.index for call in calls] == [0, 1]
+  assert [call.function.name for call in calls] == ['lookup', 'lookup']
+  assert [call.function.arguments for call in calls] == [{'city': 'London'}, {'city': 'Paris'}]
+
+
+@pytest.mark.parametrize('stream', [False, True])
+async def test_async_client_chat_tool_call_function_index(tool_call_index_server: HTTPServer, stream: bool):
+  async with AsyncClient(tool_call_index_server.url_for('/')) as client:
+    response = await client.chat('model', stream=stream)
+    responses = [part async for part in response] if stream else [response]
+
+  calls = [call for response in responses for call in response.message.tool_calls or []]
+  assert [call.function.index for call in calls] == [0, 1]
+  assert [call.function.name for call in calls] == ['lookup', 'lookup']
+  assert [call.function.arguments for call in calls] == [{'city': 'London'}, {'city': 'Paris'}]
+
+
 def test_copy_tools():
   def func1(x: int) -> str:
     """Simple function 1.
