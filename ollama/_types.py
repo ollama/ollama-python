@@ -572,7 +572,7 @@ class ShowResponse(SubscriptableBaseModel):
 
   details: Optional[ModelDetails] = None
 
-  modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
+  modelinfo: Optional[Mapping[str, Any]] = Field(default=None, alias='model_info')
 
   parameters: Optional[str] = None
 
