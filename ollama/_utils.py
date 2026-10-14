@@ -54,15 +54,17 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
 
 def convert_function_to_tool(func: Callable) -> Tool:
+  signature = inspect.signature(func)
   doc_string_hash = str(hash(inspect.getdoc(func)))
   parsed_docstring = _parse_docstring(inspect.getdoc(func))
   schema = type(
     func.__name__,
     (pydantic.BaseModel,),
     {
-      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items()},
-      '__signature__': inspect.signature(func),
+      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in signature.parameters.items()},
+      '__signature__': signature,
       '__doc__': parsed_docstring[doc_string_hash],
+      **{k: v.default for k, v in signature.parameters.items() if v.default != inspect.Parameter.empty},
     },
   ).model_json_schema()
 
@@ -70,7 +72,8 @@ def convert_function_to_tool(func: Callable) -> Tool:
     # If type is missing, the default is string
     types = {t.get('type', 'string') for t in v.get('anyOf')} if 'anyOf' in v else {v.get('type', 'string')}
     if 'null' in types:
-      schema['required'].remove(k)
+      if k in schema.get('required', []):
+        schema['required'].remove(k)
       types.discard('null')
 
     schema['properties'][k] = {

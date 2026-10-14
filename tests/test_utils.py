@@ -5,6 +5,32 @@ from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
 from ollama._utils import convert_function_to_tool
 
 
+def test_function_defaults_are_not_required():
+  def search(query: str, limit: int = 5):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
+  assert parameters.properties['limit'].type == 'integer'
+
+
+def test_nullable_default_with_no_required_arguments():
+  def search(query: Union[str, None] = None):
+    return query
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert not parameters.required
+  assert parameters.properties['query'].type == 'string'
+
+
+def test_keyword_only_defaults_are_not_required():
+  def search(query: str, *, limit: int = 5):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
+
+
 def test_function_to_tool_conversion():
   def add_numbers(x: int, y: Union[int, None] = None) -> int:
     """Add two numbers together.
