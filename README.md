@@ -277,8 +277,7 @@ print(response.answers['team'])
 System One uses `POST /v1/systemone` and returns one JSON response; streaming is
 not supported. It runs locally with decision models such as `nimble` (Ollama
 v0.35.0 or later) or `clef` (v0.35.1 or later), and in the cloud with `clef:cloud`
-on a paid plan (through Ollama v0.40.5 or later, or [directly against
-ollama.com](#cloud-api-ollamacom)).
+(through Ollama v0.40.5 or later, or [directly against ollama.com](#cloud-api-ollamacom)).
 
 Clef also reads images (v0.40.0 or later locally): pass `images` as file paths,
 bytes, or base64 strings, shared by all questions. Cloud requests accept up to 4
