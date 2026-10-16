@@ -413,8 +413,11 @@ class Client(BaseClient):
     state: SystemOneContent,
     questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
     keep_alive: Optional[Union[float, str]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
   ) -> SystemOneResponse:
-    """Score choice, noul, and score questions with a local System One model.
+    """Score choice, noul, and score questions with a System One decision model.
+
+    `images` are shared by all questions, in order; only models that accept images (such as Clef) support them.
 
     Returns one JSON response. Streaming is not supported.
     """
@@ -425,6 +428,7 @@ class Client(BaseClient):
       json=SystemOneRequest(
         model=model,
         state=state,
+        images=list(_copy_images(images)) if images else None,
         questions=questions,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
@@ -1069,8 +1073,11 @@ class AsyncClient(BaseClient):
     state: SystemOneContent,
     questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
     keep_alive: Optional[Union[float, str]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
   ) -> SystemOneResponse:
-    """Score choice, noul, and score questions with a local System One model.
+    """Score choice, noul, and score questions with a System One decision model.
+
+    `images` are shared by all questions, in order; only models that accept images (such as Clef) support them.
 
     Returns one JSON response. Streaming is not supported.
     """
@@ -1081,6 +1088,7 @@ class AsyncClient(BaseClient):
       json=SystemOneRequest(
         model=model,
         state=state,
+        images=list(_copy_images(images)) if images else None,
         questions=questions,
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),

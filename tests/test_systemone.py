@@ -1,3 +1,4 @@
+import base64
 import inspect
 import json
 
@@ -86,3 +87,24 @@ async def test_systemone_http_errors(client_type, status, message):
       await response
   assert error.value.status_code == status
   assert error.value.error == message
+
+
+@pytest.mark.anyio
+@pytest.mark.parametrize('client_type', [ollama.Client, ollama.AsyncClient])
+async def test_systemone_images(client_type, tmp_path):
+  png = b'\x89PNG\r\n\x1a\nsynthetic'
+  path = tmp_path / 'ticket.png'
+  path.write_bytes(png)
+  encoded = base64.b64encode(png).decode()
+
+  def handle(request):
+    body = json.loads(request.content)
+    assert body['images'] == [encoded] * 4
+    assert list(body) == ['model', 'state', 'images', 'questions']
+    return httpx.Response(200, json={'model': 'clef', 'answers': {'refund': {'type': 'noul', 'noul': 0.5}}, 'usage': {'input_tokens': 1, 'output_tokens': 0}})
+
+  client = client_type(transport=httpx.MockTransport(handle))
+  response = client.systemone('clef', 'See screenshot', {'refund': {'type': 'noul', 'instructions': 'Refund?'}}, images=[png, encoded, str(path), ollama.Image(value=path)])
+  if inspect.isawaitable(response):
+    response = await response
+  assert response.answers['refund'].noul == 0.5

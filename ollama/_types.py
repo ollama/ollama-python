@@ -648,6 +648,8 @@ SystemOneQuestion = Annotated[Union[SystemOneChoiceQuestion, SystemOneNoulQuesti
 class SystemOneRequest(SubscriptableBaseModel):
   model: str
   state: SystemOneContent
+  images: Optional[Sequence[Image]] = None
+  'Images shared by all questions; base64 PNG, JPEG, or WebP.'
   questions: Dict[str, SystemOneQuestion]
   keep_alive: Optional[Union[float, str]] = None
 
