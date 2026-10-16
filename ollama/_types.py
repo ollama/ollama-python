@@ -376,6 +376,7 @@ class Tool(SubscriptableBaseModel):
         items: Optional[Any] = None
         description: Optional[str] = None
         enum: Optional[Sequence[Any]] = None
+        properties: Optional[Mapping[str, 'Tool.Function.Parameters.Property']] = None
 
       properties: Optional[Mapping[str, Property]] = None
 
