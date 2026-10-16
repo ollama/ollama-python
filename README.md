@@ -274,16 +274,25 @@ response = ollama.systemone(
 print(response.answers['team'])
 ```
 
-System One uses `POST /v1/systemone` and requires Ollama v0.35.0 or later with a
-compatible local model such as `nimble`. It returns one JSON response; streaming
-and cloud models are not supported.
+System One uses `POST /v1/systemone` and returns one JSON response; streaming is
+not supported. It runs locally with decision models such as `nimble` (Ollama
+v0.35.0 or later) or `clef` (v0.35.1 or later), and in the cloud with `clef:cloud`
+on a paid plan (through Ollama v0.40.5 or later, or [directly against
+ollama.com](#cloud-api-ollamacom)).
+
+Clef also reads images (v0.40.0 or later locally): pass `images` as file paths,
+bytes, or base64 strings, shared by all questions. Cloud requests accept up to 4
+PNG, JPEG, or WebP images (each at most 4 MiB and 16 megapixels, 8 MiB total).
 
 `state` and question `instructions` accept text, JSON objects, or arrays. Questions
 are evaluated in their supplied order:
 
-- `choice`: 2–26 option keys mapped to descriptions; `None` uses the key as its description.
+- `choice`: 2–26 option keys mapped to descriptions (up to 255 in the cloud); `None` uses the key as its description.
 - `noul`: probability of true, with optional `{"false": "No", "true": "Yes"}` descriptions.
-- `score`: 2–26 descriptions ordered lowest to highest; returns a potentially fractional, zero-based score.
+- `score`: 2–10 descriptions ordered lowest to highest; returns a potentially fractional, zero-based score.
+
+In the cloud, question ids may only contain ASCII letters, digits, `_`, `.`, and
+`-`, up to 100 characters, and a request may ask up to 64 questions.
 
 Responses contain `model`, `answers`, and `usage.input_tokens` / `usage.output_tokens`.
 Confidence measures probability concentration, not calibrated correctness.
