@@ -16,6 +16,18 @@ jobs:
           enable-cache: true
       - run: uvx hatch test -acp
         if: ${{ always() }}
+  test-legacy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9']
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Run tests on Python ${{ matrix.python-version }}
+        run: uv run --python ${{ matrix.python-version }} --with pytest --with pytest-anyio --with pytest-httpserver pytest tests/
   lint:
     runs-on: ubuntu-latest
     steps:
