@@ -1371,8 +1371,15 @@ class AsyncClient(BaseClient):
     )
 
 
-def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
-  for image in images or []:
+def _copy_images(images: Optional[Union[Image, bytes, str, PathLike, Sequence[Union[Image, Any]]]]) -> Iterator[Image]:
+  # A bare str/bytes/PathLike/Image is one image. str/bytes are Sequences, so
+  # iterating them would wrap each character/byte in its own Image.
+  if images is None:
+    images = []
+  elif isinstance(images, (str, bytes, PathLike, Image)):
+    images = [images]
+
+  for image in images:
     yield image if isinstance(image, Image) else Image(value=image)
 
 

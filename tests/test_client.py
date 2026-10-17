@@ -191,6 +191,68 @@ def test_client_chat_images(httpserver: HTTPServer, message_format: str, file_st
   assert response['message']['content'] == "I don't know."
 
 
+
+@pytest.mark.parametrize('image_value', (PNG_BASE64, PNG_BYTES))
+def test_client_chat_single_image_not_in_list(httpserver: HTTPServer, image_value):
+  """A bare str/bytes image must not be iterated character-by-character (#734)."""
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [
+        {
+          'role': 'user',
+          'content': 'Why is the sky blue?',
+          'images': [PNG_BASE64],
+        },
+      ],
+      'tools': [],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat(
+    'dummy',
+    messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': image_value}],
+  )
+  assert response['model'] == 'dummy'
+  assert response['message']['content'] == "I don't know."
+
+
+def test_client_generate_single_image_not_in_list(httpserver: HTTPServer):
+  """generate(images=<str>) must send one image, not one per character (#734)."""
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'What is in this image?',
+      'stream': False,
+      'images': [PNG_BASE64],
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'A blue sky.',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'What is in this image?', images=PNG_BASE64)
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'A blue sky.'
+
+
 def test_client_chat_format_json(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
