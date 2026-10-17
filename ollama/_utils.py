@@ -73,10 +73,13 @@ def convert_function_to_tool(func: Callable) -> Tool:
       schema['required'].remove(k)
       types.discard('null')
 
-    schema['properties'][k] = {
-      'description': parsed_docstring[k],
-      'type': ', '.join(types),
-    }
+    property_schema = dict(v)
+    property_schema.pop('anyOf', None)
+    property_schema.update(
+      description=parsed_docstring[k],
+      type=', '.join(types),
+    )
+    schema['properties'][k] = property_schema
 
   tool = Tool(
     type='function',
