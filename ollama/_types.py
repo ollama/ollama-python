@@ -340,6 +340,9 @@ class Message(SubscriptableBaseModel):
       Tool call function.
       """
 
+      index: Optional[int] = None
+      'Index of the tool call.'
+
       name: str
       'Name of the function.'
 
