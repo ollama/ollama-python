@@ -108,9 +108,10 @@ Requirement: `pip install tqdm`
 
 - [pull.py](pull.py)
 
-### Ollama Create - Create a model from a Modelfile
+### Ollama Create - Create a model from a base model or a GGUF file
 
 - [create.py](create.py)
+- [create-gguf.py](create-gguf.py)
 
 ### Ollama Embed - Generate embeddings with a model
 
