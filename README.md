@@ -146,6 +146,28 @@ response = client.chat(
 )
 ```
 
+### HTTP Basic authentication
+
+For an Ollama server behind a reverse proxy that requires HTTP Basic authentication, pass an [`httpx.BasicAuth`](https://www.python-httpx.org/advanced/authentication/#basic-authentication) instance through the client's `auth` argument. Supply credentials separately from the `host` URL, whose user information is not preserved by the client's host parsing.
+
+```python
+import os
+import httpx
+from ollama import Client
+
+with Client(
+  host='https://ollama.example.com',
+  auth=httpx.BasicAuth(os.environ['OLLAMA_USERNAME'], os.environ['OLLAMA_PASSWORD']),
+) as client:
+  response = client.chat(
+    model='gemma4',
+    messages=[{'role': 'user', 'content': 'Why is the sky blue?'}],
+  )
+  print(response.message.content)
+```
+
+Set `OLLAMA_USERNAME` and `OLLAMA_PASSWORD` to the credentials configured on your reverse proxy. The same `auth` argument works with `AsyncClient`.
+
 ## Async client
 
 The `AsyncClient` class is used to make asynchronous requests. It can be configured with the same fields as the `Client` class.
