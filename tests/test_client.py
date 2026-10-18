@@ -1,3 +1,4 @@
+import asyncio
 import base64
 import inspect
 import json
@@ -7,7 +8,10 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import anyio
+import httpx
 import pytest
+from anyio.lowlevel import checkpoint
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
@@ -1241,6 +1245,51 @@ async def test_async_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile() as blob:
     response = await client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+
+@pytest.mark.parametrize('interruption', ('write_error', 'cancelled', 'cancel_scope'))
+async def test_async_client_create_blob_closes_file_on_interrupted_upload(tmp_path, monkeypatch, interruption):
+  path = tmp_path / 'weights.gguf'
+  path.write_bytes(b'x' * 65537)
+  opened_files = []
+  open_file = anyio.open_file
+
+  async def track_open_file(*args, **kwargs):
+    file = await open_file(*args, **kwargs)
+    opened_files.append(file)
+    return file
+
+  monkeypatch.setattr(anyio, 'open_file', track_open_file)
+
+  class InterruptedUpload(httpx.AsyncBaseTransport):
+    async def handle_async_request(self, request):
+      async for chunk in request.stream:
+        assert chunk
+        if interruption == 'cancelled':
+          asyncio.current_task().cancel()
+          await asyncio.sleep(0)
+        elif interruption == 'cancel_scope':
+          cancel_scope.cancel()
+          await checkpoint()
+        raise httpx.WriteError('upload interrupted', request=request)
+
+  async with AsyncClient(transport=InterruptedUpload()) as client:
+    try:
+      if interruption == 'cancel_scope':
+        with anyio.CancelScope() as cancel_scope:
+          await client.create_blob(path)
+        assert cancel_scope.cancelled_caught
+      else:
+        error = asyncio.CancelledError if interruption == 'cancelled' else httpx.WriteError
+        with pytest.raises(error):
+          await client.create_blob(path)
+
+      assert opened_files
+      assert all(file.wrapped.closed for file in opened_files)
+    finally:
+      # Also close real files when running the regression against an unfixed client.
+      for file in opened_files:
+        await file.aclose()
 
 
 async def test_async_client_delete(httpserver: HTTPServer):
