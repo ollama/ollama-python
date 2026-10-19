@@ -167,6 +167,16 @@ class Image(BaseModel):
       return b64encode(self.value.read_bytes() if isinstance(self.value, Path) else self.value).decode()
 
     if isinstance(self.value, str):
+      if self.value.lower().startswith('data:'):
+        header, separator, encoded = self.value.partition(',')
+        if not separator or not encoded or not header.lower().startswith('data:image/') or not header.lower().endswith(';base64'):
+          raise ValueError('Invalid image data URI, expected a base64-encoded image')
+        try:
+          b64decode(encoded, validate=True)
+        except Exception as exc:
+          raise ValueError('Invalid image data URI, expected a base64-encoded image') from exc
+        return encoded
+
       try:
         if Path(self.value).exists():
           return b64encode(Path(self.value).read_bytes()).decode()
