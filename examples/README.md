@@ -123,6 +123,7 @@ Requirement: `pip install tqdm`
 ### Thinking (generate) - Enable thinking mode for a model
 
 - [thinking-generate.py](thinking-generate.py)
+- [async-thinking.py](async-thinking.py)
 
 ### Thinking (levels) - Choose the thinking level
 
