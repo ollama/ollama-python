@@ -192,7 +192,7 @@ class Client(BaseClient):
             e.response.read()
             raise ResponseError(e.response.text, e.response.status_code) from None
 
-          for line in r.iter_lines():
+          for line in _iter_ndjson_lines(r.iter_text()):
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
@@ -812,7 +812,7 @@ class AsyncClient(BaseClient):
             await e.response.aread()
             raise ResponseError(e.response.text, e.response.status_code) from None
 
-          async for line in r.aiter_lines():
+          async for line in _aiter_ndjson_lines(r.aiter_text()):
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
@@ -1374,6 +1374,43 @@ class AsyncClient(BaseClient):
 def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Image]:
   for image in images or []:
     yield image if isinstance(image, Image) else Image(value=image)
+
+
+class _NDJSONLineSplitter:
+  # NDJSON records end at '\n' (CRLF accepted). httpx iter_lines() uses str.splitlines(), which also splits on
+  # U+0085, U+2028 and U+2029 that JSON allows unescaped inside strings. Partial text is kept as pieces and
+  # joined once per record, so a record split across many chunks is not re-copied for every chunk.
+
+  def __init__(self) -> None:
+    self._pending: List[str] = []
+
+  def feed(self, text: str) -> List[str]:
+    *lines, tail = text.split('\n')
+    if lines:
+      lines[0] = ''.join([*self._pending, lines[0]])
+      self._pending = []
+    if tail:
+      self._pending.append(tail)
+    return [line[:-1] if line.endswith('\r') else line for line in lines]
+
+  def flush(self) -> List[str]:
+    return self.feed('\n') if self._pending else []
+
+
+def _iter_ndjson_lines(texts: Iterator[str]) -> Iterator[str]:
+  splitter = _NDJSONLineSplitter()
+  for text in texts:
+    yield from splitter.feed(text)
+  yield from splitter.flush()
+
+
+async def _aiter_ndjson_lines(texts: AsyncIterator[str]) -> AsyncIterator[str]:
+  splitter = _NDJSONLineSplitter()
+  async for text in texts:
+    for line in splitter.feed(text):
+      yield line
+  for line in splitter.flush():
+    yield line
 
 
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
