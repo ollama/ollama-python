@@ -2,6 +2,7 @@ import contextlib
 import json
 from base64 import b64decode, b64encode
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
@@ -10,6 +11,8 @@ from pydantic import (
   ByteSize,
   ConfigDict,
   Field,
+  TypeAdapter,
+  field_validator,
   model_serializer,
 )
 from pydantic.json_schema import JsonSchemaValue
@@ -153,6 +156,13 @@ class BaseGenerateRequest(BaseStreamableRequest):
 
   format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None
   'Format of the response.'
+
+  @field_validator('format', mode='before')
+  @classmethod
+  def _enum_format(cls, value: Any) -> Any:
+    if isinstance(value, type) and issubclass(value, Enum):
+      return TypeAdapter(value).json_schema()
+    return value
 
   keep_alive: Optional[Union[float, str]] = None
   'Keep model alive for the specified duration.'
