@@ -7,6 +7,7 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
@@ -1527,3 +1528,54 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+NDJSON_UNICODE_CONTENTS = ['a\u0085b', 'c\u2028d', 'e\u2029f', 'tail\U0001f642']
+
+
+def _ndjson_transport(data: bytes, content_type: str = 'application/x-ndjson', *, is_async: bool = False) -> httpx.MockTransport:
+  # one-byte chunks split multi-byte UTF-8 sequences and CRLF pairs across reads
+  chunks = [data[i : i + 1] for i in range(len(data))]
+
+  async def achunks():
+    for chunk in chunks:
+      yield chunk
+
+  def handler(_: httpx.Request) -> httpxResponse:
+    return httpxResponse(200, headers={'Content-Type': content_type}, content=achunks() if is_async else iter(chunks))
+
+  return httpx.MockTransport(handler)
+
+
+@pytest.mark.parametrize('newline', ['\n', '\r\n'], ids=['lf', 'crlf'])
+def test_client_chat_stream_unicode_line_separators(newline: str):
+  data = ''.join(json.dumps({'model': 'dummy', 'message': {'role': 'assistant', 'content': content}}, ensure_ascii=False) + newline for content in NDJSON_UNICODE_CONTENTS).encode()
+  client = Client('http://127.0.0.1:11434', transport=_ndjson_transport(data), trust_env=False)
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], stream=True)
+  assert [part['message']['content'] for part in response] == NDJSON_UNICODE_CONTENTS
+
+
+async def test_async_client_generate_stream_unicode_line_separators():
+  # final record intentionally has no trailing newline
+  data = '\n'.join(json.dumps({'model': 'dummy', 'response': content}, ensure_ascii=False) for content in NDJSON_UNICODE_CONTENTS).encode()
+  client = AsyncClient('http://127.0.0.1:11434', transport=_ndjson_transport(data, is_async=True), trust_env=False)
+  response = await client.generate('dummy', 'Why is the sky blue?', stream=True)
+  assert [part['response'] async for part in response] == NDJSON_UNICODE_CONTENTS
+
+
+@pytest.mark.parametrize(
+  ('content_type', 'client_kwargs'),
+  [
+    ('application/x-ndjson; charset=iso-8859-1', {}),
+    ('application/x-ndjson', {'default_encoding': 'iso-8859-1'}),
+  ],
+  ids=['content-type-charset', 'default-encoding'],
+)
+async def test_stream_keeps_httpx_response_encoding(content_type: str, client_kwargs: dict):
+  # backwards compatibility with existing httpx text decoding; NDJSON itself is UTF-8
+  expected = ['caf\u00e9', 'na\u00efve']
+  data = ''.join(json.dumps({'status': status}, ensure_ascii=False) + '\n' for status in expected).encode('iso-8859-1')
+  client = Client('http://127.0.0.1:11434', transport=_ndjson_transport(data, content_type), trust_env=False, **client_kwargs)
+  assert [part['status'] for part in client.pull('dummy', stream=True)] == expected
+  async_client = AsyncClient('http://127.0.0.1:11434', transport=_ndjson_transport(data, content_type, is_async=True), trust_env=False, **client_kwargs)
+  assert [part['status'] async for part in await async_client.pull('dummy', stream=True)] == expected
