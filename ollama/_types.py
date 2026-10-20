@@ -1,5 +1,6 @@
 import contextlib
 import json
+import warnings
 from base64 import b64decode, b64encode
 from datetime import datetime
 from pathlib import Path
@@ -7,10 +8,12 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
 
 from pydantic import (
   BaseModel,
+  BeforeValidator,
   ByteSize,
   ConfigDict,
   Field,
   model_serializer,
+  model_validator,
 )
 from pydantic.json_schema import JsonSchemaValue
 from typing_extensions import Annotated, Literal
@@ -101,21 +104,49 @@ class SubscriptableBaseModel(BaseModel):
     return getattr(self, key) if hasattr(self, key) else default
 
 
+# Warn on no longer supported options
+_UNSUPPORTED_OPTIONS = frozenset(
+  {
+    'embedding_only',
+    'f16_kv',
+    'logits_all',
+    'low_vram',
+    'mirostat',
+    'mirostat_eta',
+    'mirostat_tau',
+    'numa',
+    'penalize_newline',
+    'tfs_z',
+    'typical_p',
+    'use_mlock',
+    'vocab_only',
+  }
+)
+
+
+def _drop_unsupported_options(options: Any) -> Any:
+  if not isinstance(options, Mapping):
+    return options
+  unsupported = [key for key in options if key in _UNSUPPORTED_OPTIONS]
+  if not unsupported:
+    return options
+  for key in unsupported:
+    warnings.warn(f'option {key!r} is no longer supported and was ignored', FutureWarning, stacklevel=2)
+  return {key: value for key, value in options.items() if key not in _UNSUPPORTED_OPTIONS}
+
+
 class Options(SubscriptableBaseModel):
+  # Unknown options pass through so new server options work before the client is updated.
+  model_config = ConfigDict(extra='allow')
+
   # load time options
-  numa: Optional[bool] = None
   num_ctx: Optional[int] = None
   num_batch: Optional[int] = None
   num_gpu: Optional[int] = None
   main_gpu: Optional[int] = None
-  low_vram: Optional[bool] = None
-  f16_kv: Optional[bool] = None
-  logits_all: Optional[bool] = None
-  vocab_only: Optional[bool] = None
   use_mmap: Optional[bool] = None
-  use_mlock: Optional[bool] = None
-  embedding_only: Optional[bool] = None
   num_thread: Optional[int] = None
+  draft_num_predict: Optional[int] = None
 
   # runtime options
   num_keep: Optional[int] = None
@@ -123,18 +154,27 @@ class Options(SubscriptableBaseModel):
   num_predict: Optional[int] = None
   top_k: Optional[int] = None
   top_p: Optional[float] = None
-  tfs_z: Optional[float] = None
-  typical_p: Optional[float] = None
+  min_p: Optional[float] = None
   repeat_last_n: Optional[int] = None
   temperature: Optional[float] = None
   repeat_penalty: Optional[float] = None
   presence_penalty: Optional[float] = None
   frequency_penalty: Optional[float] = None
-  mirostat: Optional[int] = None
-  mirostat_tau: Optional[float] = None
-  mirostat_eta: Optional[float] = None
-  penalize_newline: Optional[bool] = None
   stop: Optional[Sequence[str]] = None
+
+  @model_validator(mode='before')
+  @classmethod
+  def drop_unsupported(cls, data: Any) -> Any:
+    return _drop_unsupported_options(data)
+
+  def __setattr__(self, name: str, value: Any) -> None:
+    if name in _UNSUPPORTED_OPTIONS:
+      warnings.warn(f'option {name!r} is no longer supported and was ignored', FutureWarning, stacklevel=2)
+      return
+    super().__setattr__(name, value)
+
+
+_RequestOptions = Annotated[Optional[Union[Mapping[str, Any], Options]], BeforeValidator(_drop_unsupported_options)]
 
 
 class BaseRequest(SubscriptableBaseModel):
@@ -148,7 +188,7 @@ class BaseStreamableRequest(BaseRequest):
 
 
 class BaseGenerateRequest(BaseStreamableRequest):
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: _RequestOptions = None
   'Options to use for the request.'
 
   format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None
@@ -429,7 +469,7 @@ class EmbedRequest(BaseRequest):
   truncate: Optional[bool] = None
   'Truncate the input to the maximum token length.'
 
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: _RequestOptions = None
   'Options to use for the request.'
 
   keep_alive: Optional[Union[float, str]] = None
@@ -451,7 +491,7 @@ class EmbeddingsRequest(BaseRequest):
   prompt: Optional[str] = None
   'Prompt to generate embeddings from.'
 
-  options: Optional[Union[Mapping[str, Any], Options]] = None
+  options: _RequestOptions = None
   'Options to use for the request.'
 
   keep_alive: Optional[Union[float, str]] = None
@@ -502,7 +542,7 @@ class CreateRequest(BaseStreamableRequest):
   template: Optional[str] = None
   license: Optional[Union[str, List[str]]] = None
   system: Optional[str] = None
-  parameters: Optional[Union[Mapping[str, Any], Options]] = None
+  parameters: _RequestOptions = None
   messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
 
 
