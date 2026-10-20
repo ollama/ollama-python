@@ -70,6 +70,7 @@ while True:
       tool_calls.extend(chunk.message.tool_calls)
 
     if chunk.message.content:
+      content += chunk.message.content
       if not (chunk.message.thinking or chunk.message.thinking == '') and final:
         print('\n\n' + '=' * 10)
         print('Final result: ')
