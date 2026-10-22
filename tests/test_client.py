@@ -62,6 +62,50 @@ def test_client_chat(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
+def _serve_cached_prompt_response(httpserver: HTTPServer, method: str, stream: bool):
+  content = {'message': {'role': 'assistant', 'content': 'Hello'}} if method == 'chat' else {'response': 'Hello'}
+  payload = {'model': 'dummy', **content, 'done': True, 'prompt_eval_count': 50, 'prompt_eval_cached_count': 42}
+  request = httpserver.expect_request(f'/api/{method}', method='POST')
+  if stream:
+    request.respond_with_data(json.dumps({'model': 'dummy', **content, 'done': False}) + '\n' + json.dumps(payload) + '\n', content_type='application/x-ndjson')
+  else:
+    request.respond_with_json(payload)
+
+
+@pytest.mark.parametrize('method', ['generate', 'chat'])
+@pytest.mark.parametrize('stream', [False, True])
+def test_client_prompt_eval_cached_count(httpserver: HTTPServer, method: str, stream: bool):
+  _serve_cached_prompt_response(httpserver, method, stream)
+
+  with Client(httpserver.url_for('/')) as client:
+    response = getattr(client, method)('dummy', stream=stream)
+    if stream:
+      chunks = list(response)
+      assert chunks[0].prompt_eval_cached_count is None
+      response = chunks[-1]
+
+    assert response.prompt_eval_count == 50
+    assert response.prompt_eval_cached_count == 42
+    assert response.model_dump()['prompt_eval_cached_count'] == 42
+
+
+@pytest.mark.parametrize('method', ['generate', 'chat'])
+@pytest.mark.parametrize('stream', [False, True])
+async def test_async_client_prompt_eval_cached_count(httpserver: HTTPServer, method: str, stream: bool):
+  _serve_cached_prompt_response(httpserver, method, stream)
+
+  async with AsyncClient(httpserver.url_for('/')) as client:
+    response = await getattr(client, method)('dummy', stream=stream)
+    if stream:
+      chunks = [chunk async for chunk in response]
+      assert chunks[0].prompt_eval_cached_count is None
+      response = chunks[-1]
+
+    assert response.prompt_eval_count == 50
+    assert response.prompt_eval_cached_count == 42
+    assert response.model_dump()['prompt_eval_cached_count'] == 42
+
+
 def test_client_chat_with_logprobs(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
