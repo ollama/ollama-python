@@ -632,7 +632,7 @@ class Client(BaseClient):
         template=template,
         system=system,
         parameters=parameters,
-        messages=messages,
+        messages=list(_copy_create_messages(messages)) if messages is not None else None,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
@@ -1293,7 +1293,7 @@ class AsyncClient(BaseClient):
         template=template,
         system=system,
         parameters=parameters,
-        messages=messages,
+        messages=list(_copy_create_messages(messages)) if messages is not None else None,
       ).model_dump(exclude_none=True),
       stream=stream,
     )
@@ -1381,6 +1381,15 @@ def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]
     yield Message.model_validate(
       {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
     )
+
+
+def _copy_create_messages(messages: Sequence[Union[Mapping[str, Any], Message]]) -> Iterator[Union[Mapping[str, Any], Message]]:
+  # Create accepts arbitrary message mappings; preserve their other fields verbatim.
+  for message in messages:
+    if isinstance(message, Mapping) and message.get('images') is not None:
+      yield {**message, 'images': list(_copy_images(message['images']))}
+    else:
+      yield message
 
 
 def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
