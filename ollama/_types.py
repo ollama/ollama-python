@@ -422,9 +422,12 @@ class ChatResponse(BaseGenerateResponse):
   'Log probabilities for generated tokens if requested.'
 
 
+EmbedInput = Union[str, Mapping[str, str]]
+
+
 class EmbedRequest(BaseRequest):
-  input: Union[str, Sequence[str]]
-  'Input text to embed.'
+  input: Union[EmbedInput, Sequence[EmbedInput]]
+  'Text or structured text/image/audio input, or a batch of inputs. Media values are base64 strings.'
 
   truncate: Optional[bool] = None
   'Truncate the input to the maximum token length.'

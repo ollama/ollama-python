@@ -50,6 +50,7 @@ from ollama._types import (
   DeleteRequest,
   EmbeddingsRequest,
   EmbeddingsResponse,
+  EmbedInput,
   EmbedRequest,
   EmbedResponse,
   GenerateRequest,
@@ -437,7 +438,7 @@ class Client(BaseClient):
   def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[str]] = '',
+    input: Union[EmbedInput, Sequence[EmbedInput]] = '',
     truncate: Optional[bool] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -1097,7 +1098,7 @@ class AsyncClient(BaseClient):
   async def embed(
     self,
     model: str = '',
-    input: Union[str, Sequence[str]] = '',
+    input: Union[EmbedInput, Sequence[EmbedInput]] = '',
     truncate: Optional[bool] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
