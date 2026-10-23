@@ -98,7 +98,7 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg.get('tool_calls')[0]['function']['name']
     'foo'
     """
-    return getattr(self, key) if hasattr(self, key) else default
+    return getattr(self, key) if key in self else default
 
 
 class Options(SubscriptableBaseModel):
