@@ -63,6 +63,22 @@ __all__ = [
   'Tool',
   'WebFetchResponse',
   'WebSearchResponse',
+  'chat',
+  'copy',
+  'create',
+  'create_blob',
+  'delete',
+  'embed',
+  'embeddings',
+  'generate',
+  'list',
+  'ps',
+  'pull',
+  'push',
+  'show',
+  'systemone',
+  'web_fetch',
+  'web_search',
 ]
 
 _client = Client()
@@ -74,6 +90,7 @@ embeddings = _client.embeddings
 pull = _client.pull
 push = _client.push
 create = _client.create
+create_blob = _client.create_blob
 delete = _client.delete
 list = _client.list
 copy = _client.copy

@@ -256,3 +256,52 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_function_with_varargs():
+  def func_with_varargs(a: int, *args, b: str = 'default', **kwargs) -> str:
+    """
+    A function with varargs and kwargs.
+
+    Args:
+      a: The first number
+      b: The second string
+    """
+    return f'{a}-{b}'
+
+  tool = convert_function_to_tool(func_with_varargs).model_dump()
+  assert 'args' not in tool['function']['parameters']['properties']
+  assert 'kwargs' not in tool['function']['parameters']['properties']
+  assert tool['function']['parameters']['required'] == ['a']
+  assert 'a' in tool['function']['parameters']['properties']
+  assert 'b' in tool['function']['parameters']['properties']
+
+
+def test_function_with_array_items():
+  def func_with_array(tags: List[str]):
+    """
+    Function with array of strings.
+
+    Args:
+      tags: List of tag strings
+    """
+
+  tool = convert_function_to_tool(func_with_array).model_dump()
+  assert tool['function']['parameters']['properties']['tags']['type'] == 'array'
+  assert tool['function']['parameters']['properties']['tags']['items'] == {'type': 'string'}
+
+
+def test_function_with_literal_enum():
+  from typing_extensions import Literal
+
+  def func_with_enum(status: Literal['open', 'closed']):
+    """
+    Function with literal choices.
+
+    Args:
+      status: The status choice
+    """
+
+  tool = convert_function_to_tool(func_with_enum).model_dump()
+  assert tool['function']['parameters']['properties']['status']['type'] == 'string'
+  assert tool['function']['parameters']['properties']['status']['enum'] == ['open', 'closed']
