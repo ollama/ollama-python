@@ -113,7 +113,8 @@ curl https://ollama.com/api/tags
 import os
 from ollama import Client
 
-client = Client(host='https://ollama.com', headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')})
+# You can pass api_key directly or rely on the OLLAMA_API_KEY environment variable
+client = Client(host='https://ollama.com', api_key=os.environ.get('OLLAMA_API_KEY'))
 
 messages = [
   {
@@ -129,12 +130,16 @@ for part in client.chat('gpt-oss:120b', messages=messages, stream=True):
 ## Custom client
 A custom client can be created by instantiating `Client` or `AsyncClient` from `ollama`.
 
-All extra keyword arguments are passed into the [`httpx.Client`](https://www.python-httpx.org/api/#client).
+Clients accept `host`, `api_key`, `headers`, `timeout`, and any keyword arguments supported by [`httpx.Client`](https://www.python-httpx.org/api/#client).
 
 ```python
 from ollama import Client
 
-client = Client(host='http://localhost:11434', headers={'x-some-header': 'some-value'})
+client = Client(
+  host='http://localhost:11434',
+  api_key='your_api_key',
+  headers={'x-some-header': 'some-value'},
+)
 response = client.chat(
   model='gemma4',
   messages=[
@@ -144,6 +149,13 @@ response = client.chat(
     },
   ],
 )
+```
+
+Clients can also be used as context managers to ensure immediate resource and socket cleanup:
+
+```python
+with Client() as client:
+  response = client.chat(model='gemma4', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}])
 ```
 
 ## Async client

@@ -1,4 +1,3 @@
-import tempfile
 from base64 import b64encode
 from pathlib import Path
 
@@ -31,20 +30,18 @@ def test_image_serialization_plain_string():
   assert img.model_dump() == 'not a path or base64'  # Should return as-is
 
 
-def test_image_serialization_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
-    temp_file.write(b'test file content')
-    temp_file.flush()
-    img = Image(value=Path(temp_file.name))
-    assert img.model_dump() == b64encode(b'test file content').decode()
+def test_image_serialization_path(tmp_path):
+  temp_file = tmp_path / 'test_path.png'
+  temp_file.write_bytes(b'test file content')
+  img = Image(value=Path(temp_file))
+  assert img.model_dump() == b64encode(b'test file content').decode()
 
 
-def test_image_serialization_string_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
-    temp_file.write(b'test file content')
-    temp_file.flush()
-    img = Image(value=temp_file.name)
-    assert img.model_dump() == b64encode(b'test file content').decode()
+def test_image_serialization_string_path(tmp_path):
+  temp_file = tmp_path / 'test_string_path.png'
+  temp_file.write_bytes(b'test file content')
+  img = Image(value=str(temp_file))
+  assert img.model_dump() == b64encode(b'test file content').decode()
 
   with pytest.raises(ValueError):
     img = Image(value='some_path/that/does/not/exist.png')
@@ -122,3 +119,33 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_chat_request_with_none_function_or_parameters():
+  from ollama._types import Tool
+
+  req1 = ChatRequest(model='test', tools=[Tool(type='function', function=None)])
+  dumped1 = req1.model_dump(exclude_none=True)
+  assert dumped1['model'] == 'test'
+
+  req2 = ChatRequest(model='test', tools=[Tool(type='function', function=Tool.Function(name='test', parameters=None))])
+  dumped2 = req2.model_dump(exclude_none=True)
+  assert dumped2['model'] == 'test'
+
+
+def test_tool_call_id_and_type():
+  from ollama._types import Message
+
+  tool_call = Message.ToolCall(
+    id='call_abc123',
+    type='function',
+    function=Message.ToolCall.Function(name='my_func', arguments={'x': 1}),
+  )
+  assert tool_call.id == 'call_abc123'
+  assert tool_call.type == 'function'
+  assert tool_call['id'] == 'call_abc123'
+  assert tool_call['type'] == 'function'
+  dumped = tool_call.model_dump(exclude_none=True)
+  assert dumped['id'] == 'call_abc123'
+  assert dumped['type'] == 'function'
+  assert dumped['function']['name'] == 'my_func'

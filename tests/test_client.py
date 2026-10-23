@@ -442,7 +442,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
     assert part['response'] == next(it)
 
 
-def test_client_generate_images(httpserver: HTTPServer):
+def test_client_generate_images(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -461,12 +461,11 @@ def test_client_generate_images(httpserver: HTTPServer):
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as temp:
-    temp.write(PNG_BYTES)
-    temp.flush()
-    response = client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-    assert response['model'] == 'dummy'
-    assert response['response'] == 'Because it is.'
+  image_path = tmp_path / 'temp.png'
+  image_path.write_bytes(PNG_BYTES)
+  response = client.generate('dummy', 'Why is the sky blue?', images=[str(image_path)])
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
 
 
 def test_client_generate_format_json(httpserver: HTTPServer):
@@ -846,24 +845,26 @@ def test_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-def test_client_create_blob(httpserver: HTTPServer):
+def test_client_create_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = client.create_blob(blob.name)
-    assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  blob = tmp_path / 'blob'
+  blob.write_bytes(b'')
+  response = client.create_blob(str(blob))
+  assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-def test_client_create_blob_exists(httpserver: HTTPServer):
+def test_client_create_blob_exists(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
   client = Client(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = client.create_blob(blob.name)
-    assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  blob = tmp_path / 'blob'
+  blob.write_bytes(b'')
+  response = client.create_blob(str(blob))
+  assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
 def test_client_delete(httpserver: HTTPServer):
@@ -1037,7 +1038,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
     assert part['response'] == next(it)
 
 
-async def test_async_client_generate_images(httpserver: HTTPServer):
+async def test_async_client_generate_images(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(
     '/api/generate',
     method='POST',
@@ -1056,12 +1057,11 @@ async def test_async_client_generate_images(httpserver: HTTPServer):
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as temp:
-    temp.write(PNG_BYTES)
-    temp.flush()
-    response = await client.generate('dummy', 'Why is the sky blue?', images=[temp.name])
-    assert response['model'] == 'dummy'
-    assert response['response'] == 'Because it is.'
+  image_path = tmp_path / 'temp.png'
+  image_path.write_bytes(PNG_BYTES)
+  response = await client.generate('dummy', 'Why is the sky blue?', images=[str(image_path)])
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
 
 
 async def test_async_client_pull(httpserver: HTTPServer):
@@ -1223,24 +1223,26 @@ async def test_async_client_create_from_library(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
-async def test_async_client_create_blob(httpserver: HTTPServer):
+async def test_async_client_create_blob(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(re.compile('^/api/blobs/sha256[:-][0-9a-fA-F]{64}$'), method='POST').respond_with_response(Response(status=201))
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = await client.create_blob(blob.name)
-    assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  blob = tmp_path / 'blob'
+  blob.write_bytes(b'')
+  response = await client.create_blob(str(blob))
+  assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
-async def test_async_client_create_blob_exists(httpserver: HTTPServer):
+async def test_async_client_create_blob_exists(httpserver: HTTPServer, tmp_path):
   httpserver.expect_ordered_request(PrefixPattern('/api/blobs/'), method='POST').respond_with_response(Response(status=200))
 
   client = AsyncClient(httpserver.url_for('/'))
 
-  with tempfile.NamedTemporaryFile() as blob:
-    response = await client.create_blob(blob.name)
-    assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+  blob = tmp_path / 'blob'
+  blob.write_bytes(b'')
+  response = await client.create_blob(str(blob))
+  assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
 
 
 async def test_async_client_delete(httpserver: HTTPServer):
@@ -1527,3 +1529,39 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def test_client_api_key():
+  c = Client(api_key='my_secret_key')
+  assert c._client.headers.get('authorization') == 'Bearer my_secret_key'
+
+
+def test_async_client_api_key():
+  ac = AsyncClient(api_key='my_async_secret_key')
+  assert ac._client.headers.get('authorization') == 'Bearer my_async_secret_key'
+
+
+async def test_async_client_web_search_requires_auth():
+  client = AsyncClient()
+  with pytest.raises(ValueError, match='Authorization header with Bearer token is required for web search'):
+    await client.web_search('test')
+
+
+async def test_async_client_web_fetch_requires_auth():
+  client = AsyncClient()
+  with pytest.raises(ValueError, match='Authorization header with Bearer token is required for web fetch'):
+    await client.web_fetch('https://example.com')
+
+
+def test_copy_messages_preserves_empty_content():
+  from ollama._client import _copy_messages
+
+  msgs = list(_copy_messages([{'role': 'assistant', 'content': ''}]))
+  assert msgs[0].content == ''
+
+
+def test_init_create_blob_export():
+  import ollama
+
+  assert hasattr(ollama, 'create_blob')
+  assert 'create_blob' in ollama.__all__
