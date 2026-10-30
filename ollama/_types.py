@@ -266,6 +266,9 @@ class TokenLogprob(SubscriptableBaseModel):
   logprob: float
   'Log probability for the token.'
 
+  bytes: Optional[Sequence[int]] = None
+  'Raw UTF-8 bytes of the token. Useful when a token is not a standalone valid string.'
+
 
 class Logprob(TokenLogprob):
   top_logprobs: Optional[Sequence[TokenLogprob]] = None
