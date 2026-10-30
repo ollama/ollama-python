@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, ChatResponse, CreateRequest, GenerateRequest, GenerateResponse, Image
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,44 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_generate_response_keeps_prompt_eval_cached_count():
+  response = GenerateResponse.model_validate(
+    {
+      'model': 'test-model',
+      'response': 'hi',
+      'done': True,
+      'prompt_eval_count': 30,
+      'prompt_eval_cached_count': 16,
+    }
+  )
+
+  assert response.prompt_eval_cached_count == 16
+  assert response['prompt_eval_cached_count'] == 16
+  assert 'prompt_eval_cached_count' in response
+  assert response.model_dump(exclude_none=True)['prompt_eval_cached_count'] == 16
+
+
+def test_chat_response_keeps_prompt_eval_cached_count():
+  response = ChatResponse.model_validate(
+    {
+      'model': 'test-model',
+      'message': {'role': 'assistant', 'content': 'hi'},
+      'done': True,
+      'prompt_eval_count': 30,
+      'prompt_eval_cached_count': 16,
+    }
+  )
+
+  assert response.prompt_eval_cached_count == 16
+
+
+def test_prompt_eval_cached_count_is_optional():
+  # Servers predating the field must keep parsing, with the attribute present but unset.
+  for response in (
+    GenerateResponse.model_validate({'model': 'test-model'}),
+    ChatResponse.model_validate({'model': 'test-model', 'message': {'role': 'assistant', 'content': 'hi'}}),
+  ):
+    assert response.prompt_eval_cached_count is None
+    assert 'prompt_eval_cached_count' not in response.model_dump(exclude_none=True)

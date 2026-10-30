@@ -249,6 +249,9 @@ class BaseGenerateResponse(SubscriptableBaseModel):
   prompt_eval_count: Optional[int] = None
   'Number of tokens evaluated in the prompt.'
 
+  prompt_eval_cached_count: Optional[int] = None
+  'Number of prompt tokens that were served from the prompt cache instead of being evaluated.'
+
   prompt_eval_duration: Optional[int] = None
   'Duration of evaluating the prompt in nanoseconds.'
 
