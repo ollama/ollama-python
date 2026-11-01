@@ -73,9 +73,13 @@ def convert_function_to_tool(func: Callable) -> Tool:
       schema['required'].remove(k)
       types.discard('null')
 
+    # A JSON Schema `type` must be a single string or an array of strings;
+    # joining multiple types with commas produces an invalid schema.
+    prop_type = sorted(types) if len(types) > 1 else types.pop()
+
     schema['properties'][k] = {
       'description': parsed_docstring[k],
-      'type': ', '.join(types),
+      'type': prop_type,
     }
 
   tool = Tool(

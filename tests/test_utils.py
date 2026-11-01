@@ -98,7 +98,7 @@ def test_function_with_all_types():
   if sys.version_info >= (3, 10):
     assert tool['function']['parameters']['properties']['z']['type'] == 'array'
     assert tool['function']['parameters']['properties']['w']['type'] == 'object'
-    assert {x.strip().strip("'") for x in tool['function']['parameters']['properties']['v']['type'].removeprefix('[').removesuffix(']').split(',')} == {'string', 'integer'}
+    assert tool['function']['parameters']['properties']['v']['type'] == ['integer', 'string']
     assert tool['function']['parameters']['properties']['v']['type'] != 'null'
     assert tool['function']['parameters']['required'] == ['x', 'y', 'z', 'w']
   else:
@@ -256,3 +256,33 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_convert_function_to_tool_union_types():
+  'A union parameter type serializes as a JSON Schema type array, not a comma-joined string.'
+
+  def lookup(key: int | str):
+    """
+    Look a key up.
+
+    Args:
+        key: The key to look up.
+    """
+
+  tool = convert_function_to_tool(lookup).model_dump()
+  assert tool['function']['parameters']['properties']['key']['type'] == ['integer', 'string']
+
+
+def test_convert_function_to_tool_optional_type_stays_scalar():
+  'An Optional parameter keeps its single type after the null is discarded.'
+
+  def lookup(key: int | None):
+    """
+    Look a key up.
+
+    Args:
+        key: The key to look up.
+    """
+
+  tool = convert_function_to_tool(lookup).model_dump()
+  assert tool['function']['parameters']['properties']['key']['type'] == 'integer'
