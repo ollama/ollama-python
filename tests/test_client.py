@@ -1527,3 +1527,48 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def test_client_generate_stream_skips_blank_lines(httpserver: HTTPServer):
+  "Blank lines in an NDJSON stream (proxies, keep-alive padding) must not crash the parser."
+
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'stream': True,
+    },
+  ).respond_with_data(
+    json.dumps({'model': 'dummy', 'response': 'Because '}) + '\n\n' + json.dumps({'model': 'dummy', 'response': 'it is.', 'done': True}) + '\n',
+    content_type='application/x-ndjson',
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Why is the sky blue?', stream=True)
+
+  assert [part.response for part in response] == ['Because ', 'it is.']
+
+
+async def test_async_client_chat_stream_skips_blank_lines(httpserver: HTTPServer):
+  "Blank lines in an NDJSON stream must not crash the async parser either."
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
+      'tools': [],
+      'stream': True,
+    },
+  ).respond_with_data(
+    json.dumps({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'Because '}}) + '\n\n' + json.dumps({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'it is.'}, 'done': True}) + '\n',
+    content_type='application/x-ndjson',
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?'}], stream=True)
+
+  assert [part.message.content async for part in response] == ['Because ', 'it is.']
