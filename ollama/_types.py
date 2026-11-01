@@ -97,8 +97,14 @@ class SubscriptableBaseModel(BaseModel):
     >>> msg = Message(role='user', tool_calls=[ Message.ToolCall(function=Message.ToolCall.Function(name='foo', arguments={}))])
     >>> msg.get('tool_calls')[0]['function']['name']
     'foo'
+    >>> msg = Message(role='user')
+    >>> msg.get('content', 'default')
+    'default'
     """
-    return getattr(self, key) if hasattr(self, key) else default
+    try:
+      return self[key]
+    except KeyError:
+      return default
 
 
 class Options(SubscriptableBaseModel):
