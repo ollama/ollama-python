@@ -275,8 +275,6 @@ class Client(BaseClient):
     """
     Create a response using the requested model.
 
-    Raises `RequestError` if a model is not provided.
-
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `GenerateResponse` if `stream` is `False`, otherwise returns a `GenerateResponse` generator.
@@ -381,8 +379,6 @@ class Client(BaseClient):
         return a + b
 
       client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
-
-    Raises `RequestError` if a model is not provided.
 
     Raises `ResponseError` if the request could not be fulfilled.
 
@@ -935,8 +931,6 @@ class AsyncClient(BaseClient):
     """
     Create a response using the requested model.
 
-    Raises `RequestError` if a model is not provided.
-
     Raises `ResponseError` if the request could not be fulfilled.
 
     Returns `GenerateResponse` if `stream` is `False`, otherwise returns an asynchronous `GenerateResponse` generator.
@@ -1040,8 +1034,6 @@ class AsyncClient(BaseClient):
         return a + b
 
       await client.chat(model='llama3.2', tools=[add_two_numbers], messages=[...])
-
-    Raises `RequestError` if a model is not provided.
 
     Raises `ResponseError` if the request could not be fulfilled.
 
