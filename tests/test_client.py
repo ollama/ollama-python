@@ -1752,6 +1752,3 @@ async def test_async_client_chat_tool_result_message(httpserver: HTTPServer):
   ]
   response = await async_client.chat('dummy', messages=messages)
   assert response.message.content == 'The weather in Tokyo is 18 degrees and rainy.'
-
-
-
