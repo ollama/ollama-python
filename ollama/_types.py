@@ -708,9 +708,11 @@ class ResponseError(Exception):
 
   def __init__(self, error: str, status_code: int = -1):
     # try to parse content as JSON and extract 'error'
-    # fallback to raw content if JSON parsing fails
+    # fallback to raw content if JSON parsing fails or the body is not an object
     with contextlib.suppress(json.JSONDecodeError):
-      error = json.loads(error).get('error', error)
+      parsed = json.loads(error)
+      if isinstance(parsed, dict):
+        error = parsed.get('error', error)
 
     super().__init__(error)
     self.error = error
