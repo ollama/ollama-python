@@ -572,7 +572,8 @@ class ShowResponse(SubscriptableBaseModel):
 
   details: Optional[ModelDetails] = None
 
-  modelinfo: Optional[Mapping[str, Any]] = Field(alias='model_info')
+  modelinfo: Optional[Mapping[str, Any]] = Field(default=None, alias='model_info')
+  'Per-model metadata. Absent for some cloud models.'
 
   parameters: Optional[str] = None
 
