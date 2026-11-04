@@ -1397,6 +1397,24 @@ def test_client_web_fetch_requires_bearer_auth_header(monkeypatch: pytest.Monkey
     client.web_fetch('https://example.com')
 
 
+async def test_async_client_web_search_requires_bearer_auth_header(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.delenv('OLLAMA_API_KEY', raising=False)
+
+  client = AsyncClient()
+
+  with pytest.raises(ValueError, match='Authorization header with Bearer token is required for web search'):
+    await client.web_search('test query')
+
+
+async def test_async_client_web_fetch_requires_bearer_auth_header(monkeypatch: pytest.MonkeyPatch):
+  monkeypatch.delenv('OLLAMA_API_KEY', raising=False)
+
+  client = AsyncClient()
+
+  with pytest.raises(ValueError, match='Authorization header with Bearer token is required for web fetch'):
+    await client.web_fetch('https://example.com')
+
+
 def _mock_request_web_search(self, cls, method, url, json=None, **kwargs):
   assert method == 'POST'
   assert url == 'https://ollama.com/api/web_search'
