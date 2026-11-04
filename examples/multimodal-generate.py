@@ -5,19 +5,21 @@ import httpx
 
 from ollama import generate
 
-latest = httpx.get('https://xkcd.com/info.0.json')
+HTTP_TIMEOUT = 30
+
+latest = httpx.get('https://xkcd.com/info.0.json', timeout=HTTP_TIMEOUT)
 latest.raise_for_status()
 
 num = int(sys.argv[1]) if len(sys.argv) > 1 else random.randint(1, latest.json().get('num'))
 
-comic = httpx.get(f'https://xkcd.com/{num}/info.0.json')
+comic = httpx.get(f'https://xkcd.com/{num}/info.0.json', timeout=HTTP_TIMEOUT)
 comic.raise_for_status()
 
 print(f'xkcd #{comic.json().get("num")}: {comic.json().get("alt")}')
 print(f'link: https://xkcd.com/{num}')
 print('---')
 
-raw = httpx.get(comic.json().get('img'))
+raw = httpx.get(comic.json().get('img'), timeout=HTTP_TIMEOUT)
 raw.raise_for_status()
 
 for response in generate('llava', 'explain this comic:', images=[raw.content], stream=True):
