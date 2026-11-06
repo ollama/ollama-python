@@ -256,3 +256,21 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_copy_messages_preserves_empty_content():
+  from ollama._client import _copy_messages
+
+  # Empty (but set) message content must be preserved; only unset None values
+  # are dropped, matching the exclude_none serialization used downstream.
+  messages = list(_copy_messages([
+    {'role': 'user', 'content': ''},
+    {'role': 'assistant', 'content': None},
+    {'role': 'user', 'content': 'hello'},
+  ]))
+
+  assert messages[0].content == ''
+  assert 'content' in messages[0].model_fields_set
+  assert messages[1].content is None
+  assert 'content' not in messages[1].model_fields_set
+  assert messages[2].content == 'hello'
