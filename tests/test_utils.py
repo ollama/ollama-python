@@ -263,11 +263,15 @@ def test_copy_messages_preserves_empty_content():
 
   # Empty (but set) message content must be preserved; only unset None values
   # are dropped, matching the exclude_none serialization used downstream.
-  messages = list(_copy_messages([
-    {'role': 'user', 'content': ''},
-    {'role': 'assistant', 'content': None},
-    {'role': 'user', 'content': 'hello'},
-  ]))
+  messages = list(
+    _copy_messages(
+      [
+        {'role': 'user', 'content': ''},
+        {'role': 'assistant', 'content': None},
+        {'role': 'user', 'content': 'hello'},
+      ]
+    )
+  )
 
   assert messages[0].content == ''
   assert 'content' in messages[0].model_fields_set
