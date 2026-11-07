@@ -122,3 +122,28 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_chat_request_tool_without_parameters_does_not_crash():
+  from ollama._types import Message, Tool
+  tool = Tool(function=Tool.Function(name='lookup'))
+  request = ChatRequest(model='test-model', messages=[Message(role='user', content='hi')], tools=[tool])
+  dumped = request.model_dump()
+  assert dumped['tools'][0]['function']['name'] == 'lookup'
+
+
+def test_chat_request_tool_without_function_does_not_crash():
+  from ollama._types import ChatRequest, Message, Tool
+  tool = Tool()
+  request = ChatRequest(model='test-model', messages=[Message(role='user', content='hi')], tools=[tool])
+  assert request.model_dump()['tools'][0]['type'] == 'function'
+
+
+def test_chat_request_tool_defs_alias_restored():
+  from ollama._types import ChatRequest, Message, Tool
+  tool = Tool(function=Tool.Function(
+    name='g', parameters=Tool.Function.Parameters(type='object', defs={'x': 1}, required=['x'])))
+  request = ChatRequest(model='test-model', messages=[Message(role='user', content='hi')], tools=[tool])
+  params = request.model_dump()['tools'][0]['function']['parameters']
+  assert '$defs' in params and params['$defs'] == {'x': 1}
+  assert 'defs' not in params
