@@ -122,3 +122,29 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_client_ping_reports_reachable_server():
+  from unittest.mock import Mock, patch
+  from ollama import Client, AsyncClient
+  mock_resp = Mock()
+  mock_resp.json.return_value = {'version': '0.1.0'}
+  with patch.object(Client, '_request_raw', return_value=mock_resp):
+    assert Client().ping() is True
+  async def run():
+    with patch.object(AsyncClient, '_request_raw', return_value=mock_resp):
+      return await AsyncClient().ping()
+  import asyncio
+  assert asyncio.run(run()) is True
+
+
+def test_client_ping_reports_unreachable_server():
+  from unittest.mock import patch
+  from ollama import Client, AsyncClient
+  with patch.object(Client, '_request_raw', side_effect=ConnectionError('down')):
+    assert Client().ping() is False
+  async def run():
+    with patch.object(AsyncClient, '_request_raw', side_effect=ConnectionError('down')):
+      return await AsyncClient().ping()
+  import asyncio
+  assert asyncio.run(run()) is False
