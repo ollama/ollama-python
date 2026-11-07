@@ -64,7 +64,8 @@ def convert_function_to_tool(func: Callable) -> Tool:
       '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in signature.parameters.items()},
       '__signature__': signature,
       '__doc__': parsed_docstring[doc_string_hash],
-      **{k: v.default for k, v in signature.parameters.items() if v.default is not inspect.Parameter.empty},
+      # A factory marks the field as optional without serializing its Python default.
+      **{name: pydantic.Field(default_factory=lambda default=parameter.default: default) for name, parameter in signature.parameters.items() if parameter.default is not inspect.Parameter.empty},
     },
   ).model_json_schema()
 
