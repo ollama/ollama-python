@@ -122,3 +122,12 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_tool_standalone_defs_alias_restored():
+  from ollama._types import Tool
+  tool = Tool(function=Tool.Function(
+    name='g', parameters=Tool.Function.Parameters(type='object', defs={'x': 1}, required=['x'])))
+  params = tool.model_dump()['function']['parameters']
+  assert '$defs' in params and params['$defs'] == {'x': 1}
+  assert 'defs' not in params
