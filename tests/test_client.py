@@ -6,7 +6,7 @@ import re
 import tempfile
 from pathlib import Path
 from typing import Any
-
+import ollama
 import pytest
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
@@ -99,6 +99,50 @@ def test_client_chat_with_logprobs(httpserver: HTTPServer):
   assert response['logprobs'][0]['token'] == 'Hello'
   assert response['logprobs'][0]['top_logprobs'][1]['token'] == 'Hi'
 
+
+def test_package_version():
+  assert hasattr(ollama, '__version__')
+  assert isinstance(ollama.__version__, str)
+  assert ollama.__version__ != ''
+  assert callable(ollama.version)
+  assert hasattr(ollama, 'version')
+
+
+def test_client_version_missing_field(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/version',
+    method='GET',
+  ).respond_with_json({})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.version()
+  assert response == ''
+
+
+async def test_async_client_version(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/version',
+    method='GET',
+  ).respond_with_json(
+    {
+      'version': '0.1.0',
+    }
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.version()
+  assert response == '0.1.0'
+  assert isinstance(response, str)
+
+async def test_async_client_version_missing_field(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/version',
+    method='GET',
+  ).respond_with_json({})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.version()
+  assert response == ''
 
 def test_client_chat_stream(httpserver: HTTPServer):
   def stream_handler(_: Request):
