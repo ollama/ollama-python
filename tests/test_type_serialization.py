@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image, Tool
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,28 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_tool_parameters_uses_defs_alias():
+  tool = {
+    'type': 'function',
+    'function': {
+      'name': 'find_items',
+      'parameters': {
+        'type': 'object',
+        'properties': {'item': {'$ref': '#/$defs/Item'}},
+        'required': ['item'],
+        '$defs': {'Item': {'type': 'object', 'properties': {'name': {'type': 'string'}}}},
+      },
+    },
+  }
+  t = Tool.model_validate(tool)
+
+  direct = t.model_dump(exclude_none=True)['function']['parameters']
+  assert '$defs' in direct
+  assert 'defs' not in direct
+
+  cr = ChatRequest(model='x', messages=[{'role': 'user', 'content': 'y'}], tools=[tool])
+  nested = cr.model_dump(exclude_none=True)['tools'][0]['function']['parameters']
+  assert '$defs' in nested
+  assert 'defs' not in nested
