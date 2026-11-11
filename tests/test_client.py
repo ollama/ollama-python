@@ -14,7 +14,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
 from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
-from ollama._types import Image, Message
+from ollama._types import Image, Message, ResponseError
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -108,6 +108,7 @@ def test_client_chat_stream(httpserver: HTTPServer):
           json.dumps(
             {
               'model': 'dummy',
+              'done': message == 'know.',
               'message': {
                 'role': 'assistant',
                 'content': message,
@@ -415,6 +416,7 @@ def test_client_generate_stream(httpserver: HTTPServer):
           json.dumps(
             {
               'model': 'dummy',
+              'done': message == 'is.',
               'response': message,
             }
           )
@@ -915,6 +917,7 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
           json.dumps(
             {
               'model': 'dummy',
+              'done': message == 'know.',
               'message': {
                 'role': 'assistant',
                 'content': message,
@@ -1010,6 +1013,7 @@ async def test_async_client_generate_stream(httpserver: HTTPServer):
           json.dumps(
             {
               'model': 'dummy',
+              'done': message == 'is.',
               'response': message,
             }
           )
@@ -1527,3 +1531,85 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def _mock_generation_stream(httpserver: HTTPServer, method: str, ending: str):
+  part = {'model': 'dummy', 'done': False}
+  if method == 'chat':
+    part['message'] = {'role': 'assistant', 'content': 'partial'}
+  else:
+    part['response'] = 'partial'
+  if ending == 'missing_done':
+    del part['done']
+
+  lines = [] if ending == 'empty' else [json.dumps(part)]
+  if ending in ('complete', 'complete_no_newline', 'error_after_done'):
+    lines.append(json.dumps({**part, 'done': True}))
+  if ending in ('server_error', 'error_after_done'):
+    lines.append(json.dumps({'error': 'generation failed'}))
+  if ending == 'invalid_json':
+    lines.append('{')
+  if ending == 'http_error':
+    lines = [json.dumps({'error': 'generation failed'})]
+  body = '\n'.join(lines)
+  if ending != 'complete_no_newline' and lines:
+    body += '\n'
+  httpserver.expect_ordered_request(f'/api/{method}', method='POST').respond_with_data(body, content_type='application/x-ndjson', status=503 if ending == 'http_error' else 200)
+
+
+@pytest.mark.parametrize('method', ('chat', 'generate'))
+@pytest.mark.parametrize('ending', ('empty', 'missing_done', 'partial', 'complete', 'complete_no_newline', 'server_error', 'error_after_done', 'invalid_json', 'http_error', 'close'))
+def test_client_generation_stream_end(httpserver: HTTPServer, method: str, ending: str):
+  _mock_generation_stream(httpserver, method, ending)
+  with Client(httpserver.url_for('/')) as client:
+    stream = getattr(client, method)('dummy', stream=True)
+    if ending != 'empty' and ending != 'http_error':
+      part = next(stream)
+      assert part.model == 'dummy'
+      assert (part.message.content if method == 'chat' else part.response) == 'partial'
+    if ending == 'close':
+      stream.close()
+      return
+    if ending in ('complete', 'complete_no_newline', 'error_after_done'):
+      assert next(stream).done is True
+      if ending != 'error_after_done':
+        with pytest.raises(StopIteration):
+          next(stream)
+        return
+    if ending == 'invalid_json':
+      with pytest.raises(json.JSONDecodeError):
+        next(stream)
+    else:
+      message = 'generation failed' if ending in ('server_error', 'error_after_done', 'http_error') else 'Stream ended before receiving a final response'
+      with pytest.raises(ResponseError, match=message) as error:
+        next(stream)
+      assert error.value.status_code == (503 if ending == 'http_error' else -1)
+
+
+@pytest.mark.parametrize('method', ('chat', 'generate'))
+@pytest.mark.parametrize('ending', ('empty', 'missing_done', 'partial', 'complete', 'complete_no_newline', 'server_error', 'error_after_done', 'invalid_json', 'http_error', 'close'))
+async def test_async_client_generation_stream_end(httpserver: HTTPServer, method: str, ending: str):
+  _mock_generation_stream(httpserver, method, ending)
+  async with AsyncClient(httpserver.url_for('/')) as client:
+    stream = await getattr(client, method)('dummy', stream=True)
+    if ending != 'empty' and ending != 'http_error':
+      part = await stream.__anext__()
+      assert part.model == 'dummy'
+      assert (part.message.content if method == 'chat' else part.response) == 'partial'
+    if ending == 'close':
+      await stream.aclose()
+      return
+    if ending in ('complete', 'complete_no_newline', 'error_after_done'):
+      assert (await stream.__anext__()).done is True
+      if ending != 'error_after_done':
+        with pytest.raises(StopAsyncIteration):
+          await stream.__anext__()
+        return
+    if ending == 'invalid_json':
+      with pytest.raises(json.JSONDecodeError):
+        await stream.__anext__()
+    else:
+      message = 'generation failed' if ending in ('server_error', 'error_after_done', 'http_error') else 'Stream ended before receiving a final response'
+      with pytest.raises(ResponseError, match=message) as error:
+        await stream.__anext__()
+      assert error.value.status_code == (503 if ending == 'http_error' else -1)
