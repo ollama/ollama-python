@@ -179,7 +179,7 @@ def test_function_with_only_description():
 
   tool = convert_function_to_tool(only_description).model_dump()
   assert tool['function']['description'] == 'A function with only a description.'
-  assert tool['function']['parameters'] == {'type': 'object', 'defs': None, 'items': None, 'required': None, 'properties': {}}
+  assert tool['function']['parameters'] == {'type': 'object', '$defs': None, 'items': None, 'required': None, 'properties': {}}
 
   def only_description_with_args(x: int, y: int):
     """
@@ -190,7 +190,7 @@ def test_function_with_only_description():
   assert tool['function']['description'] == 'A function with only a description.'
   assert tool['function']['parameters'] == {
     'type': 'object',
-    'defs': None,
+    '$defs': None,
     'items': None,
     'properties': {
       'x': {'type': 'integer', 'description': '', 'enum': None, 'items': None},
