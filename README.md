@@ -57,7 +57,7 @@ for chunk in stream:
 
 Run larger models by offloading to Ollama’s cloud while keeping your local workflow.
 
-- Supported models: `deepseek-v3.1:671b-cloud`, `gpt-oss:20b-cloud`, `gpt-oss:120b-cloud`, `kimi-k2:1t-cloud`, `qwen3-coder:480b-cloud`, `kimi-k2-thinking` See [Ollama Models - Cloud](https://ollama.com/search?c=cloud) for more information
+- Supported models: See the [cloud model library](https://ollama.com/search?c=cloud) for current availability.
 
 ### Run via local Ollama
 
