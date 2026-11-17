@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, ChatResponse, CreateRequest, GenerateRequest, GenerateResponse, Image
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,25 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+@pytest.mark.parametrize('response_type', [GenerateResponse, ChatResponse])
+@pytest.mark.parametrize('cached_count', [None, 0, 42])
+def test_prompt_eval_cached_count_serialization(response_type, cached_count):
+  payload = {'model': 'dummy', 'prompt_eval_count': 50}
+  if response_type is ChatResponse:
+    payload['message'] = {'role': 'assistant', 'content': 'Hello'}
+  if cached_count is not None:
+    payload['prompt_eval_cached_count'] = cached_count
+
+  response = response_type.model_validate(payload)
+
+  assert response.prompt_eval_count == 50
+  assert response.prompt_eval_cached_count == cached_count
+  if cached_count is None:
+    assert 'prompt_eval_cached_count' not in response.model_dump(exclude_none=True)
+    with pytest.raises(KeyError):
+      response['prompt_eval_cached_count']
+  else:
+    assert response['prompt_eval_cached_count'] == cached_count
+    assert response.model_dump(exclude_none=True)['prompt_eval_cached_count'] == cached_count
