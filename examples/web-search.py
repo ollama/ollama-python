@@ -5,6 +5,7 @@
 #     "ollama",
 # ]
 # ///
+import os
 from typing import Union
 
 from rich import print
@@ -41,7 +42,9 @@ def format_tool_results(
     return '\n'.join(output).rstrip()
 
 
-# client = Client(headers={'Authorization': f"Bearer {os.getenv('OLLAMA_API_KEY')}"} if api_key else None)
+if not os.environ.get('OLLAMA_API_KEY'):
+  raise SystemExit('Set OLLAMA_API_KEY to an API key from https://ollama.com/settings/keys')
+
 available_tools = {'web_search': web_search, 'web_fetch': web_fetch}
 
 query = "what is ollama's new engine"

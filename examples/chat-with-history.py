@@ -21,7 +21,11 @@ messages = [
 ]
 
 while True:
-  user_input = input('Chat with history: ')
+  try:
+    user_input = input('Chat with history (Ctrl-D to quit): ')
+  except (EOFError, KeyboardInterrupt):
+    print()
+    break
   response = chat(
     'gemma4',
     messages=[*messages, {'role': 'user', 'content': user_input}],
@@ -30,6 +34,6 @@ while True:
   # Add the response to the messages to maintain the history
   messages += [
     {'role': 'user', 'content': user_input},
-    {'role': 'assistant', 'content': response.message.content},
+    response.message,
   ]
   print(response.message.content + '\n')

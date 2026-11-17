@@ -1,16 +1,47 @@
 # Running Examples
 
-Run the examples in this directory with:
+Run commands from the repository root. Use Python 3.11 or later for the full example set, install [Ollama](https://ollama.com/download), and start its server.
+
+To run against this checkout:
 
 ```sh
-# Run example
-python3 examples/<example>.py
-
-# or with uv
-uv run examples/<example>.py
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -e . rich tqdm 'mcp>=2,<3'
+python examples/chat.py
 ```
 
-See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md) for full API documentation
+Or use uv (including for scripts with inline dependencies):
+
+```sh
+uv run --with-editable . examples/chat.py
+uv run --with-editable . examples/web-search-mcp.py
+```
+
+`--with-editable .` keeps scripts with inline dependencies on the SDK in this checkout. To use a released package instead, install `ollama>=0.6.3` and run the scripts with that environment. System One is available in 0.6.3; System One image inputs are currently on `main` and require this checkout. Python 0.6.3 also accepts model-defined thinking levels; the examples use the GPT-OSS levels `low`, `medium`, and `high`.
+
+Pull the model named in the example before running it, for example `ollama pull gemma4`. Use `ollama list` to see installed models and `ollama show <model>` to check capabilities. Models may require several GB of memory and disk space; pulling is a separate step except in `pull.py`. See the [model library](https://ollama.com/search) for available tags.
+
+| Examples | Model / additional requirements |
+| --- | --- |
+| Basic chat/generate, logprobs, show, create | `gemma4` |
+| Tools, structured text output | `gemma4` |
+| Multi-tool, web search | `qwen3` (thinking and tools) |
+| GPT-OSS tools, thinking levels | `gpt-oss:20b` |
+| GPT-OSS web search | `gpt-oss:120b-cloud`, `ollama signin`, and a web-search API key |
+| Thinking chat/generate | `deepseek-r1` |
+| Fill in the middle | `codellama:7b-code` |
+| Multimodal chat, structured image output | `gemma4` and an image path |
+| Multimodal generate | `gemma4`; fetches an XKCD comic over the internet |
+| Embeddings | `embeddinggemma`; Ollama v0.11.10 or later |
+| Image generation | `x/z-image-turbo`; supported macOS installation; writes `output.png` |
+| System One | `nimble`; Ollama v0.35.0 or later |
+
+The `ps.py` and `list.py` examples only inspect models. `create.py` writes a model named `my-assistant`; choose an unused name before running it. `pull.py` downloads `gemma4`. Image generation overwrites `output.png` in the working directory.
+
+Most examples call the local server at `http://localhost:11434`. Set `OLLAMA_HOST` to use another server. A connection error means the server is not reachable; a model-not-found error means you need to pull that exact tag on that server. Structured outputs require a local model; Ollama's cloud does not currently support the `format` schema.
+
+For direct cloud inference, set `OLLAMA_API_KEY` and use `Client(host='https://ollama.com')` with the direct model name, such as `gpt-oss:120b`. Through a signed-in local server, use the `-cloud` tag instead. Web search/fetch always call `https://ollama.com` and require an API key, even when inference is local. Python reads `OLLAMA_API_KEY` automatically. See [cloud authentication](https://docs.ollama.com/cloud/api) and the [API documentation](https://docs.ollama.com/api/introduction).
 
 ### Chat - Chat with a model
 
@@ -104,11 +135,11 @@ Configuration to use with an MCP client:
 
 ### Ollama Pull - Pull a model from Ollama
 
-Requirement: `pip install tqdm`
+Requires `tqdm` (installed above).
 
 - [pull.py](pull.py)
 
-### Ollama Create - Create a model from a Modelfile
+### Ollama Create - Create a model from an existing model
 
 - [create.py](create.py)
 
