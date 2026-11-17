@@ -193,8 +193,8 @@ def test_function_with_only_description():
     'defs': None,
     'items': None,
     'properties': {
-      'x': {'type': 'integer', 'description': '', 'enum': None, 'items': None},
-      'y': {'type': 'integer', 'description': '', 'enum': None, 'items': None},
+      'x': {'type': 'integer', 'description': '', 'enum': None, 'items': None, 'properties': None},
+      'y': {'type': 'integer', 'description': '', 'enum': None, 'items': None, 'properties': None},
     },
     'required': ['x', 'y'],
   }
