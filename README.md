@@ -249,6 +249,19 @@ ollama.embed(model='gemma4', input='The sky is blue because of rayleigh scatteri
 ollama.embed(model='gemma4', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
 ```
 
+### Embed (structured media)
+
+With an Ollama server and embedding model that support [structured embedding inputs](https://github.com/ollama/ollama/blob/3295b3e96ba386219f4baa841cdbe402a04b13dc/api/types.go#L647-L674), an input can be an object with `text`, `image`, or `audio` string fields. Media values must be caller-provided base64 strings. Objects and text strings can also be mixed in a batch; each item remains a separate embedding input.
+
+Given `image_base64` and `audio_base64` containing the encoded media:
+
+```python
+ollama.embed(model='your-multimodal-embedding-model', input={'text': 'Describe this image', 'image': image_base64})
+ollama.embed(model='your-multimodal-embedding-model', input=['plain text', {'audio': audio_base64}])
+```
+
+The same inputs work with `Client.embed` and `await AsyncClient.embed`. The SDK does not read media paths, bytes, or PDFs for these fields. Older servers and models without the corresponding embedding capability may reject the request; chat image support alone does not imply multimodal embedding support.
+
 ### Ps
 
 ```python
