@@ -25,14 +25,14 @@ Pull the model named in the example before running it, for example `ollama pull 
 | Examples | Model / additional requirements |
 | --- | --- |
 | Basic chat/generate, logprobs, show, create | `gemma4` |
-| Tools, structured text output | `llama3.1` (the structured examples use `llama3.1:8b`) |
+| Tools, structured text output | `gemma4` |
 | Multi-tool, web search | `qwen3` (thinking and tools) |
 | GPT-OSS tools, thinking levels | `gpt-oss:20b` |
 | GPT-OSS web search | `gpt-oss:120b-cloud`, `ollama signin`, and a web-search API key |
 | Thinking chat/generate | `deepseek-r1` |
 | Fill in the middle | `codellama:7b-code` |
 | Multimodal chat, structured image output | `gemma4` and an image path |
-| Multimodal generate | `llava`; fetches an XKCD comic over the internet |
+| Multimodal generate | `gemma4`; fetches an XKCD comic over the internet |
 | Embeddings | `embeddinggemma`; Ollama v0.11.10 or later |
 | Image generation | `x/z-image-turbo`; supported macOS installation; writes `output.png` |
 | System One | `nimble`; Ollama v0.35.0 or later |
