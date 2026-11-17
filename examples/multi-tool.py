@@ -4,7 +4,7 @@ from typing import Iterator
 from ollama import ChatResponse, Client
 
 
-def get_temperature(city: str) -> int:
+def get_temperature(city: str) -> str:
   """
   Get the temperature for a city in Celsius
 
@@ -12,11 +12,9 @@ def get_temperature(city: str) -> int:
     city (str): The name of the city
 
   Returns:
-    int: The current temperature in Celsius
+    str: The current temperature in Celsius
   """
   # This is a mock implementation - would need to use a real weather API
-  import random
-
   if city not in ['London', 'Paris', 'New York', 'Tokyo', 'Sydney']:
     return 'Unknown city'
 
@@ -48,41 +46,33 @@ print('----- Prompt:', messages[0]['content'], '\n')
 
 model = 'qwen3'
 client = Client()
-response: Iterator[ChatResponse] = client.chat(model, stream=True, messages=messages, tools=[get_temperature, get_conditions], think=True)
-
-for chunk in response:
-  if chunk.message.thinking:
-    print(chunk.message.thinking, end='', flush=True)
-  if chunk.message.content:
-    print(chunk.message.content, end='', flush=True)
-  if chunk.message.tool_calls:
-    for tool in chunk.message.tool_calls:
-      if function_to_call := available_functions.get(tool.function.name):
-        print('\nCalling function:', tool.function.name, 'with arguments:', tool.function.arguments)
-        output = function_to_call(**tool.function.arguments)
-        print('> Function output:', output, '\n')
-
-        # Add the assistant message and tool call result to the messages
-        messages.append(chunk.message)
-        messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})
-      else:
-        print('Function', tool.function.name, 'not found')
-
-print('----- Sending result back to model \n')
-if any(msg.get('role') == 'tool' for msg in messages):
-  res = client.chat(model, stream=True, tools=[get_temperature, get_conditions], messages=messages, think=True)
-  done_thinking = False
-  for chunk in res:
+while True:
+  response: Iterator[ChatResponse] = client.chat(model, stream=True, messages=messages, tools=[get_temperature, get_conditions], think=True)
+  thinking = ''
+  content = ''
+  tool_calls = []
+  for chunk in response:
     if chunk.message.thinking:
+      thinking += chunk.message.thinking
       print(chunk.message.thinking, end='', flush=True)
     if chunk.message.content:
-      if not done_thinking:
-        print('\n----- Final result:')
-        done_thinking = True
+      content += chunk.message.content
       print(chunk.message.content, end='', flush=True)
     if chunk.message.tool_calls:
-      # Model should be explaining the tool calls and the results in this output
-      print('Model returned tool calls:')
-      print(chunk.message.tool_calls)
-else:
-  print('No tool calls returned')
+      tool_calls.extend(chunk.message.tool_calls)
+
+  # Preserve the complete assistant turn before adding any tool results.
+  messages.append({'role': 'assistant', 'thinking': thinking, 'content': content, 'tool_calls': tool_calls})
+  if not tool_calls:
+    print()
+    break
+
+  for tool in tool_calls:
+    function_to_call = available_functions.get(tool.function.name)
+    if function_to_call:
+      print('\nCalling function:', tool.function.name, 'with arguments:', tool.function.arguments)
+      output = function_to_call(**tool.function.arguments)
+      print('> Function output:', output)
+    else:
+      output = f'Function {tool.function.name} not found'
+    messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})

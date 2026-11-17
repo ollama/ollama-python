@@ -4,6 +4,7 @@
 #     "ollama",
 # ]
 # ///
+import os
 from typing import Any, Dict, List
 
 from web_search_gpt_oss_helper import Browser
@@ -12,6 +13,9 @@ from ollama import Client
 
 
 def main() -> None:
+  if not os.environ.get('OLLAMA_API_KEY'):
+    raise SystemExit('Set OLLAMA_API_KEY to an API key from https://ollama.com/settings/keys')
+
   client = Client()
   browser = Browser(initial_state=None, client=client)
 
@@ -28,6 +32,15 @@ def main() -> None:
     'type': 'function',
     'function': {
       'name': 'browser.search',
+      'description': 'Search the web for a query.',
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'query': {'type': 'string'},
+          'topn': {'type': 'integer', 'description': 'Maximum results, from 1 to 10.'},
+        },
+        'required': ['query'],
+      },
     },
   }
 
@@ -35,6 +48,16 @@ def main() -> None:
     'type': 'function',
     'function': {
       'name': 'browser.open',
+      'description': 'Open a URL or numbered link, or scroll a page.',
+      'parameters': {
+        'type': 'object',
+        'properties': {
+          'id': {'anyOf': [{'type': 'integer'}, {'type': 'string'}]},
+          'cursor': {'type': 'integer', 'description': 'Page index; -1 uses the current page.'},
+          'loc': {'type': 'integer', 'description': 'First line to display.'},
+          'num_lines': {'type': 'integer', 'description': 'Number of lines; -1 uses the default.'},
+        },
+      },
     },
   }
 
@@ -42,6 +65,12 @@ def main() -> None:
     'type': 'function',
     'function': {
       'name': 'browser.find',
+      'description': 'Find text in the current page or a page at a given cursor.',
+      'parameters': {
+        'type': 'object',
+        'properties': {'pattern': {'type': 'string'}, 'cursor': {'type': 'integer'}},
+        'required': ['pattern'],
+      },
     },
   }
 

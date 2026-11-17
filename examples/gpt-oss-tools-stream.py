@@ -1,7 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
 # dependencies = [
-#     "gpt-oss",
 #     "ollama",
 #     "rich",
 # ]
@@ -11,8 +10,7 @@ from typing import Iterator
 
 from rich import print
 
-from ollama import Client
-from ollama._types import ChatResponse
+from ollama import ChatResponse, Client
 
 
 def get_weather(city: str) -> str:
@@ -50,15 +48,11 @@ available_tools = {'get_weather': get_weather, 'get_weather_conditions': get_wea
 
 messages = [{'role': 'user', 'content': 'What is the weather like in London? What are the conditions in Toronto?'}]
 
-client = Client(
-  # Ollama Turbo
-  # host="https://ollama.com", headers={'Authorization': (os.getenv('OLLAMA_API_KEY'))}
-)
+client = Client()
 
 model = 'gpt-oss:20b'
 # gpt-oss can call tools while "thinking"
 # a loop is needed to call the tools and get the results
-final = True
 while True:
   response_stream: Iterator[ChatResponse] = client.chat(model=model, messages=messages, tools=[get_weather, get_weather_conditions], stream=True)
   tool_calls = []
@@ -70,10 +64,7 @@ while True:
       tool_calls.extend(chunk.message.tool_calls)
 
     if chunk.message.content:
-      if not (chunk.message.thinking or chunk.message.thinking == '') and final:
-        print('\n\n' + '=' * 10)
-        print('Final result: ')
-        final = False
+      content += chunk.message.content
       print(chunk.message.content, end='', flush=True)
 
     if chunk.message.thinking:

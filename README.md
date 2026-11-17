@@ -113,7 +113,7 @@ curl https://ollama.com/api/tags
 import os
 from ollama import Client
 
-client = Client(host='https://ollama.com', headers={'Authorization': 'Bearer ' + os.environ.get('OLLAMA_API_KEY')})
+client = Client(host='https://ollama.com', headers={'Authorization': 'Bearer ' + os.environ['OLLAMA_API_KEY']})
 
 messages = [
   {
@@ -239,14 +239,16 @@ ollama.push('user/gemma4')
 
 ### Embed
 
+Pull an embedding model first: `ollama pull embeddinggemma`.
+
 ```python
-ollama.embed(model='gemma4', input='The sky is blue because of rayleigh scattering')
+ollama.embed(model='embeddinggemma', input='The sky is blue because of rayleigh scattering')
 ```
 
 ### Embed (batch)
 
 ```python
-ollama.embed(model='gemma4', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
+ollama.embed(model='embeddinggemma', input=['The sky is blue because of rayleigh scattering', 'Grass is green because of chlorophyll'])
 ```
 
 ### Ps
@@ -279,6 +281,9 @@ not supported. It runs locally with decision models such as `nimble` (Ollama
 v0.35.0 or later) or `clef` (v0.35.1 or later), and in the cloud with `clef:cloud`
 on a paid plan (through Ollama v0.40.5 or later, or [directly against
 ollama.com](#cloud-api-ollamacom)).
+
+System One image inputs below require the current `main` checkout; they are not
+in the 0.6.3 release.
 
 Clef also reads images (v0.40.0 or later locally): pass `images` as file paths,
 bytes, or base64 strings, shared by all questions. Cloud requests accept up to 4

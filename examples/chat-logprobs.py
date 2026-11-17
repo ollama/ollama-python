@@ -1,15 +1,13 @@
-from typing import Iterable
-
 import ollama
 
 
-def print_logprobs(logprobs: Iterable[dict], label: str) -> None:
+def print_logprobs(logprobs, label: str) -> None:
   print(f'\n{label}:')
   for entry in logprobs:
     token = entry.get('token', '')
     logprob = entry.get('logprob')
     print(f'  token={token!r:<12} logprob={logprob:.3f}')
-    for alt in entry.get('top_logprobs', []):
+    for alt in entry.top_logprobs or []:
       if alt['token'] != token:
         print(f'    alt -> {alt["token"]!r:<12} ({alt["logprob"]:.3f})')
 
@@ -28,4 +26,4 @@ response = ollama.chat(
   top_logprobs=3,
 )
 print('Chat response:', response['message']['content'])
-print_logprobs(response.get('logprobs', []), 'chat logprobs')
+print_logprobs(response.logprobs or [], 'chat logprobs')

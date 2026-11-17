@@ -11,9 +11,9 @@ async def main():
     },
   ]
 
-  client = AsyncClient()
-  response = await client.chat('gemma4', messages=messages)
-  print(response['message']['content'])
+  async with AsyncClient() as client:
+    response = await client.chat('gemma4', messages=messages)
+    print(response['message']['content'])
 
 
 if __name__ == '__main__':

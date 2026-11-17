@@ -1,4 +1,4 @@
 from ollama import embed
 
-response = embed(model='llama3.2', input='Hello, world!')
+response = embed(model='embeddinggemma', input='Hello, world!')
 print(response['embeddings'])
