@@ -1379,6 +1379,22 @@ async def test_arbitrary_roles_accepted_in_message_request_async(monkeypatch: py
   await client.chat(model='llama3.1', messages=[{'role': 'somerandomrole', 'content': "I'm ok with you adding any role message now!"}, {'role': 'user', 'content': 'Hello world!'}])
 
 
+def test_copy_messages_preserves_empty_string_content():
+  from ollama._client import _copy_messages
+
+  msgs = list(
+    _copy_messages(
+      [
+        {'role': 'assistant', 'content': ''},
+        {'role': 'tool', 'content': '', 'tool_name': 'web_search'},
+      ]
+    )
+  )
+  assert msgs[0].content == ''
+  assert msgs[1].content == ''
+  assert msgs[1].tool_name == 'web_search'
+
+
 def test_client_web_search_requires_bearer_auth_header(monkeypatch: pytest.MonkeyPatch):
   monkeypatch.delenv('OLLAMA_API_KEY', raising=False)
 
