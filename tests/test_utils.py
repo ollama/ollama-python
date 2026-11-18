@@ -256,3 +256,20 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_docstring_continuation_lines_with_colons():
+  def get_page(url: str, date: str) -> str:
+    """
+    Fetch a page.
+
+    Args:
+        url: Page to fetch, for example
+            https://example.com/docs
+        date: Day to fetch, in the format
+            YYYY-MM-DD (for example: 2024-01-31)
+    """
+
+  tool = convert_function_to_tool(get_page).model_dump()
+  assert tool['function']['parameters']['properties']['url']['description'] == 'Page to fetch, for example https://example.com/docs'
+  assert tool['function']['parameters']['properties']['date']['description'] == 'Day to fetch, in the format YYYY-MM-DD (for example: 2024-01-31)'
