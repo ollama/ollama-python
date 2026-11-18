@@ -32,7 +32,7 @@ def test_image_serialization_plain_string():
 
 
 def test_image_serialization_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
+  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
     img = Image(value=Path(temp_file.name))
@@ -40,7 +40,7 @@ def test_image_serialization_path():
 
 
 def test_image_serialization_string_path():
-  with tempfile.NamedTemporaryFile() as temp_file:
+  with tempfile.NamedTemporaryFile(delete=False) as temp_file:
     temp_file.write(b'test file content')
     temp_file.flush()
     img = Image(value=temp_file.name)
