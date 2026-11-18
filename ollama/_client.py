@@ -750,6 +750,18 @@ class Client(BaseClient):
       ).model_dump(exclude_none=True),
     )
 
+  def ping(self) -> bool:
+    """
+    Check whether the Ollama server is running and reachable.
+
+    Returns True if the server responds to the /api/version health endpoint.
+    """
+    try:
+      data = self._request_raw('GET', '/api/version').json()
+      return bool(data) and 'version' in data
+    except ConnectionError:
+      return False
+
 
 class AsyncClient(BaseClient):
   def __init__(self, host: Optional[str] = None, **kwargs) -> None:
@@ -861,6 +873,18 @@ class AsyncClient(BaseClient):
         url=url,
       ).model_dump(exclude_none=True),
     )
+
+  async def ping(self) -> bool:
+    """
+    Check whether the Ollama server is running and reachable.
+
+    Returns True if the server responds to the /api/version health endpoint.
+    """
+    try:
+      data = (await self._request_raw('GET', '/api/version')).json()
+      return bool(data) and 'version' in data
+    except ConnectionError:
+      return False
 
   @overload
   async def generate(
