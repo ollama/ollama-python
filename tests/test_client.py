@@ -15,6 +15,7 @@ from werkzeug.wrappers import Request, Response
 
 from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
 from ollama._types import Image, Message
+from ollama._utils import convert_function_to_tool
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -42,7 +43,6 @@ def test_client_chat(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'stream': False,
     },
   ).respond_with_json(
@@ -62,6 +62,68 @@ def test_client_chat(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
+def test_client_chat_omits_tools_for_empty_list(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hello!',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], tools=[])
+  assert response['message']['content'] == 'Hello!'
+
+
+def test_client_chat_sends_tools_when_provided(httpserver: HTTPServer):
+  def add_two_numbers(a: int, b: int) -> int:
+    """
+    Add two numbers.
+
+    Args:
+      a: First number.
+      b: Second number.
+
+    Returns:
+      int: The sum of the two numbers.
+    """
+    return a + b
+
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'tools': [convert_function_to_tool(add_two_numbers).model_dump(exclude_none=True)],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hello!',
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], tools=[add_two_numbers])
+  assert response['message']['content'] == 'Hello!'
+
+
 def test_client_chat_with_logprobs(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -69,7 +131,6 @@ def test_client_chat_with_logprobs(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Hi'}],
-      'tools': [],
       'stream': False,
       'logprobs': True,
       'top_logprobs': 3,
@@ -125,7 +186,6 @@ def test_client_chat_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'stream': True,
     },
   ).respond_with_handler(stream_handler)
@@ -156,7 +216,6 @@ def test_client_chat_images(httpserver: HTTPServer, message_format: str, file_st
           'images': [PNG_BASE64],
         },
       ],
-      'tools': [],
       'stream': False,
     },
   ).respond_with_json(
@@ -198,7 +257,6 @@ def test_client_chat_format_json(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'format': 'json',
       'stream': False,
     },
@@ -230,7 +288,6 @@ def test_client_chat_format_pydantic(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'format': {'title': 'ResponseFormat', 'type': 'object', 'properties': {'answer': {'title': 'Answer', 'type': 'string'}, 'confidence': {'title': 'Confidence', 'type': 'number'}}, 'required': ['answer', 'confidence']},
       'stream': False,
     },
@@ -258,7 +315,6 @@ async def test_async_client_chat_format_json(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'format': 'json',
       'stream': False,
     },
@@ -290,7 +346,6 @@ async def test_async_client_chat_format_pydantic(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'format': {'title': 'ResponseFormat', 'type': 'object', 'properties': {'answer': {'title': 'Answer', 'type': 'string'}, 'confidence': {'title': 'Confidence', 'type': 'number'}}, 'required': ['answer', 'confidence']},
       'stream': False,
     },
@@ -887,7 +942,6 @@ async def test_async_client_chat(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'stream': False,
     },
   ).respond_with_json(
@@ -932,7 +986,6 @@ async def test_async_client_chat_stream(httpserver: HTTPServer):
     json={
       'model': 'dummy',
       'messages': [{'role': 'user', 'content': 'Why is the sky blue?'}],
-      'tools': [],
       'stream': True,
     },
   ).respond_with_handler(stream_handler)
@@ -959,7 +1012,6 @@ async def test_async_client_chat_images(httpserver: HTTPServer):
           'images': [PNG_BASE64],
         },
       ],
-      'tools': [],
       'stream': False,
     },
   ).respond_with_json(
@@ -1507,7 +1559,6 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
     json={
       'model': 'qwen3.8:27b',
       'messages': [{'role': 'user', 'content': 'Hello'}],
-      'tools': [],
       'stream': False,
       'think': 'xhigh',
     },

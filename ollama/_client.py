@@ -395,7 +395,7 @@ class Client(BaseClient):
       json=ChatRequest(
         model=model,
         messages=list(_copy_messages(messages)),
-        tools=list(_copy_tools(tools)),
+        tools=list(_copy_tools(tools)) or None,
         stream=stream,
         think=think,
         logprobs=logprobs,
@@ -1055,7 +1055,7 @@ class AsyncClient(BaseClient):
       json=ChatRequest(
         model=model,
         messages=list(_copy_messages(messages)),
-        tools=list(_copy_tools(tools)),
+        tools=list(_copy_tools(tools)) or None,
         stream=stream,
         think=think,
         logprobs=logprobs,
