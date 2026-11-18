@@ -56,14 +56,15 @@ for chunk in response:
   if chunk.message.content:
     print(chunk.message.content, end='', flush=True)
   if chunk.message.tool_calls:
+    # Record the assistant message once, before the results for its tool calls.
+    messages.append(chunk.message)
     for tool in chunk.message.tool_calls:
       if function_to_call := available_functions.get(tool.function.name):
         print('\nCalling function:', tool.function.name, 'with arguments:', tool.function.arguments)
         output = function_to_call(**tool.function.arguments)
         print('> Function output:', output, '\n')
 
-        # Add the assistant message and tool call result to the messages
-        messages.append(chunk.message)
+        # Add each tool result to the messages
         messages.append({'role': 'tool', 'content': str(output), 'tool_name': tool.function.name})
       else:
         print('Function', tool.function.name, 'not found')
