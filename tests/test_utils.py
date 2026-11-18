@@ -256,3 +256,72 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_function_with_parameters_named_like_sections():
+  def fetch(url: str, raises: bool, timeout: int) -> str:
+    """
+    Fetch a URL.
+
+    Args:
+      url: The URL to fetch
+      raises: Whether to raise on HTTP errors
+      timeout: Seconds to wait
+    """
+
+  def lookup(key: str, returns: str, limit: int) -> str:
+    """
+    Look up a record.
+
+    Args:
+      key: The record key
+      returns: Which field to return
+      limit: Maximum number of records
+
+    Returns:
+      The selected field
+    """
+
+  tool = convert_function_to_tool(fetch).model_dump()
+  assert tool['function']['description'] == 'Fetch a URL.'
+  assert tool['function']['parameters']['properties']['url']['description'] == 'The URL to fetch'
+  assert tool['function']['parameters']['properties']['raises']['description'] == 'Whether to raise on HTTP errors'
+  assert tool['function']['parameters']['properties']['timeout']['description'] == 'Seconds to wait'
+
+  tool = convert_function_to_tool(lookup).model_dump()
+  assert tool['function']['description'] == 'Look up a record.'
+  assert tool['function']['parameters']['properties']['key']['description'] == 'The record key'
+  assert tool['function']['parameters']['properties']['returns']['description'] == 'Which field to return'
+  assert tool['function']['parameters']['properties']['limit']['description'] == 'Maximum number of records'
+
+
+def test_overindented_sections_still_end_args():
+  def fetch(url: str, timeout: int) -> str:
+    """
+    Fetch a URL.
+
+    Args:
+      url: The URL to fetch
+      timeout: Seconds to wait
+      Raises:
+        timeout: Not a parameter description
+    """
+
+  def lookup(key: str, returns: str) -> str:
+    """
+    Look up a record.
+
+    Args:
+      key: The record key
+      returns: Which field to return
+      Returns: The selected field
+        key: Not a parameter description
+    """
+
+  tool = convert_function_to_tool(fetch).model_dump()
+  assert tool['function']['parameters']['properties']['url']['description'] == 'The URL to fetch'
+  assert tool['function']['parameters']['properties']['timeout']['description'] == 'Seconds to wait'
+
+  tool = convert_function_to_tool(lookup).model_dump()
+  assert tool['function']['parameters']['properties']['key']['description'] == 'The record key'
+  assert tool['function']['parameters']['properties']['returns']['description'] == 'Which field to return'

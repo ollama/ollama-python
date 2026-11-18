@@ -3,24 +3,30 @@ from __future__ import annotations
 import inspect
 import re
 from collections import defaultdict
-from typing import Callable, Union
+from typing import Callable, Container, Union
 
 import pydantic
 
 from ollama._types import Tool
 
 
-def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
+def _parse_docstring(doc_string: Union[str, None], parameters: Container[str] = ()) -> dict[str, str]:
   parsed_docstring = defaultdict(str)
   if not doc_string:
     return parsed_docstring
 
   key = str(hash(doc_string))
+  args_indent = 0
   for line in doc_string.splitlines():
     lowered_line = line.lower().strip()
+    indent = len(line) - len(line.lstrip())
+    name, _, text = line.strip().partition(':')
+    # A deeper line under Args like `raises: ...` documents the parameter of that exact name; bare or other headers still end Args
+    is_parameter = key == 'args' and indent > args_indent and name in parameters and text.strip() != ''
     if lowered_line.startswith('args:'):
       key = 'args'
-    elif lowered_line.startswith(('returns:', 'yields:', 'raises:')):
+      args_indent = indent
+    elif lowered_line.startswith(('returns:', 'yields:', 'raises:')) and not is_parameter:
       key = '_'
 
     else:
@@ -55,7 +61,7 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
 def convert_function_to_tool(func: Callable) -> Tool:
   doc_string_hash = str(hash(inspect.getdoc(func)))
-  parsed_docstring = _parse_docstring(inspect.getdoc(func))
+  parsed_docstring = _parse_docstring(inspect.getdoc(func), inspect.signature(func).parameters)
   schema = type(
     func.__name__,
     (pydantic.BaseModel,),
