@@ -6,6 +6,7 @@ from collections import defaultdict
 from typing import Callable, Union
 
 import pydantic
+from typing_extensions import get_type_hints
 
 from ollama._types import Tool
 
@@ -53,14 +54,32 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
   return parsed_docstring
 
 
+def _resolve_type_hints(func: Callable) -> dict:
+  # String annotations (quoted, or under `from __future__ import annotations`) name types
+  # from the function's module, which pydantic cannot see from here, so evaluate them there.
+  try:
+    return get_type_hints(inspect.unwrap(func), include_extras=True)
+  except Exception:
+    return {}
+
+
+def _parameter_annotation(name: str, parameter: inspect.Parameter, type_hints: dict):
+  if parameter.annotation is inspect.Parameter.empty:
+    return str
+  if isinstance(parameter.annotation, str):
+    return type_hints.get(name, parameter.annotation)
+  return parameter.annotation
+
+
 def convert_function_to_tool(func: Callable) -> Tool:
   doc_string_hash = str(hash(inspect.getdoc(func)))
   parsed_docstring = _parse_docstring(inspect.getdoc(func))
+  type_hints = _resolve_type_hints(func)
   schema = type(
     func.__name__,
     (pydantic.BaseModel,),
     {
-      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items()},
+      '__annotations__': {k: _parameter_annotation(k, v, type_hints) for k, v in inspect.signature(func).parameters.items()},
       '__signature__': inspect.signature(func),
       '__doc__': parsed_docstring[doc_string_hash],
     },
