@@ -14,7 +14,7 @@ from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
 from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
-from ollama._types import Image, Message
+from ollama._types import Image, Message, ResponseError
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
 PNG_BYTES = base64.b64decode(PNG_BASE64)
@@ -1349,6 +1349,46 @@ async def test_async_client_connection_error():
   with pytest.raises(ConnectionError) as exc_info:
     await client.show('model')
   assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+
+response_error_json_bodies = [
+  ('{"error": "boom"}', 'boom'),
+  ('null', 'null'),
+  ('[]', '[]'),
+  ('"gateway timeout"', '"gateway timeout"'),
+]
+
+
+@pytest.mark.parametrize('body, expected_error', response_error_json_bodies)
+def test_client_response_error_json_body_shapes(httpserver: HTTPServer, body: str, expected_error: str):
+  "A non-2xx JSON body that is not an object must raise ResponseError with the raw body instead of crashing on decode."
+
+  httpserver.expect_ordered_request('/api/chat', method='POST').respond_with_response(
+    Response(body, status=502, content_type='application/json'),
+  )
+
+  client = Client(httpserver.url_for('/'))
+  with pytest.raises(ResponseError) as exc_info:
+    client.chat('dummy', messages=[{'role': 'user', 'content': 'Hello'}])
+
+  assert exc_info.value.status_code == 502
+  assert exc_info.value.error == expected_error
+
+
+@pytest.mark.parametrize('body, expected_error', response_error_json_bodies)
+async def test_async_client_response_error_json_body_shapes(httpserver: HTTPServer, body: str, expected_error: str):
+  "A non-2xx JSON body that is not an object must raise ResponseError with the raw body instead of crashing on decode."
+
+  httpserver.expect_ordered_request('/api/chat', method='POST').respond_with_response(
+    Response(body, status=502, content_type='application/json'),
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  with pytest.raises(ResponseError) as exc_info:
+    await client.chat('dummy', messages=[{'role': 'user', 'content': 'Hello'}])
+
+  assert exc_info.value.status_code == 502
+  assert exc_info.value.error == expected_error
 
 
 def test_arbitrary_roles_accepted_in_message():
