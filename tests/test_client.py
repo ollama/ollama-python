@@ -4,10 +4,12 @@ import json
 import os
 import re
 import tempfile
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
 
 import pytest
+from httpx import MockTransport
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
@@ -864,6 +866,41 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile() as blob:
     response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+
+@pytest.fixture(params=[0, 1, 32 * 1024, 32 * 1024 + 1, 64 * 1024 + 1])
+def blob_file(request, tmp_path):
+  size = request.param
+  content = (bytes(range(256)) * (size // 256 + 1))[:size]
+  path = tmp_path / 'blob.bin'
+  path.write_bytes(content)
+  return path, content
+
+
+@pytest.mark.parametrize('client_type', [Client, AsyncClient])
+@pytest.mark.parametrize('status_code', [200, 201])
+async def test_create_blob_content(blob_file, client_type, status_code):
+  path, content = blob_file
+  digest = f'sha256:{sha256(content).hexdigest()}'
+  requests = []
+
+  def handle(request):
+    requests.append(request)
+    assert request.method == 'POST'
+    assert request.url.path == f'/api/blobs/{digest}'
+    assert request.content == content
+    return httpxResponse(status_code)
+
+  client = client_type(host='http://sdk.test:11434', transport=MockTransport(handle))
+  if isinstance(client, AsyncClient):
+    async with client:
+      response = await client.create_blob(path)
+  else:
+    with client:
+      response = client.create_blob(path)
+
+  assert response == digest
+  assert len(requests) == 1
 
 
 def test_client_delete(httpserver: HTTPServer):
