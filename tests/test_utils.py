@@ -1,8 +1,62 @@
 import json
 import sys
+from enum import IntEnum
 from typing import Dict, List, Mapping, Sequence, Set, Tuple, Union
 
+import pytest
+
 from ollama._utils import convert_function_to_tool
+
+
+def test_function_defaults_are_not_required():
+  def search(query: str, limit: int = 5):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
+  assert parameters.properties['limit'].type == 'integer'
+
+
+def test_function_default_with_custom_comparison():
+  class DefaultLimit(IntEnum):
+    FIVE = 5
+
+    def __ne__(self, other):
+      raise RuntimeError('Default value comparison is not supported')
+
+  def search(query: str, limit: int = DefaultLimit.FIVE):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
+  assert parameters.properties['limit'].type == 'integer'
+
+
+@pytest.mark.filterwarnings('error::pydantic.json_schema.PydanticJsonSchemaWarning')
+@pytest.mark.parametrize('default', [object(), Ellipsis], ids=['sentinel', 'ellipsis'])
+def test_function_default_stays_in_python(default):
+  def search(query: str, limit=default):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
+
+
+def test_nullable_default_with_no_required_arguments():
+  def search(query: Union[str, None] = None):
+    return query
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert not parameters.required
+  assert parameters.properties['query'].type == 'string'
+
+
+def test_keyword_only_defaults_are_not_required():
+  def search(query: str, *, limit: int = 5):
+    return query, limit
+
+  parameters = convert_function_to_tool(search).function.parameters
+  assert parameters.required == ['query']
 
 
 def test_function_to_tool_conversion():
