@@ -18,12 +18,14 @@ See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md)
 - [async-chat.py](async-chat.py)
 - [chat-stream.py](chat-stream.py) - Streamed outputs
 - [chat-with-history.py](chat-with-history.py) - Chat with model and maintain history of the conversation
+- [chat-logprobs.py](chat-logprobs.py) - Return log probabilities for chat completions
 
 ### Generate - Generate text with a model
 
 - [generate.py](generate.py)
 - [async-generate.py](async-generate.py)
 - [generate-stream.py](generate-stream.py) - Streamed outputs
+- [generate-logprobs.py](generate-logprobs.py) - Return log probabilities for generation
 - [fill-in-middle.py](fill-in-middle.py) - Given a prefix and suffix, fill in the middle
 
 ### Tools/Function Calling - Call a function with a model
@@ -46,6 +48,7 @@ export OLLAMA_API_KEY="your_api_key_here"
 ```
 
 - [web-search.py](web-search.py)
+- [web-fetch.py](web-fetch.py) - Fetch and extract content from a web page
 - [web-search-gpt-oss.py](web-search-gpt-oss.py) - Using browser research tools with gpt-oss
 
 #### MCP server
@@ -131,3 +134,7 @@ Requirement: `pip install tqdm`
 ### System One - Score typed questions
 
 - [systemone.py](systemone.py) - Choice, boolean probability, and rubric score questions
+
+### Client Lifecycle & Context Managers - Manage connections and resources
+
+- [context-manager.py](context-manager.py) - Use sync and async clients with context managers for automatic resource cleanup

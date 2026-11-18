@@ -335,6 +335,12 @@ class Message(SubscriptableBaseModel):
     Model tool calls.
     """
 
+    id: Optional[str] = None
+    'Identifier of the tool call.'
+
+    type: Optional[str] = 'function'
+    'Type of the tool call.'
+
     class Function(SubscriptableBaseModel):
       """
       Tool call function.
@@ -390,8 +396,12 @@ class ChatRequest(BaseGenerateRequest):
     output = nxt(self)
     if output.get('tools'):
       for tool in output['tools']:
-        if 'function' in tool and 'parameters' in tool['function'] and 'defs' in tool['function']['parameters']:
-          tool['function']['parameters']['$defs'] = tool['function']['parameters'].pop('defs')
+        if isinstance(tool, dict):
+          fn = tool.get('function')
+          if isinstance(fn, dict):
+            params = fn.get('parameters')
+            if isinstance(params, dict) and 'defs' in params:
+              params['$defs'] = params.pop('defs')
     return output
 
   messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None

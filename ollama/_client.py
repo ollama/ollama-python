@@ -6,7 +6,6 @@ import platform
 import sys
 import urllib.parse
 from hashlib import sha256
-from os import PathLike
 from pathlib import Path
 from typing import (
   Any,
@@ -89,6 +88,7 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
     follow_redirects: bool = True,
     timeout: Any = None,
     headers: Optional[Mapping[str, str]] = None,
+    api_key: Optional[str] = None,
     **kwargs,
   ) -> None:
     """
@@ -109,7 +109,7 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
       }.items()
       if v is not None
     }
-    api_key = os.getenv('OLLAMA_API_KEY', None)
+    api_key = api_key or os.getenv('OLLAMA_API_KEY', None)
     if not headers.get('authorization') and api_key:
       headers['authorization'] = f'Bearer {api_key}'
 
@@ -132,8 +132,8 @@ CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollam
 
 
 class Client(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.Client, host, **kwargs)
+  def __init__(self, host: Optional[str] = None, *, api_key: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.Client, host, api_key=api_key, **kwargs)
 
   def close(self):
     self._client.close()
@@ -752,8 +752,8 @@ class Client(BaseClient):
 
 
 class AsyncClient(BaseClient):
-  def __init__(self, host: Optional[str] = None, **kwargs) -> None:
-    super().__init__(httpx.AsyncClient, host, **kwargs)
+  def __init__(self, host: Optional[str] = None, *, api_key: Optional[str] = None, **kwargs) -> None:
+    super().__init__(httpx.AsyncClient, host, api_key=api_key, **kwargs)
 
   async def close(self):
     await self._client.aclose()
@@ -832,7 +832,12 @@ class AsyncClient(BaseClient):
 
     Returns:
       WebSearchResponse with the search results
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web search')
+
     return await self._request(
       WebSearchResponse,
       'POST',
@@ -852,7 +857,12 @@ class AsyncClient(BaseClient):
 
     Returns:
       WebFetchResponse with the fetched result
+    Raises:
+      ValueError: If OLLAMA_API_KEY environment variable is not set
     """
+    if not self._client.headers.get('authorization', '').startswith('Bearer '):
+      raise ValueError('Authorization header with Bearer token is required for web fetch')
+
     return await self._request(
       WebFetchResponse,
       'POST',
@@ -1379,23 +1389,13 @@ def _copy_images(images: Optional[Sequence[Union[Image, Any]]]) -> Iterator[Imag
 def _copy_messages(messages: Optional[Sequence[Union[Mapping[str, Any], Message]]]) -> Iterator[Message]:
   for message in messages or []:
     yield Message.model_validate(
-      {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v},
+      {k: list(_copy_images(v)) if k == 'images' else v for k, v in dict(message).items() if v is not None},
     )
 
 
 def _copy_tools(tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None) -> Iterator[Tool]:
   for unprocessed_tool in tools or []:
     yield convert_function_to_tool(unprocessed_tool) if callable(unprocessed_tool) else Tool.model_validate(unprocessed_tool)
-
-
-def _as_path(s: Optional[Union[str, PathLike]]) -> Union[Path, None]:
-  if isinstance(s, (str, Path)):
-    try:
-      if (p := Path(s)).exists():
-        return p
-    except Exception:
-      ...
-  return None
 
 
 def _parse_host(host: Optional[str]) -> str:

@@ -56,27 +56,38 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 def convert_function_to_tool(func: Callable) -> Tool:
   doc_string_hash = str(hash(inspect.getdoc(func)))
   parsed_docstring = _parse_docstring(inspect.getdoc(func))
+  sig = inspect.signature(func)
+  valid_params = {k: v for k, v in sig.parameters.items() if v.kind not in (inspect.Parameter.VAR_POSITIONAL, inspect.Parameter.VAR_KEYWORD)}
+  attrs = {
+    '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in valid_params.items()},
+    '__signature__': sig.replace(parameters=list(valid_params.values())),
+    '__doc__': parsed_docstring[doc_string_hash],
+    **{k: v.default for k, v in valid_params.items() if v.default != inspect._empty},
+  }
   schema = type(
     func.__name__,
     (pydantic.BaseModel,),
-    {
-      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items()},
-      '__signature__': inspect.signature(func),
-      '__doc__': parsed_docstring[doc_string_hash],
-    },
+    attrs,
   ).model_json_schema()
 
   for k, v in schema.get('properties', {}).items():
     # If type is missing, the default is string
     types = {t.get('type', 'string') for t in v.get('anyOf')} if 'anyOf' in v else {v.get('type', 'string')}
     if 'null' in types:
-      schema['required'].remove(k)
+      if 'required' in schema and k in schema['required']:
+        schema['required'].remove(k)
       types.discard('null')
 
-    schema['properties'][k] = {
+    prop = {
       'description': parsed_docstring[k],
       'type': ', '.join(types),
     }
+    if 'items' in v:
+      prop['items'] = v['items']
+    if 'enum' in v:
+      prop['enum'] = v['enum']
+
+    schema['properties'][k] = prop
 
   tool = Tool(
     type='function',
