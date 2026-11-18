@@ -192,11 +192,18 @@ class Client(BaseClient):
             e.response.read()
             raise ResponseError(e.response.text, e.response.status_code) from None
 
+          done = False
           for line in r.iter_lines():
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
-            yield cls(**part)
+            response = cls(**part)
+            if isinstance(response, (ChatResponse, GenerateResponse)) and response.done:
+              done = True
+            yield response
+
+          if cls in (ChatResponse, GenerateResponse) and not done:
+            raise ResponseError('Stream ended before receiving a final response')
 
       return inner()
 
@@ -812,11 +819,18 @@ class AsyncClient(BaseClient):
             await e.response.aread()
             raise ResponseError(e.response.text, e.response.status_code) from None
 
+          done = False
           async for line in r.aiter_lines():
             part = json.loads(line)
             if err := part.get('error'):
               raise ResponseError(err)
-            yield cls(**part)
+            response = cls(**part)
+            if isinstance(response, (ChatResponse, GenerateResponse)) and response.done:
+              done = True
+            yield response
+
+          if cls in (ChatResponse, GenerateResponse) and not done:
+            raise ResponseError('Stream ended before receiving a final response')
 
       return inner()
 

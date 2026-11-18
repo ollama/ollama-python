@@ -309,6 +309,8 @@ See [the combined question example](examples/systemone.py).
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
 
+Streamed chat and generation requests raise `ResponseError` if the response ends without a final `done: true` message. The error is raised when consuming the stream; any chunks already yielded remain available.
+
 ```python
 model = 'does-not-yet-exist'
 
