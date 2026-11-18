@@ -62,6 +62,36 @@ def test_client_chat(httpserver: HTTPServer):
   assert response['message']['content'] == "I don't know."
 
 
+def test_client_chat_with_prompt_eval_cached_count(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hello'}],
+      'tools': [],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': 'Hi!',
+      },
+      'prompt_eval_count': 10,
+      'prompt_eval_cached_count': 8,
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hello'}])
+  assert response['prompt_eval_count'] == 10
+  assert response['prompt_eval_cached_count'] == 8
+  assert response.prompt_eval_cached_count == 8
+
+
+
 def test_client_chat_with_logprobs(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',

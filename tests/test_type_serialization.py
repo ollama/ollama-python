@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, ChatResponse, CreateRequest, GenerateRequest, GenerateResponse, Image
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,26 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_response_prompt_eval_cached_count():
+  gen_resp = GenerateResponse(model='test-model', prompt_eval_count=100, prompt_eval_cached_count=80)
+  assert gen_resp.prompt_eval_cached_count == 80
+  assert gen_resp['prompt_eval_cached_count'] == 80
+  assert gen_resp.model_dump(exclude_none=True)['prompt_eval_cached_count'] == 80
+
+  chat_resp = ChatResponse(
+    model='test-model',
+    message={'role': 'assistant', 'content': 'hi'},
+    prompt_eval_count=100,
+    prompt_eval_cached_count=80,
+  )
+  assert chat_resp.prompt_eval_cached_count == 80
+  assert chat_resp['prompt_eval_cached_count'] == 80
+  assert chat_resp.model_dump(exclude_none=True)['prompt_eval_cached_count'] == 80
+
+  default_resp = GenerateResponse(model='test-model')
+  assert default_resp.prompt_eval_cached_count is None
+  assert 'prompt_eval_cached_count' not in default_resp
+  assert 'prompt_eval_cached_count' not in default_resp.model_dump(exclude_none=True)
+
