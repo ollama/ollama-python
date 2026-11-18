@@ -256,3 +256,21 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+def test_function_with_parameter_named_args():
+  def run_command(command: str, args: list) -> str:
+    """
+    Run a shell command.
+
+    Args:
+      command: The executable to run
+
+    Returns:
+      The command output
+    """
+
+  tool = convert_function_to_tool(run_command).model_dump()
+  assert tool['function']['description'] == 'Run a shell command.'
+  assert tool['function']['parameters']['properties']['command']['description'] == 'The executable to run'
+  assert tool['function']['parameters']['properties']['args']['description'] == ''

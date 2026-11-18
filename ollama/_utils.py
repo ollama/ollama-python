@@ -16,6 +16,8 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
     return parsed_docstring
 
   key = str(hash(doc_string))
+  # Keep section text out of parsed_docstring so it cannot collide with a parameter named `args` or `_`
+  args_lines = []
   for line in doc_string.splitlines():
     lowered_line = line.lower().strip()
     if lowered_line.startswith('args:'):
@@ -23,12 +25,14 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
     elif lowered_line.startswith(('returns:', 'yields:', 'raises:')):
       key = '_'
 
-    else:
+    elif key == 'args':
+      args_lines.append(line)
+    elif key != '_':
       # maybe change to a list and join later
       parsed_docstring[key] += f'{line.strip()}\n'
 
   last_key = None
-  for line in parsed_docstring['args'].splitlines():
+  for line in args_lines:
     line = line.strip()
     if ':' in line:
       # Split the line on either:
