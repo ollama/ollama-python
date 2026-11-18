@@ -390,8 +390,9 @@ class ChatRequest(BaseGenerateRequest):
     output = nxt(self)
     if output.get('tools'):
       for tool in output['tools']:
-        if 'function' in tool and 'parameters' in tool['function'] and 'defs' in tool['function']['parameters']:
-          tool['function']['parameters']['$defs'] = tool['function']['parameters'].pop('defs')
+        parameters = (tool.get('function') or {}).get('parameters')
+        if parameters and 'defs' in parameters:
+          parameters['$defs'] = parameters.pop('defs')
     return output
 
   messages: Optional[Sequence[Union[Mapping[str, Any], Message]]] = None
