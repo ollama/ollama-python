@@ -369,6 +369,13 @@ class Tool(SubscriptableBaseModel):
       items: Optional[Any] = None
       required: Optional[Sequence[str]] = None
 
+      @model_serializer(mode='wrap')
+      def serialize_parameters(self, nxt):
+        output = nxt(self)
+        if isinstance(output, dict) and 'defs' in output:
+          output['$defs'] = output.pop('defs')
+        return output
+
       class Property(SubscriptableBaseModel):
         model_config = ConfigDict(arbitrary_types_allowed=True)
 
