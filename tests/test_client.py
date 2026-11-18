@@ -13,7 +13,7 @@ from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
-from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
+from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools, _parse_host
 from ollama._types import Image, Message
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
@@ -1323,6 +1323,12 @@ def test_tool_validation():
   assert len(tools) == 1
   assert tools[0].type == 'custom_type'
   assert tools[0].function.name == 'test'
+
+
+def test_parse_host_strips_whitespace():
+  assert _parse_host(' http://example.com ') == 'http://example.com:80'
+  assert _parse_host(' example.com:56789 ') == 'http://example.com:56789'
+  assert _parse_host('\thttps://example.com/path\n') == 'https://example.com:443/path'
 
 
 def test_client_connection_error():
