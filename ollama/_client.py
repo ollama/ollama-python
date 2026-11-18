@@ -3,9 +3,10 @@ import ipaddress
 import json
 import os
 import platform
-import sys
 import urllib.parse
+from collections.abc import AsyncIterator, Iterator
 from hashlib import sha256
+from importlib import metadata
 from os import PathLike
 from pathlib import Path
 from typing import (
@@ -27,13 +28,6 @@ import anyio
 from pydantic.json_schema import JsonSchemaValue
 
 from ollama._utils import convert_function_to_tool
-
-if sys.version_info < (3, 9):
-  from typing import AsyncIterator, Iterator
-else:
-  from collections.abc import AsyncIterator, Iterator
-
-from importlib import metadata
 
 try:
   __version__ = metadata.version('ollama')
