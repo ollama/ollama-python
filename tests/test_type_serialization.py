@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image, Tool
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,33 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_tool_parameters_defs_serialized_by_alias():
+  # https://github.com/ollama/ollama-python/issues/787
+  tool = {
+    'type': 'function',
+    'function': {
+      'name': 'find_items',
+      'parameters': {
+        'type': 'object',
+        'properties': {'item': {'$ref': '#/$defs/Item'}},
+        'required': ['item'],
+        '$defs': {'Item': {'type': 'object', 'properties': {'name': {'type': 'string'}}}},
+      },
+    },
+  }
+
+  t = Tool.model_validate(tool)
+  params = t.model_dump(exclude_none=True)['function']['parameters']
+  assert 'defs' not in params
+  assert params['$defs'] == tool['function']['parameters']['$defs']
+  assert '"$defs"' in t.model_dump_json(exclude_none=True)
+
+  # The request path keeps producing the same output
+  request = ChatRequest(model='x', messages=[{'role': 'user', 'content': 'y'}], tools=[tool])
+  request_params = request.model_dump(exclude_none=True)['tools'][0]['function']['parameters']
+  assert request_params == params
+
+  # Dumps round-trip back into an equivalent Tool
+  assert Tool.model_validate(t.model_dump(exclude_none=True)) == t

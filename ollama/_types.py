@@ -379,6 +379,15 @@ class Tool(SubscriptableBaseModel):
 
       properties: Optional[Mapping[str, Property]] = None
 
+      @model_serializer(mode='wrap')
+      def serialize_model(self, nxt):
+        output = nxt(self)
+        # Emit the JSON Schema key `$defs` instead of the Python field name `defs`,
+        # so `$ref: '#/$defs/...'` targets still resolve when a Tool is dumped on its own.
+        if isinstance(output, dict) and 'defs' in output:
+          output['$defs'] = output.pop('defs')
+        return output
+
     parameters: Optional[Parameters] = None
 
   function: Optional[Function] = None
