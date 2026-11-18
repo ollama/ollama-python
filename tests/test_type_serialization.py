@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image, Message
 
 
 def test_image_serialization_bytes():
@@ -122,3 +122,19 @@ def test_think_boolean_serialization():
   assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
   assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
   assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
+
+
+def test_message_get_follows_contains_semantics():
+  'A declared-but-unset field is "absent" for `in`, so `get` returns the default.'
+
+  msg = Message(role='user')
+  assert 'content' not in msg
+  assert msg.get('content', 'fallback') == 'fallback'
+
+  # A field explicitly set to None still exists, like in a dict.
+  msg['tool_calls'] = None
+  assert 'tool_calls' in msg
+  assert msg.get('tool_calls', 'fallback') is None
+
+  # Non-field attribute names must not leak through get().
+  assert msg.get('model_dump', 'fallback') == 'fallback'
