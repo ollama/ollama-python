@@ -1,5 +1,7 @@
 # Ollama Python Library
 
+[**简体中文**](https://github.com/ollama/ollama-python/blob/main/README.zh.md) | **English**
+
 The Ollama Python library provides the easiest way to integrate Python 3.8+ projects with [Ollama](https://github.com/ollama/ollama).
 
 ## Prerequisites
