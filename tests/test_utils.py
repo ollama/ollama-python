@@ -256,3 +256,32 @@ def test_function_with_parentheses():
   tool = convert_function_to_tool(func_with_parentheses_and_args).model_dump()
   assert tool['function']['parameters']['properties']['a']['description'] == 'First (:thing) number to add'
   assert tool['function']['parameters']['properties']['b']['description'] == 'Second number to add'
+
+
+# Add this at the END of tests/test_utils.py
+# (that file already imports convert_function_to_tool; if not, add:
+#  from ollama._utils import convert_function_to_tool)
+
+
+def test_function_with_default_str_arg_to_tool():
+  def get_current_time(timezone: str = 'UTC') -> str:
+    """
+    Get the current date and time.
+
+    Args:
+      timezone (str): IANA timezone name, for example 'Asia/Kolkata'
+
+    Returns:
+      str: The current date and time in the given timezone
+    """
+    return ''
+
+  tool = convert_function_to_tool(get_current_time).model_dump()
+
+  assert tool['type'] == 'function'
+  assert tool['function']['name'] == 'get_current_time'
+  assert 'current date and time' in tool['function']['description'].lower()
+
+  props = tool['function']['parameters']['properties']
+  assert 'timezone' in props
+  assert props['timezone']['type'] == 'string'

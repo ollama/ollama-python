@@ -128,6 +128,11 @@ Requirement: `pip install tqdm`
 
 - [thinking-levels.py](thinking-levels.py)
 
+
+- [tools-current-time.py](tools-current-time.py) - Give the model a `get_current_time` tool so it can answer questions about the current date and time
+
 ### System One - Score typed questions
 
 - [systemone.py](systemone.py) - Choice, boolean probability, and rubric score questions
+
+
