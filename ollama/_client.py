@@ -362,6 +362,7 @@ class Client(BaseClient):
       tools:
         A JSON schema as a dict, an Ollama Tool or a Python Function.
         Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        Use functools.partial to bind positional arguments that should not be exposed as tool parameters.
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
@@ -1021,6 +1022,7 @@ class AsyncClient(BaseClient):
       tools:
         A JSON schema as a dict, an Ollama Tool or a Python Function.
         Python functions need to follow Google style docstrings to be converted to an Ollama Tool.
+        Use functools.partial to bind positional arguments that should not be exposed as tool parameters.
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.

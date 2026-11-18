@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import re
 from collections import defaultdict
+from functools import partial
 from typing import Callable, Union
 
 import pydantic
@@ -54,14 +55,31 @@ def _parse_docstring(doc_string: Union[str, None]) -> dict[str, str]:
 
 
 def convert_function_to_tool(func: Callable) -> Tool:
-  doc_string_hash = str(hash(inspect.getdoc(func)))
-  parsed_docstring = _parse_docstring(inspect.getdoc(func))
+  name_source = doc_source = func
+  while isinstance(name_source, partial) and not hasattr(name_source, '__name__'):
+    name_source = name_source.func
+  while isinstance(doc_source, partial) and '__doc__' not in vars(doc_source):
+    doc_source = doc_source.func
+
+  # A partial's __wrapped__ metadata must not hide its bound arguments from inspect.
+  signature_source = func
+  bound_partials = []
+  while isinstance(signature_source, partial) and getattr(signature_source, '__signature__', None) is None:
+    bound_partials.append(signature_source)
+    signature_source = signature_source.func
+  for bound in reversed(bound_partials):
+    signature_source = partial(signature_source, *bound.args, **bound.keywords)
+  signature = inspect.signature(signature_source)
+
+  doc_string = inspect.getdoc(doc_source)
+  doc_string_hash = str(hash(doc_string))
+  parsed_docstring = _parse_docstring(doc_string)
   schema = type(
-    func.__name__,
+    name_source.__name__,
     (pydantic.BaseModel,),
     {
-      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in inspect.signature(func).parameters.items()},
-      '__signature__': inspect.signature(func),
+      '__annotations__': {k: v.annotation if v.annotation != inspect._empty else str for k, v in signature.parameters.items()},
+      '__signature__': signature,
       '__doc__': parsed_docstring[doc_string_hash],
     },
   ).model_json_schema()
@@ -81,7 +99,7 @@ def convert_function_to_tool(func: Callable) -> Tool:
   tool = Tool(
     type='function',
     function=Tool.Function(
-      name=func.__name__,
+      name=name_source.__name__,
       description=schema.get('description', ''),
       parameters=Tool.Function.Parameters(**schema),
     ),
