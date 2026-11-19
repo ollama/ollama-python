@@ -560,6 +560,9 @@ class ShowRequest(BaseRequest):
   Request to show model information.
   """
 
+  verbose: Optional[bool] = None
+  'Include full metadata arrays, such as tokenizer tokens.'
+
 
 class ShowResponse(SubscriptableBaseModel):
   modified_at: Optional[datetime] = None

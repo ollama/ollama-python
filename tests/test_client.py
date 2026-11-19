@@ -880,6 +880,22 @@ def test_client_copy(httpserver: HTTPServer):
   assert response['status'] == 'success'
 
 
+@pytest.fixture(params=[{}, {'verbose': True}, {'verbose': False}], ids=['default', 'verbose', 'nonverbose'])
+def show_request(httpserver: HTTPServer, request):
+  options = request.param
+  tokens = ['hello', 'world'] if options.get('verbose') else []
+  model_info = {'tokenizer.ggml.tokens': tokens}
+  httpserver.expect_ordered_request('/api/show', method='POST', json={'model': 'dummy', **options}).respond_with_json({'model_info': model_info})
+  return options, model_info
+
+
+def test_client_show(httpserver: HTTPServer, show_request):
+  options, model_info = show_request
+  with Client(httpserver.url_for('/')) as client:
+    response = client.show('dummy', **options)
+  assert response.modelinfo == model_info
+
+
 async def test_async_client_chat(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/chat',
@@ -1255,6 +1271,13 @@ async def test_async_client_copy(httpserver: HTTPServer):
   client = AsyncClient(httpserver.url_for('/api/copy'))
   response = await client.copy('dum', 'dummer')
   assert response['status'] == 'success'
+
+
+async def test_async_client_show(httpserver: HTTPServer, show_request):
+  options, model_info = show_request
+  async with AsyncClient(httpserver.url_for('/')) as client:
+    response = await client.show('dummy', **options)
+  assert response.modelinfo == model_info
 
 
 def test_headers():

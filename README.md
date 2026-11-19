@@ -205,6 +205,9 @@ ollama.list()
 
 ```python
 ollama.show('gemma4')
+
+# Include large metadata fields such as tokenizer tokens
+ollama.show('gemma4', verbose=True)
 ```
 
 ### Create

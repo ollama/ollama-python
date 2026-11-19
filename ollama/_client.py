@@ -685,13 +685,14 @@ class Client(BaseClient):
       status='success' if r.status_code == 200 else 'error',
     )
 
-  def show(self, model: str) -> ShowResponse:
+  def show(self, model: str, *, verbose: Optional[bool] = None) -> ShowResponse:
     return self._request(
       ShowResponse,
       'POST',
       '/api/show',
       json=ShowRequest(
         model=model,
+        verbose=verbose,
       ).model_dump(exclude_none=True),
     )
 
@@ -1353,13 +1354,14 @@ class AsyncClient(BaseClient):
       status='success' if r.status_code == 200 else 'error',
     )
 
-  async def show(self, model: str) -> ShowResponse:
+  async def show(self, model: str, *, verbose: Optional[bool] = None) -> ShowResponse:
     return await self._request(
       ShowResponse,
       'POST',
       '/api/show',
       json=ShowRequest(
         model=model,
+        verbose=verbose,
       ).model_dump(exclude_none=True),
     )
 
