@@ -309,6 +309,13 @@ See [the combined question example](examples/systemone.py).
 
 Errors are raised if requests return an error status or if an error is detected while streaming.
 
+Use `Client(timeout=30.0)` or `AsyncClient(timeout=30.0)` to configure timeouts,
+including the read timeout.
+If the server takes longer than the read timeout to send response data, the client
+raises `httpx.ReadTimeout`. For streaming requests, catch this exception while
+iterating over the response (with `for` or `async for`), since the client reads
+the response as the stream is consumed.
+
 ```python
 model = 'does-not-yet-exist'
 
