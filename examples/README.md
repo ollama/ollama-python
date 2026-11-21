@@ -86,6 +86,8 @@ Configuration to use with an MCP client:
 
 ### Structured Outputs - Generate structured outputs with a model
 
+The synchronous and asynchronous text examples require Python 3.9 or later. The image example requires Python 3.10 or later.
+
 - [structured-outputs.py](structured-outputs.py)
 - [async-structured-outputs.py](async-structured-outputs.py)
 - [structured-outputs-image.py](structured-outputs-image.py)
