@@ -231,6 +231,20 @@ ollama.delete('gemma4')
 ollama.pull('gemma4')
 ```
 
+`pull()` asks the connected Ollama server to download and store the model.
+For a remote server, the model files are stored on that server:
+
+```python
+from ollama import Client
+
+client = Client(host='http://ollama-host:11434')
+client.pull('gemma4')
+```
+
+To change the storage directory, set `OLLAMA_MODELS` in the environment of the **Ollama server process** and restart it.
+Setting it only in the Python client's environment does not change the server's storage directory.
+See the [Ollama FAQ](https://docs.ollama.com/faq#where-are-models-stored) for the default locations and server setup.
+
 ### Push
 
 ```python
