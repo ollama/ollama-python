@@ -4,8 +4,10 @@ import json
 import os
 import re
 import tempfile
+from hashlib import sha256
 from pathlib import Path
 from typing import Any
+from unittest.mock import Mock
 
 import pytest
 from httpx import Response as httpxResponse
@@ -864,6 +866,39 @@ def test_client_create_blob_exists(httpserver: HTTPServer):
   with tempfile.NamedTemporaryFile() as blob:
     response = client.create_blob(blob.name)
     assert response == 'sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
+
+
+@pytest.mark.skipif(os.name == 'nt', reason='Windows does not allow replacing an open file')
+@pytest.mark.parametrize('client_type', [Client, AsyncClient])
+async def test_create_blob_path_replaced_after_hashing(httpserver: HTTPServer, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, client_type: type) -> None:
+  content = b'original model data' * 4096
+  path = tmp_path / 'model.gguf'
+  path.write_bytes(content)
+  replacement = tmp_path / 'replacement.gguf'
+  replacement.write_bytes(b'replacement model data')
+  expected_digest = f'sha256:{sha256(content).hexdigest()}'
+  digest = sha256()
+  hasher = Mock(wraps=digest)
+
+  def replace_path() -> str:
+    replacement.replace(path)
+    return digest.hexdigest()
+
+  hasher.hexdigest.side_effect = replace_path
+  monkeypatch.setattr(inspect.getmodule(Client), 'sha256', lambda: hasher)
+  httpserver.expect_ordered_request(f'/api/blobs/{expected_digest}', method='POST', data=content).respond_with_response(Response(status=201))
+
+  client = client_type(httpserver.url_for('/'))
+  if isinstance(client, AsyncClient):
+    async with client:
+      result = await client.create_blob(path)
+  else:
+    with client:
+      result = client.create_blob(path)
+
+  httpserver.check_assertions()
+  assert result == expected_digest
+  assert path.read_bytes() == b'replacement model data'
 
 
 def test_client_delete(httpserver: HTTPServer):
