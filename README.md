@@ -181,7 +181,7 @@ asyncio.run(chat())
 
 ## API
 
-The Ollama Python library's API is designed around the [Ollama REST API](https://github.com/ollama/ollama/blob/main/docs/api.md)
+The Ollama Python library's API is designed around the [Ollama REST API](https://docs.ollama.com/api/introduction)
 
 ### Chat
 
