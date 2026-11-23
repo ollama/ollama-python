@@ -10,7 +10,7 @@ python3 examples/<example>.py
 uv run examples/<example>.py
 ```
 
-See [ollama/docs/api.md](https://github.com/ollama/ollama/blob/main/docs/api.md) for full API documentation
+See [Ollama REST API reference](https://docs.ollama.com/api/introduction) for full API documentation
 
 ### Chat - Chat with a model
 
