@@ -1273,6 +1273,13 @@ def test_headers():
   assert client._client.headers['content-type'] == 'application/json'
 
 
+@pytest.mark.parametrize('client_type', [Client, AsyncClient])
+@pytest.mark.parametrize('header_name', ['User-Agent', 'user-agent', 'USER-AGENT'])
+def test_custom_user_agent_header(client_type, header_name):
+  client = client_type(headers={header_name: 'example-app/1.0'})
+  assert client._client.headers['user-agent'] == 'example-app/1.0'
+
+
 def test_copy_tools():
   def func1(x: int) -> str:
     """Simple function 1.
