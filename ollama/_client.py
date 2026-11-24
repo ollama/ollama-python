@@ -105,10 +105,13 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
         **(headers or {}),
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        'User-Agent': f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
       }.items()
       if v is not None
     }
+    headers.setdefault(
+      'user-agent',
+      f'ollama-python/{__version__} ({platform.machine()} {platform.system().lower()}) Python/{platform.python_version()}',
+    )
     api_key = os.getenv('OLLAMA_API_KEY', None)
     if not headers.get('authorization') and api_key:
       headers['authorization'] = f'Bearer {api_key}'
