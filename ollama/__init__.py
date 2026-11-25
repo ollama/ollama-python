@@ -1,4 +1,4 @@
-from ollama._client import AsyncClient, Client
+from ollama._client import AsyncClient, Client, __version__
 from ollama._types import (
   ChatResponse,
   EmbeddingsResponse,
@@ -35,6 +35,8 @@ __all__ = [
   'AsyncClient',
   'ChatResponse',
   'Client',
+  '__version__',
+  'version',
   'EmbedResponse',
   'EmbeddingsResponse',
   'GenerateResponse',
@@ -79,6 +81,7 @@ list = _client.list
 copy = _client.copy
 show = _client.show
 ps = _client.ps
+version = _client.version
 web_search = _client.web_search
 web_fetch = _client.web_fetch
 systemone = _client.systemone
