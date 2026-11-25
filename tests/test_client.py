@@ -469,6 +469,78 @@ def test_client_generate_images(httpserver: HTTPServer):
     assert response['response'] == 'Because it is.'
 
 
+@pytest.mark.parametrize('file_style', ('path', 'bytes'))
+def test_client_generate_bare_image_is_not_iterated_as_sequence(httpserver: HTTPServer, file_style, tmp_path):
+  # Issue #734: a bare str/bytes used to be iterated character- or byte-wise.
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why is the sky blue?',
+      'stream': False,
+      'images': [PNG_BASE64],
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': 'Because it is.',
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  if file_style == 'bytes':
+    image = PNG_BYTES
+  else:
+    image_path = tmp_path / 'transparent.png'
+    image_path.write_bytes(PNG_BYTES)
+    image = str(image_path)
+
+  response = client.generate('dummy', 'Why is the sky blue?', images=image)
+  assert response['model'] == 'dummy'
+  assert response['response'] == 'Because it is.'
+
+
+@pytest.mark.parametrize('file_style', ('path', 'bytes'))
+def test_client_chat_bare_image_in_message_is_not_iterated_as_sequence(httpserver: HTTPServer, file_style, tmp_path):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [
+        {
+          'role': 'user',
+          'content': 'Why is the sky blue?',
+          'images': [PNG_BASE64],
+        },
+      ],
+      'tools': [],
+      'stream': False,
+    },
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'message': {
+        'role': 'assistant',
+        'content': "I don't know.",
+      },
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  if file_style == 'bytes':
+    image = PNG_BYTES
+  else:
+    image_path = tmp_path / 'transparent.png'
+    image_path.write_bytes(PNG_BYTES)
+    image = str(image_path)
+
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Why is the sky blue?', 'images': image}])
+  assert response['model'] == 'dummy'
+  assert response['message']['content'] == "I don't know."
+
+
 def test_client_generate_format_json(httpserver: HTTPServer):
   httpserver.expect_ordered_request(
     '/api/generate',
