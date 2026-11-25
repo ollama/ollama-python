@@ -7,13 +7,14 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
+import httpx
 import pytest
 from httpx import Response as httpxResponse
 from pydantic import BaseModel
 from pytest_httpserver import HTTPServer, URIPattern
 from werkzeug.wrappers import Request, Response
 
-from ollama._client import CONNECTION_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
+from ollama._client import CONNECTION_ERROR_MESSAGE, TIMEOUT_ERROR_MESSAGE, AsyncClient, Client, _copy_tools
 from ollama._types import Image, Message
 
 PNG_BASE64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGNgYGAAAAAEAAH2FzhVAAAAAElFTkSuQmCC'
@@ -1349,6 +1350,45 @@ async def test_async_client_connection_error():
   with pytest.raises(ConnectionError) as exc_info:
     await client.show('model')
   assert str(exc_info.value) == 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+
+
+def test_client_connection_error_stream():
+  client = Client('http://localhost:1234')
+
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
+    next(client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}], stream=True))
+
+
+async def test_async_client_connection_error_stream():
+  client = AsyncClient('http://localhost:1234')
+
+  with pytest.raises(ConnectionError, match=CONNECTION_ERROR_MESSAGE):
+    async for _ in await client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}], stream=True):
+      pass
+
+
+def _read_timeout(request: httpx.Request):
+  raise httpx.ReadTimeout('timed out', request=request)
+
+
+def test_client_timeout_error():
+  client = Client('http://localhost:1234', transport=httpx.MockTransport(_read_timeout))
+
+  with pytest.raises(TimeoutError, match=TIMEOUT_ERROR_MESSAGE) as exc_info:
+    client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
+  assert isinstance(exc_info.value.__cause__, httpx.ReadTimeout)
+  with pytest.raises(TimeoutError, match=TIMEOUT_ERROR_MESSAGE):
+    next(client.generate('model', 'prompt', stream=True))
+
+
+async def test_async_client_timeout_error():
+  client = AsyncClient('http://localhost:1234', transport=httpx.MockTransport(_read_timeout))
+
+  with pytest.raises(TimeoutError, match=TIMEOUT_ERROR_MESSAGE):
+    await client.chat('model', messages=[{'role': 'user', 'content': 'prompt'}])
+  with pytest.raises(TimeoutError, match=TIMEOUT_ERROR_MESSAGE):
+    async for _ in await client.generate('model', 'prompt', stream=True):
+      pass
 
 
 def test_arbitrary_roles_accepted_in_message():

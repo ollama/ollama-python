@@ -129,6 +129,7 @@ class BaseClient(contextlib.AbstractContextManager, contextlib.AbstractAsyncCont
 
 
 CONNECTION_ERROR_MESSAGE = 'Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download'
+TIMEOUT_ERROR_MESSAGE = 'Request to Ollama timed out. Try increasing the client timeout.'
 
 
 class Client(BaseClient):
@@ -147,6 +148,8 @@ class Client(BaseClient):
       raise ResponseError(e.response.text, e.response.status_code) from None
     except httpx.ConnectError:
       raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+    except httpx.TimeoutException as e:
+      raise TimeoutError(TIMEOUT_ERROR_MESSAGE) from e
 
   @overload
   def _request(
@@ -185,18 +188,23 @@ class Client(BaseClient):
     if stream:
 
       def inner():
-        with self._client.stream(*args, **kwargs) as r:
-          try:
-            r.raise_for_status()
-          except httpx.HTTPStatusError as e:
-            e.response.read()
-            raise ResponseError(e.response.text, e.response.status_code) from None
+        try:
+          with self._client.stream(*args, **kwargs) as r:
+            try:
+              r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+              e.response.read()
+              raise ResponseError(e.response.text, e.response.status_code) from None
 
-          for line in r.iter_lines():
-            part = json.loads(line)
-            if err := part.get('error'):
-              raise ResponseError(err)
-            yield cls(**part)
+            for line in r.iter_lines():
+              part = json.loads(line)
+              if err := part.get('error'):
+                raise ResponseError(err)
+              yield cls(**part)
+        except httpx.ConnectError:
+          raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+        except httpx.TimeoutException as e:
+          raise TimeoutError(TIMEOUT_ERROR_MESSAGE) from e
 
       return inner()
 
@@ -767,6 +775,8 @@ class AsyncClient(BaseClient):
       raise ResponseError(e.response.text, e.response.status_code) from None
     except httpx.ConnectError:
       raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+    except httpx.TimeoutException as e:
+      raise TimeoutError(TIMEOUT_ERROR_MESSAGE) from e
 
   @overload
   async def _request(
@@ -805,18 +815,23 @@ class AsyncClient(BaseClient):
     if stream:
 
       async def inner():
-        async with self._client.stream(*args, **kwargs) as r:
-          try:
-            r.raise_for_status()
-          except httpx.HTTPStatusError as e:
-            await e.response.aread()
-            raise ResponseError(e.response.text, e.response.status_code) from None
+        try:
+          async with self._client.stream(*args, **kwargs) as r:
+            try:
+              r.raise_for_status()
+            except httpx.HTTPStatusError as e:
+              await e.response.aread()
+              raise ResponseError(e.response.text, e.response.status_code) from None
 
-          async for line in r.aiter_lines():
-            part = json.loads(line)
-            if err := part.get('error'):
-              raise ResponseError(err)
-            yield cls(**part)
+            async for line in r.aiter_lines():
+              part = json.loads(line)
+              if err := part.get('error'):
+                raise ResponseError(err)
+              yield cls(**part)
+        except httpx.ConnectError:
+          raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+        except httpx.TimeoutException as e:
+          raise TimeoutError(TIMEOUT_ERROR_MESSAGE) from e
 
       return inner()
 
