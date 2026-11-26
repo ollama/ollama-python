@@ -1527,3 +1527,27 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def test_client_list_keeps_capabilities(httpserver: HTTPServer):
+  httpserver.expect_ordered_request('/api/tags', method='GET').respond_with_json(
+    {
+      'models': [
+        {'model': 'llama3.2', 'digest': 'abc', 'size': 1, 'capabilities': ['completion', 'tools']},
+        {'model': 'nomic-embed-text', 'digest': 'def', 'size': 1, 'capabilities': ['embedding']},
+      ]
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.list()
+  assert response.models[0].capabilities == ['completion', 'tools']
+  assert response['models'][1]['capabilities'] == ['embedding']
+
+
+async def test_async_client_list_keeps_capabilities(httpserver: HTTPServer):
+  httpserver.expect_ordered_request('/api/tags', method='GET').respond_with_json({'models': [{'model': 'llama3.2', 'digest': 'abc', 'size': 1, 'capabilities': ['completion', 'vision']}]})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.list()
+  assert response.models[0].capabilities == ['completion', 'vision']
