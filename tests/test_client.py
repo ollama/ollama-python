@@ -1527,3 +1527,77 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def test_client_chat_with_truncate_and_shift(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'tools': [],
+      'stream': False,
+      'truncate': False,
+      'shift': False,
+    },
+  ).respond_with_json({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'Hello'}})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], truncate=False, shift=False)
+  assert response['message']['content'] == 'Hello'
+
+
+def test_client_generate_with_truncate_and_shift(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why',
+      'stream': False,
+      'truncate': True,
+      'shift': False,
+    },
+  ).respond_with_json({'model': 'dummy', 'response': 'Because'})
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Why', truncate=True, shift=False)
+  assert response['response'] == 'Because'
+
+
+async def test_async_client_chat_with_truncate_and_shift(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/chat',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'messages': [{'role': 'user', 'content': 'Hi'}],
+      'tools': [],
+      'stream': False,
+      'truncate': False,
+      'shift': True,
+    },
+  ).respond_with_json({'model': 'dummy', 'message': {'role': 'assistant', 'content': 'Hello'}})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.chat('dummy', messages=[{'role': 'user', 'content': 'Hi'}], truncate=False, shift=True)
+  assert response['message']['content'] == 'Hello'
+
+
+async def test_async_client_generate_with_truncate_and_shift(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={
+      'model': 'dummy',
+      'prompt': 'Why',
+      'stream': False,
+      'truncate': False,
+      'shift': False,
+    },
+  ).respond_with_json({'model': 'dummy', 'response': 'Because'})
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.generate('dummy', 'Why', truncate=False, shift=False)
+  assert response['response'] == 'Because'

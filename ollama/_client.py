@@ -216,6 +216,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -240,6 +242,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -263,6 +267,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -297,6 +303,8 @@ class Client(BaseClient):
         think=think,
         logprobs=logprobs,
         top_logprobs=top_logprobs,
+        truncate=truncate,
+        shift=shift,
         raw=raw,
         format=format,
         images=list(_copy_images(images)) if images else None,
@@ -320,6 +328,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -336,6 +346,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -351,6 +363,8 @@ class Client(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -365,6 +379,8 @@ class Client(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      truncate: Whether to truncate the chat history if the rendered prompt exceeds the context length.
+      shift: Whether to shift the context instead of erroring when it reaches the context length.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -400,6 +416,8 @@ class Client(BaseClient):
         think=think,
         logprobs=logprobs,
         top_logprobs=top_logprobs,
+        truncate=truncate,
+        shift=shift,
         format=format,
         options=options,
         keep_alive=keep_alive,
@@ -876,6 +894,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -900,6 +920,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: bool = False,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -923,6 +945,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     raw: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     images: Optional[Sequence[Union[str, bytes, Image]]] = None,
@@ -956,6 +980,8 @@ class AsyncClient(BaseClient):
         think=think,
         logprobs=logprobs,
         top_logprobs=top_logprobs,
+        truncate=truncate,
+        shift=shift,
         raw=raw,
         format=format,
         images=list(_copy_images(images)) if images else None,
@@ -979,6 +1005,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -995,6 +1023,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -1010,6 +1040,8 @@ class AsyncClient(BaseClient):
     think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
+    truncate: Optional[bool] = None,
+    shift: Optional[bool] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
     options: Optional[Union[Mapping[str, Any], Options]] = None,
     keep_alive: Optional[Union[float, str]] = None,
@@ -1024,6 +1056,8 @@ class AsyncClient(BaseClient):
         For more information, see: https://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings
       stream: Whether to stream the response.
       format: The format of the response.
+      truncate: Whether to truncate the chat history if the rendered prompt exceeds the context length.
+      shift: Whether to shift the context instead of erroring when it reaches the context length.
 
     Example:
       def add_two_numbers(a: int, b: int) -> int:
@@ -1060,6 +1094,8 @@ class AsyncClient(BaseClient):
         think=think,
         logprobs=logprobs,
         top_logprobs=top_logprobs,
+        truncate=truncate,
+        shift=shift,
         format=format,
         options=options,
         keep_alive=keep_alive,
