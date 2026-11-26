@@ -157,6 +157,12 @@ class BaseGenerateRequest(BaseStreamableRequest):
   keep_alive: Optional[Union[float, str]] = None
   'Keep model alive for the specified duration.'
 
+  truncate: Optional[bool] = None
+  'Truncate the chat history if the rendered prompt exceeds the context length.'
+
+  shift: Optional[bool] = None
+  'Shift the context instead of erroring when it reaches the context length.'
+
 
 class Image(BaseModel):
   value: Union[str, bytes, Path]
