@@ -289,6 +289,9 @@ class GenerateResponse(BaseGenerateResponse):
   logprobs: Optional[Sequence[Logprob]] = None
   'Log probabilities for generated tokens.'
 
+  tool_calls: Optional[Sequence['Message.ToolCall']] = None
+  'Tool calls parsed from the response by models with a built-in tool call parser.'
+
   # Image generation response fields
   image: Optional[str] = None
   'Base64-encoded generated image data (for image generation models).'

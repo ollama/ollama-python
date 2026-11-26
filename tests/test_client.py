@@ -1527,3 +1527,63 @@ def test_client_chat_with_think_level(httpserver: HTTPServer):
   assert response['model'] == 'qwen3.8:27b'
   assert response['message']['content'] == 'Hi there.'
   assert response['message']['thinking'] == 'Thinking deeply...'
+
+
+def test_client_generate_keeps_tool_calls(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={'model': 'dummy', 'prompt': 'Weather in Paris?', 'stream': False},
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '',
+      'done': True,
+      'tool_calls': [{'function': {'name': 'get_weather', 'arguments': {'city': 'Paris'}}}],
+    }
+  )
+
+  client = Client(httpserver.url_for('/'))
+  response = client.generate('dummy', 'Weather in Paris?')
+  assert len(response.tool_calls) == 1
+  assert response.tool_calls[0].function.name == 'get_weather'
+  assert response['tool_calls'][0]['function']['arguments'] == {'city': 'Paris'}
+
+
+def test_client_generate_stream_keeps_tool_calls(httpserver: HTTPServer):
+  def stream_handler(_: Request):
+    def generate():
+      yield json.dumps({'model': 'dummy', 'response': '', 'done': False}) + '\n'
+      yield json.dumps({'model': 'dummy', 'response': '', 'done': True, 'tool_calls': [{'function': {'name': 'get_weather', 'arguments': {'city': 'Paris'}}}]}) + '\n'
+
+    return Response(generate())
+
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={'model': 'dummy', 'prompt': 'Weather in Paris?', 'stream': True},
+  ).respond_with_handler(stream_handler)
+
+  client = Client(httpserver.url_for('/'))
+  parts = list(client.generate('dummy', 'Weather in Paris?', stream=True))
+  assert parts[0].tool_calls is None
+  assert parts[-1].tool_calls[0].function.name == 'get_weather'
+
+
+async def test_async_client_generate_keeps_tool_calls(httpserver: HTTPServer):
+  httpserver.expect_ordered_request(
+    '/api/generate',
+    method='POST',
+    json={'model': 'dummy', 'prompt': 'Weather in Paris?', 'stream': False},
+  ).respond_with_json(
+    {
+      'model': 'dummy',
+      'response': '',
+      'done': True,
+      'tool_calls': [{'function': {'name': 'get_weather', 'arguments': {'city': 'Paris'}}}],
+    }
+  )
+
+  client = AsyncClient(httpserver.url_for('/'))
+  response = await client.generate('dummy', 'Weather in Paris?')
+  assert response.tool_calls[0].function.arguments == {'city': 'Paris'}
