@@ -66,6 +66,10 @@ from ollama._types import (
   ShowRequest,
   ShowResponse,
   StatusResponse,
+  SystemOneContent,
+  SystemOneQuestion,
+  SystemOneRequest,
+  SystemOneResponse,
   Tool,
   WebFetchRequest,
   WebFetchResponse,
@@ -209,7 +213,7 @@ class Client(BaseClient):
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
-    think: Optional[bool] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
@@ -233,7 +237,7 @@ class Client(BaseClient):
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
-    think: Optional[bool] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
@@ -256,7 +260,7 @@ class Client(BaseClient):
     template: Optional[str] = None,
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
-    think: Optional[bool] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: Optional[bool] = None,
@@ -313,7 +317,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -329,7 +333,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -344,7 +348,7 @@ class Client(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -401,6 +405,33 @@ class Client(BaseClient):
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
+    )
+
+  def systemone(
+    self,
+    model: str,
+    state: SystemOneContent,
+    questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
+    keep_alive: Optional[Union[float, str]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+  ) -> SystemOneResponse:
+    """Score choice, noul, and score questions with a System One decision model.
+
+    `images` are shared by all questions, in order; only models that accept images (such as Clef) support them.
+
+    Returns one JSON response. Streaming is not supported.
+    """
+    return self._request(
+      SystemOneResponse,
+      'POST',
+      '/v1/systemone',
+      json=SystemOneRequest(
+        model=model,
+        state=state,
+        images=list(_copy_images(images)) if images else None,
+        questions=questions,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
 
   def embed(
@@ -842,7 +873,7 @@ class AsyncClient(BaseClient):
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[False] = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
@@ -866,7 +897,7 @@ class AsyncClient(BaseClient):
     template: str = '',
     context: Optional[Sequence[int]] = None,
     stream: Literal[True] = True,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: bool = False,
@@ -889,7 +920,7 @@ class AsyncClient(BaseClient):
     template: Optional[str] = None,
     context: Optional[Sequence[int]] = None,
     stream: bool = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     raw: Optional[bool] = None,
@@ -945,7 +976,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[False] = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -961,7 +992,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: Literal[True] = True,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -976,7 +1007,7 @@ class AsyncClient(BaseClient):
     *,
     tools: Optional[Sequence[Union[Mapping[str, Any], Tool, Callable]]] = None,
     stream: bool = False,
-    think: Optional[Union[bool, Literal['low', 'medium', 'high']]] = None,
+    think: Optional[Union[bool, str]] = None,
     logprobs: Optional[bool] = None,
     top_logprobs: Optional[int] = None,
     format: Optional[Union[Literal['', 'json'], JsonSchemaValue]] = None,
@@ -1034,6 +1065,33 @@ class AsyncClient(BaseClient):
         keep_alive=keep_alive,
       ).model_dump(exclude_none=True),
       stream=stream,
+    )
+
+  async def systemone(
+    self,
+    model: str,
+    state: SystemOneContent,
+    questions: Mapping[str, Union[SystemOneQuestion, Mapping[str, Any]]],
+    keep_alive: Optional[Union[float, str]] = None,
+    images: Optional[Sequence[Union[str, bytes, Image]]] = None,
+  ) -> SystemOneResponse:
+    """Score choice, noul, and score questions with a System One decision model.
+
+    `images` are shared by all questions, in order; only models that accept images (such as Clef) support them.
+
+    Returns one JSON response. Streaming is not supported.
+    """
+    return await self._request(
+      SystemOneResponse,
+      'POST',
+      '/v1/systemone',
+      json=SystemOneRequest(
+        model=model,
+        state=state,
+        images=list(_copy_images(images)) if images else None,
+        questions=questions,
+        keep_alive=keep_alive,
+      ).model_dump(exclude_none=True),
     )
 
   async def embed(

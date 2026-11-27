@@ -3,7 +3,7 @@ from ollama import Client
 client = Client()
 response = client.create(
   model='my-assistant',
-  from_='gemma3',
+  from_='gemma4',
   system='You are mario from Super Mario Bros.',
   stream=False,
 )

@@ -4,7 +4,7 @@ from pathlib import Path
 
 import pytest
 
-from ollama._types import CreateRequest, Image
+from ollama._types import ChatRequest, CreateRequest, GenerateRequest, Image
 
 
 def test_image_serialization_bytes():
@@ -55,6 +55,19 @@ def test_image_serialization_string_path():
     img.model_dump()
 
 
+@pytest.mark.parametrize('extension', ['PNG', 'JPG', 'JPEG', 'WEBP'])
+def test_image_serialization_string_path_uppercase_extension(extension):
+  # A non-existent path with an uppercase image extension must be rejected the
+  # same way its lowercase counterpart is, rather than being treated as base64.
+  with pytest.raises(ValueError, match='does not exist'):
+    Image(value=f'some_path/that/does/not/exist.{extension}').model_dump()
+
+  # A bare filename with an uppercase extension can be valid base64, so without a
+  # case-insensitive check it is silently accepted instead of raising.
+  with pytest.raises(ValueError, match='does not exist'):
+    Image(value=f'PHOTO.{extension}').model_dump()
+
+
 def test_create_request_serialization():
   request = CreateRequest(model='test-model', from_='base-model', quantize='q4_0', files={'file1': 'content1'}, adapters={'adapter1': 'content1'}, template='test template', license='MIT', system='test system', parameters={'param1': 'value1'})
 
@@ -92,3 +105,20 @@ def test_create_request_serialization_license_list():
   request = CreateRequest(model='test-model', license=['MIT', 'Apache-2.0'])
   serialized = request.model_dump()
   assert serialized['license'] == ['MIT', 'Apache-2.0']
+
+
+@pytest.mark.parametrize('level', ['low', 'medium', 'high', 'xhigh', 'max'])
+def test_think_model_defined_levels_serialization(level):
+  chat_req = ChatRequest(model='test-model', messages=[{'role': 'user', 'content': 'hi'}], think=level)
+  assert chat_req.think == level
+  assert chat_req.model_dump(exclude_none=True)['think'] == level
+
+  gen_req = GenerateRequest(model='test-model', think=level)
+  assert gen_req.think == level
+  assert gen_req.model_dump(exclude_none=True)['think'] == level
+
+
+def test_think_boolean_serialization():
+  assert ChatRequest(model='test-model', think=True).model_dump(exclude_none=True)['think'] is True
+  assert ChatRequest(model='test-model', think=False).model_dump(exclude_none=True)['think'] is False
+  assert 'think' not in ChatRequest(model='test-model', think=None).model_dump(exclude_none=True)
