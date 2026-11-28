@@ -638,6 +638,7 @@ class Client(BaseClient):
     )
 
   def create_blob(self, path: Union[str, Path]) -> str:
+    """Hash and upload the same open file, even if its path is replaced."""
     sha256sum = sha256()
     with open(path, 'rb') as r:
       while True:
@@ -646,9 +647,9 @@ class Client(BaseClient):
           break
         sha256sum.update(chunk)
 
-    digest = f'sha256:{sha256sum.hexdigest()}'
+      digest = f'sha256:{sha256sum.hexdigest()}'
+      r.seek(0)
 
-    with open(path, 'rb') as r:
       self._request_raw('POST', f'/api/blobs/{digest}', content=r)
 
     return digest
@@ -1299,6 +1300,7 @@ class AsyncClient(BaseClient):
     )
 
   async def create_blob(self, path: Union[str, Path]) -> str:
+    """Hash and upload the same open file, even if its path is replaced."""
     sha256sum = sha256()
     async with await anyio.open_file(path, 'rb') as r:
       while True:
@@ -1307,17 +1309,17 @@ class AsyncClient(BaseClient):
           break
         sha256sum.update(chunk)
 
-    digest = f'sha256:{sha256sum.hexdigest()}'
+      digest = f'sha256:{sha256sum.hexdigest()}'
+      await r.seek(0)
 
-    async def upload_bytes():
-      async with await anyio.open_file(path, 'rb') as r:
+      async def upload_bytes():
         while True:
           chunk = await r.read(32 * 1024)
           if not chunk:
             break
           yield chunk
 
-    await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
+      await self._request_raw('POST', f'/api/blobs/{digest}', content=upload_bytes())
 
     return digest
 
